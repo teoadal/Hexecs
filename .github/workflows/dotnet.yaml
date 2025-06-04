@@ -20,7 +20,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd ./src/Hexecs.Tests/
-          dotnet test -c Release --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover"
+          dotnet test -c Release --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
       - name: Publish coverage report
         uses: codecov/codecov-action@v3
         with:

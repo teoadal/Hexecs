@@ -1,4 +1,10 @@
-# Hexecs
+[![.NET Core](https://github.com/teoadal/Hexecs/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/teoadal/Hexecs/actions/workflows/dotnet.yml)
+[![NuGet](https://img.shields.io/nuget/v/Hexecs.svg)](https://www.nuget.org/packages/Hexecs)
+[![NuGet](https://img.shields.io/nuget/dt/Hexecs.svg)](https://www.nuget.org/packages/Hexecs)
+[![codecov](https://codecov.io/gh/teoadal/Hexecs/branch/master/graph/badge.svg?token=8L4HN9FAIV)](https://codecov.io/gh/teoadal/Hexecs)
+[![CodeFactor](https://www.codefactor.io/repository/github/teoadal/Hexecs/badge)](https://www.codefactor.io/repository/github/teoadal/Hexecs)
+
+# HexECS
 
 Привет! Это движок, имплементирующий ECS. Тут ты можешь делать многое, к чему и так привык.
 При этом, ты можешь чуть больше, чем обычные ECS, так как помимо ECS в библиотеке есть встроенный CQRS и DI.

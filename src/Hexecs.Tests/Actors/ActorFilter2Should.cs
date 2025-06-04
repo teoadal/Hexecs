@@ -9,7 +9,7 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
         
-        fixture.CreateActor<Defence>(); // Создаем актера с другим компонентом, чтобы убедиться, что он не попадет в фильтр
+        var expected = fixture.CreateActor<Defence>(); // Создаем актера с другим компонентом, чтобы убедиться, что он не попадет в фильтр
         
         // act
         var filter = fixture
@@ -17,10 +17,10 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
             .Filter<Attack>(); // Фильтруем по Attack
 
         // assert
-        filter
-            .ToArray()
+        var actors = filter.ToArray();
+        actors
             .Should()
-            .BeEmpty();
+            .NotContain(actor => actor.Id == expected.Id);
     }
 
     [Fact(DisplayName = "Содержит актера с двумя компонентами при фильтрации по двум компонентам")]

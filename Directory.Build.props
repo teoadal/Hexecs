@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <WarningsAsErrors>true</WarningsAsErrors>
+        <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
     <Choose>
         <When Condition="$(MSBuildProjectName.EndsWith('Benchmarks'))">

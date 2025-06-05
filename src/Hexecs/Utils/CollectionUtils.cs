@@ -50,7 +50,7 @@ public static class CollectionUtils
     }
 
     /// <summary>
-    /// Преобразует список <see cref="List{T}"/> в массив <see cref="TValue"/>[],
+    /// Преобразует список <see cref="List{T}"/> в массив <typeparamref name="TValue"/>[],
     /// применяя к каждому элементу функцию выбора с использованием предоставленного контекста.
     /// </summary>
     /// <typeparam name="T">Тип элементов в исходном списке.</typeparam>
@@ -59,7 +59,7 @@ public static class CollectionUtils
     /// <param name="collection">Исходный список <see cref="List{T}"/>.</param>
     /// <param name="selector">Функция <see cref="Func{T, TContext, TValue}"/> для преобразования каждого элемента.</param>
     /// <param name="context">Контекст, передаваемый в функцию выбора <paramref name="selector"/>.</param>
-    /// <returns>Новый массив <see cref="TValue"/>[], содержащий преобразованные элементы. Возвращает пустой массив, если исходный список пуст.</returns>
+    /// <returns>Новый массив <typeparamref name="TValue"/>[], содержащий преобразованные элементы. Возвращает пустой массив, если исходный список пуст.</returns>
     public static TValue[] ToArray<T, TValue, TContext>(
         this List<T> collection,
         Func<T, TContext, TValue> selector,
@@ -77,13 +77,13 @@ public static class CollectionUtils
     }
 
     /// <summary>
-    /// Преобразует перечисляемую коллекцию <see cref="IEnumerable{T}"/> в массив <see cref="T"/>[].
+    /// Преобразует перечисляемую коллекцию <see cref="IEnumerable{T}"/> в массив <typeparamref name="T"/>[].
     /// Пытается оптимизировать создание массива, определяя количество элементов заранее, если это возможно.
     /// В противном случае использует стандартный метод <see cref="System.Linq.Enumerable.ToArray{TSource}"/>.
     /// </summary>
     /// <typeparam name="T">Тип элементов в коллекции.</typeparam>
     /// <param name="collection">Исходная перечисляемая коллекция <see cref="IEnumerable{T}"/>.</param>
-    /// <returns>Новый массив <see cref="T"/>[], содержащий элементы из коллекции. Возвращает пустой массив, если исходная коллекция пуста.</returns>
+    /// <returns>Новый массив <typeparamref name="T"/>[], содержащий элементы из коллекции. Возвращает пустой массив, если исходная коллекция пуста.</returns>
     public static T[] ToArray<T>(IEnumerable<T> collection)
     {
         if (!collection.TryGetNonEnumeratedCount(out var count))
@@ -104,7 +104,7 @@ public static class CollectionUtils
     }
 
     /// <summary>
-    /// Преобразует перечисляемую коллекцию <see cref="IEnumerable{T}"/> в массив <see cref="T"/>[] указанной длины.
+    /// Преобразует перечисляемую коллекцию <see cref="IEnumerable{T}"/> в массив <typeparamref name="T"/>[] указанной длины.
     /// Копирует элементы из коллекции в новый массив до тех пор, пока не будет достигнута указанная длина <paramref name="length"/>
     /// или пока элементы в коллекции не закончатся.
     /// </summary>
@@ -112,7 +112,7 @@ public static class CollectionUtils
     /// <param name="collection">Исходная перечисляемая коллекция <see cref="IEnumerable{T}"/>.</param>
     /// <param name="length">Требуемая длина результирующего массива.</param>
     /// <returns>
-    /// Новый массив <see cref="T"/>[] указанной длины. Если <paramref name="length"/> равен 0, возвращает пустой массив.
+    /// Новый массив <typeparamref name="T"/>[] указанной длины. Если <paramref name="length"/> равен 0, возвращает пустой массив.
     /// Если коллекция содержит меньше элементов, чем <paramref name="length"/>, оставшиеся элементы массива будут иметь значение по умолчанию для типа <typeparamref name="T"/>.
     /// </returns>
     public static T[] ToArray<T>(IEnumerable<T> collection, int length)

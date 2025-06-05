@@ -3,6 +3,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs", "src\Hexecs\Hexecs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Tests", "src\Hexecs.Tests\Hexecs.Tests.csproj", "{2F69C623-5FAC-4696-B849-B42B7F6CE540}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Monogame", "src\Hexecs.Monogame\Hexecs.Monogame.csproj", "{69A93FD4-1A22-4657-A578-9377A966753E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,5 +19,9 @@ Global
 		{2F69C623-5FAC-4696-B849-B42B7F6CE540}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F69C623-5FAC-4696-B849-B42B7F6CE540}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F69C623-5FAC-4696-B849-B42B7F6CE540}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69A93FD4-1A22-4657-A578-9377A966753E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69A93FD4-1A22-4657-A578-9377A966753E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69A93FD4-1A22-4657-A578-9377A966753E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69A93FD4-1A22-4657-A578-9377A966753E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

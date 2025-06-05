@@ -1,4 +1,4 @@
-[![.NET Core](https://github.com/teoadal/Hexecs/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/teoadal/Hexecs/actions/workflows/dotnet.yaml)
+[![.NET Core](https://github.com/teoadal/Hexecs/actions/workflows/dotnet.yaml/badge.svg?branch=master)](https://github.com/teoadal/Hexecs/actions/workflows/dotnet.yaml)
 [![NuGet](https://img.shields.io/nuget/v/Hexecs.svg)](https://www.nuget.org/packages/Hexecs)
 [![NuGet](https://img.shields.io/nuget/dt/Hexecs.svg)](https://www.nuget.org/packages/Hexecs)
 [![codecov](https://codecov.io/gh/teoadal/Hexecs/branch/master/graph/badge.svg?token=8L4HN9FAIV)](https://codecov.io/gh/teoadal/Hexecs)

@@ -51,7 +51,8 @@ public struct FlyComponent(int current, int max) : IActorComponent { // необ
 
 Создать актёра можно следующим образом:
 ```csharp
-Actor actor = world.Actors.CreateActor(); // создаём
+ActorContext actorContext = world.Actors; // контекст актёров по-умолчанию.
+Actor actor = actorContext.CreateActor(); // создаём
 actor.Add(new FlyComponent(10, 20)); // добавляем компонент
 Actor<FlyComponent> typedActor = actor.As<FlyComponent>();
 ```
@@ -127,12 +128,21 @@ actor.Remove<PilotComponent>();
 Пассажиры! Их тоже можно создать примерно так:
 
 ```csharp
-Asset passengerAsset = world.GetAsset<PassengerAsset>(); 
-Actor passenger = world.Actor.BuildActor(passengerAsset, Arg.Rent("plane", planeActor))
+ActorContext actorContext = world.Actors;
+Asset passengerAsset = world.Assets.GetAsset<PassengerAsset>(); 
+Actor passenger = .BuildActor(passengerAsset, Arg.Rent("plane", planeActor))
 ```
 
-Мы находим ассет пассажира (вспомним, что у него есть компоненты). 
-Допустим, что он всего один. 
+Мы находим ассет пассажира (вспомним, что у него тоже есть компоненты). 
+Допустим, что ассет пассажира всего один. 
+Если их несколько, можно поискать его по алиасу или идентификатору: 
+
+```csharp
+AssetContext assetContext = world.Assets;
+assetContext.GetAsset<PassengerAsset>("simle_passenger") // по алиасу
+assetContext.GetAsset<PassengerAsset>(123) // по идентификатору
+```
+
 На второй строке, с помощью зарегистрированных `IActorBuilder` (имплементации "строителей" актёров по компонентам ассета), буквательно создаём актёра.
 Кстати, если нам будет нужно, мы сможем проверить, по какому ассету был построен актёр, запросив `actor.TryGetAsset`.
 
@@ -146,3 +156,67 @@ plane.AddChild(passenger);
 ```
 
 Если повторить это много раз, то в самолёте будут сидеть 2-400 пассажиров (в зависимости от типа самолёта, конечно).
+Получить всех пассажиров можно вот так:
+
+```csharp
+Actor plane = ...; 
+foreach(Actor passanger in plane.Children(passenger)) 
+{
+    // do something
+}
+```
+
+## Системы
+
+Системы это важный элемент ECS. 
+Системы регистрируются при создании контекста актёров и работают с ним и только с ним. 
+Необходимо помнить, что контексты акёров могут быть разными, но контекст ассетов всегда один.
+
+Сейчас мы зарегистрируем систему при создании мира, так как у нас всего один контекст актёров.
+
+```csharp
+var world = new WorldBuilder()
+    .DebugWorld() // чтобы получать больше информации в Debug-режиме 
+    .CreateLogger(logger => logger.UseConsoleSink()); // чтобы логи выводились в консоль
+    .DefaultActorContext(defaultContext => defaultContext
+        .AddUpdateSystem(new MyUpdateSystem())
+        .CreateUpdateSystem(serviceProvider => new FlySystem<FlyComponent>(serviceProvider.GetRequiredService<ActorContext>)))
+    .Build(); 
+```
+
+Можно обратить внимание на то, что в коде выше есть два похода к регистрации системы: добавление инстанса или созданеие через DI. 
+Второй подход предпочтительнее, но сложнее в написании. 
+Сложность состоит в том, что мы не можем довериться Reflection для создания системы, так как библиотека является `AOT-ready`, что запрещает некоторые трюки с созданием инстансов объектов по сигнатуре конструктора. Да, это можно обойти, но в настоящий момент этот функционал не реализован.
+
+Код самой системы будет простой. 
+Нам нужны все не сломанные самолёты с пилотами, которые умеют летать.
+Мы создаём систему, которая обновляет состояние аткёра, а не рисует его (да, ещё есть системы `IDrawSystem`).
+
+```csharp
+internal sealed class PlaneSystem: UpdateSystem<FlyComponent, PilotComponent>
+{
+    public LandSystem(ActorContext context) 
+        : base(context, static constraint => constraint.Exclude<BrokenComponent>()) // исключаем сломанные самолёты
+    {
+    }
+
+    protected override void Update(
+        in ActorRef<FlyComponent, PilotComponent> actor,  // ссылка на актёра и его компоненты
+        in WorldTime time) // время мира
+    {
+        ref FlyComponent fly = ref actor.Component1;
+        fly.CurrentSpeed++;
+        
+        ref PilotComponent pilot = ref actor.Component2;
+        pilot.Panic--;
+    }
+}
+```
+
+Для обновления мира нужно просто обновить его:
+```csharp
+world.Update();
+```
+
+При вызове этого метода будут вызваны все методы обновления у всех контекстов актёров и, соответственно, у всех зарегистрированных систем обновления (`IUpdateSystem`).
+

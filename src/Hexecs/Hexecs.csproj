@@ -7,6 +7,22 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <Title>Hexecs</Title>
+        <Description>Simple Entity Component System framework</Description>
+        <Version>0.4.0</Version>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>git://github.com/teoadal/Hexecs</RepositoryUrl>
+        <PackageId>Hexecs</PackageId>
+        <PackageTags>ecs;entity-component-system;gamedev</PackageTags>
+        <PackageProjectUrl>https://github.com/teoadal/Hexecs</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Copyright>Kirill Bazhaykin</Copyright>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>$(MSBuildProjectName).Benchmarks</_Parameter1>
@@ -180,28 +196,28 @@
             <DependentUpon>ActorContext.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorContext.Serialization.cs">
-          <DependentUpon>ActorContext.cs</DependentUpon>
+            <DependentUpon>ActorContext.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\Components\ActorComponentPool.Serialization.cs">
-          <DependentUpon>ActorComponentPool.cs</DependentUpon>
+            <DependentUpon>ActorComponentPool.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorContextBuilder.ComponentPoolBuilder.cs">
-          <DependentUpon>ActorContextBuilder.cs</DependentUpon>
+            <DependentUpon>ActorContextBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorContext.Bounds.cs">
-          <DependentUpon>ActorContext.cs</DependentUpon>
+            <DependentUpon>ActorContext.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorContextBuilder.Entry.cs">
-          <DependentUpon>ActorContextBuilder.cs</DependentUpon>
+            <DependentUpon>ActorContextBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorContextBuilder.Extensions.cs">
-          <DependentUpon>ActorContextBuilder.cs</DependentUpon>
+            <DependentUpon>ActorContextBuilder.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\Relations\ActorRelationPool.Serialization.cs">
-          <DependentUpon>ActorRelationPool.cs</DependentUpon>
+            <DependentUpon>ActorRelationPool.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\Relations\ActorRelationPool.Enumerator.cs">
-          <DependentUpon>ActorRelationPool.cs</DependentUpon>
+            <DependentUpon>ActorRelationPool.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

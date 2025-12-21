@@ -7,7 +7,11 @@ public sealed partial class ActorFilter<T1, T2, T3>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator()
     {
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             Interlocked.Increment(ref _postponedReadersCount);
         }
@@ -27,7 +31,7 @@ public sealed partial class ActorFilter<T1, T2, T3>
         private readonly ReadOnlySpan<Entry> _entries;
 
         private int _index;
-        
+
         public readonly ActorRef<T1, T2, T3> Current
         {
             get

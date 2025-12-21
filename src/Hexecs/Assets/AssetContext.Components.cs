@@ -5,7 +5,11 @@ namespace Hexecs.Assets;
 public sealed partial class AssetContext
 {
     private IAssetComponentPool?[] _componentPools;
-    private readonly Lock _componentPoolLock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _componentPoolLock = new();
+#else
+    private readonly object _componentPoolLock = new();
+#endif
 
     /// <summary>
     /// Возвращает перечислитель компонентов для указанного ассета.
@@ -57,7 +61,7 @@ public sealed partial class AssetContext
             ? AssetComponentRef<T>.Empty
             : new AssetComponentRef<T>(pool, index);
     }
-    
+
     /// <summary>
     /// Возвращает пул компонентов указанного типа.
     /// </summary>
@@ -88,13 +92,17 @@ public sealed partial class AssetContext
             var existsPool = _componentPools[id];
             if (existsPool != null) return Unsafe.As<AssetComponentPool<T>>(existsPool);
         }
+#if NET9_0_OR_GREATER
+        using (_componentPoolLock.EnterScope())
+#else
+        lock (_componentPoolLock)
+#endif
+        {
+            ArrayUtils.EnsureCapacity(ref _componentPools, id);
+            ref var pool = ref _componentPools[id];
+            pool ??= new AssetComponentPool<T>(this);
 
-        using var locker = _componentPoolLock.EnterScope();
-
-        ArrayUtils.EnsureCapacity(ref _componentPools, id);
-        ref var pool = ref _componentPools[id];
-        pool ??= new AssetComponentPool<T>(this);
-
-        return Unsafe.As<AssetComponentPool<T>>(pool);
+            return Unsafe.As<AssetComponentPool<T>>(pool);
+        }
     }
 }

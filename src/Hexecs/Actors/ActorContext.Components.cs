@@ -6,7 +6,11 @@ namespace Hexecs.Actors;
 public sealed partial class ActorContext
 {
     private IActorComponentPool?[] _componentPools;
-    private readonly Lock _componentPoolLock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _componentPoolLock = new();
+#else
+    private readonly object _componentPoolLock = new();
+#endif
     private readonly IActorComponentConfiguration?[] _componentConfigurations;
 
     /// <summary>
@@ -316,13 +320,18 @@ public sealed partial class ActorContext
             if (existsPool != null) return Unsafe.As<ActorComponentPool<T>>(existsPool);
         }
 
-        using var locker = _componentPoolLock.EnterScope();
+#if NET9_0_OR_GREATER
+        using (_componentPoolLock.EnterScope())
+#else
+        lock (_componentPoolLock)
+#endif
+        {
+            ArrayUtils.EnsureCapacity(ref _componentPools, id);
+            ref var pool = ref _componentPools[id];
+            pool ??= new ActorComponentPool<T>(this, GetOrCreateComponentConfiguration<T>());
 
-        ArrayUtils.EnsureCapacity(ref _componentPools, id);
-        ref var pool = ref _componentPools[id];
-        pool ??= new ActorComponentPool<T>(this, GetOrCreateComponentConfiguration<T>());
-
-        return Unsafe.As<ActorComponentPool<T>>(pool);
+            return Unsafe.As<ActorComponentPool<T>>(pool);
+        }
     }
 
     private ActorComponentConfiguration<T> GetOrCreateComponentConfiguration<T>()

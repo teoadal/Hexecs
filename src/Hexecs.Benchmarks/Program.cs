@@ -1,4 +1,4 @@
 ﻿using BenchmarkDotNet.Running;
-using Hexecs.Benchmarks.Actors;
+using Hexecs.Benchmarks.Collections;
 
-BenchmarkRunner.Run<CreateAddComponentsDestroyBenchmark>();
+BenchmarkRunner.Run<SparsePageDictionaryBenchmark>();

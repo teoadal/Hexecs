@@ -9,7 +9,11 @@ internal sealed class MessageQueue<TMessage> : IMessageQueue<TMessage>
 
     private readonly IMessageHandler<TMessage> _handler;
     private readonly Queue<TMessage> _queue;
-    private readonly Lock _lock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     public MessageQueue(IMessageHandler<TMessage> handler)
     {
@@ -19,39 +23,58 @@ internal sealed class MessageQueue<TMessage> : IMessageQueue<TMessage>
 
         _handler = handler;
         _queue = new Queue<TMessage>(16);
-        _lock = new Lock();
     }
 
     public void Enqueue(in TMessage message)
     {
-        using var locker = _lock.EnterScope();
-
-        _queue.Enqueue(message);
+#if NET9_0_OR_GREATER
+        using (_lock.EnterScope())
+#else
+        lock (_lock)
+#endif
+        {
+            _queue.Enqueue(message);
+        }
     }
 
     public void Execute()
     {
-        using var locker = _lock.EnterScope();
-
-        while (_queue.TryDequeue(out var message))
+#if NET9_0_OR_GREATER
+        using (_lock.EnterScope())
+#else
+        lock (_lock)
+#endif
         {
-            _handler.Handle(in message);
+            while (_queue.TryDequeue(out var message))
+            {
+                _handler.Handle(in message);
+            }
         }
     }
 
     public bool TryEnqueue(in TMessage message)
     {
+#if NET9_0_OR_GREATER
         var result = _lock.TryEnter();
+#else
+        var result = Monitor.TryEnter(_lock);
+#endif
         if (!result) return false;
 
-        try
         {
-            _queue.Enqueue(message);
-            return true;
-        }
-        finally
-        {
-            _lock.Exit();
+            try
+            {
+                _queue.Enqueue(message);
+                return true;
+            }
+            finally
+            {
+#if NET9_0_OR_GREATER
+                _lock.Exit();
+#else
+                Monitor.Exit(_lock);
+#endif
+            }
         }
     }
 }

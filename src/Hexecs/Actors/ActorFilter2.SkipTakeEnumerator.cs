@@ -7,7 +7,11 @@ public sealed partial class ActorFilter<T1, T2>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SkipTakeEnumerator Skip(int skip, int take = int.MaxValue)
     {
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             Interlocked.Increment(ref _postponedReadersCount);
         }

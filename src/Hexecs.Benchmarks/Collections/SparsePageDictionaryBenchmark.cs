@@ -1,5 +1,27 @@
 ﻿namespace Hexecs.Benchmarks.Collections;
 
+// BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
+// Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
+//    .NET SDK 10.0.100
+//    [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//    .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//    | Method                | N    | Mean         | Allocated |
+//    |---------------------- |----- |-------------:|----------:|
+//    | Iterate_Sparse        | 1000 |     509.2 ns |         - |
+//    | Iterate_Dict          | 1000 |   1,062.4 ns |         - |
+//    | Iterate_Sparse_Span   | 1000 |     362.0 ns |         - |
+//    | Contains_Sparse_Hit   | 1000 |   3,184.4 ns |         - |
+//    | Contains_Dict_Hit     | 1000 |   4,950.2 ns |         - |
+//    | Contains_Sparse_Miss  | 1000 |     689.1 ns |         - |
+//    | Contains_Dict_Miss    | 1000 |   4,156.2 ns |         - |
+//    | TryGetValue_Sparse    | 1000 |   5,208.9 ns |         - |
+//    | TryGetValue_Dict      | 1000 |   5,057.5 ns |         - |
+//    | AddRemoveCycle_Sparse | 1000 |  94,951.8 ns |         - |
+//    | AddRemoveCycle_Dict   | 1000 | 155,528.9 ns |         - |
+
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [MeanColumn, MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]

@@ -132,7 +132,15 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <exception cref="Exception">Если уже запущен цикл обновления</exception>
     public void Draw(WorldTime? time = null)
     {
+#if NET9_0_OR_GREATER
         var state = Interlocked.CompareExchange(ref _state, WorldState.Draw, WorldState.None);
+#else
+        var state = (WorldState)Interlocked.CompareExchange(
+            ref Unsafe.As<WorldState, int>(ref _state),
+            (int)WorldState.Draw,
+            (int)WorldState.None);
+#endif
+
         if (state != WorldState.None) WorldError.InvalidState(state);
 
         var now = Environment.TickCount64;
@@ -146,7 +154,13 @@ public sealed class World : IDependencyProvider, IDisposable
 
         _previousDraw = now;
 
+#if NET9_0_OR_GREATER
         Interlocked.Exchange(ref _state, WorldState.None);
+#else
+        Interlocked.Exchange(
+            ref Unsafe.As<WorldState, int>(ref _state),
+            (int)WorldState.None);
+#endif
     }
 
     /// <summary>
@@ -238,7 +252,15 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <exception cref="Exception">Если уже запущен цикл рисования</exception>
     public void Update(WorldTime? time = null)
     {
+#if NET9_0_OR_GREATER
         var state = Interlocked.CompareExchange(ref _state, WorldState.Update, WorldState.None);
+#else
+        var state = (WorldState)Interlocked.CompareExchange(
+            ref Unsafe.As<WorldState, int>(ref _state),
+            (int)WorldState.Update,
+            (int)WorldState.None);
+#endif
+
         if (state != WorldState.None) WorldError.InvalidState(state);
 
         var now = Environment.TickCount64;
@@ -253,7 +275,13 @@ public sealed class World : IDependencyProvider, IDisposable
 
         _previousUpdate = now;
 
+#if NET9_0_OR_GREATER
         Interlocked.Exchange(ref _state, WorldState.None);
+#else
+        Interlocked.Exchange(
+            ref Unsafe.As<WorldState, int>(ref _state),
+            (int)WorldState.None);
+#endif
     }
 
     private ActorContext CreateActorContextImpl(bool isDefault, Action<ActorContextBuilder> context)

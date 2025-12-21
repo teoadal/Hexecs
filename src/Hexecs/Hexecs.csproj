@@ -128,9 +128,6 @@
         <Compile Update="Actors\ActorContext.Systems.cs">
             <DependentUpon>ActorContext.cs</DependentUpon>
         </Compile>
-        <Compile Update="Actors\ActorFilter1.Entry.cs">
-            <DependentUpon>ActorFilter1.cs</DependentUpon>
-        </Compile>
         <Compile Update="Actors\ActorFilter1.Dictionary.cs">
             <DependentUpon>ActorFilter1.cs</DependentUpon>
         </Compile>

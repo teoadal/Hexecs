@@ -35,7 +35,7 @@ public readonly struct Actor : IEquatable<Actor>
     public bool Alive
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Context?.ActorAlive(Id) ?? false;
+        get => Context != null && Context.ActorAlive(Id);
     }
 
     /// <summary>

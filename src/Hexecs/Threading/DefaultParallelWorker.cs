@@ -14,7 +14,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
         int degreeOfParallelism,
         ThreadPriority priority = ThreadPriority.AboveNormal)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(degreeOfParallelism, 1);
+        if (degreeOfParallelism < 2) ThreadingError.WrongDegreeOfParallelism();
 
         DegreeOfParallelism = degreeOfParallelism;
 
@@ -78,7 +78,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
     private void ExecuteWorker(int workerIndex)
     {
-        var workerCount = _workers.Length;
+        var lastWorkerIndex = _workers.Length - 1;
 
         try
         {
@@ -89,7 +89,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
                 if (_disposed) return;
 
-                _job?.Execute(workerIndex, workerCount);
+                _job?.Execute(workerIndex, lastWorkerIndex);
 
                 // Сообщаем о завершении фазы
                 _barrier.SignalAndWait();

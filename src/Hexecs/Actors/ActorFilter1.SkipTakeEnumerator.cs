@@ -17,6 +17,15 @@ public sealed partial class ActorFilter<T1>
 
     public ref struct SkipTakeEnumerator
     {
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1> _filter;
+        private readonly ActorComponentPool<T1> _pool1;
+
+        private readonly ReadOnlySpan<uint> _keys;
+        private readonly ReadOnlySpan<int> _entries;
+
+        private int _index;
+        
         public readonly ActorRef<T1> Current
         {
             get
@@ -27,7 +36,7 @@ public sealed partial class ActorFilter<T1>
                 return new ActorRef<T1>(
                     _context,
                     _keys[index],
-                    ref _pool1.GetByIndex(entry.Index1));
+                    ref _pool1.GetByIndex(entry));
             }
         }
 
@@ -36,15 +45,6 @@ public sealed partial class ActorFilter<T1>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _filter.Length;
         }
-
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1> _filter;
-        private readonly ActorComponentPool<T1> _pool1;
-
-        private readonly ReadOnlySpan<uint> _keys;
-        private readonly ReadOnlySpan<Entry> _entries;
-
-        private int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal SkipTakeEnumerator(ActorFilter<T1> filter, int skip, int take = int.MaxValue)

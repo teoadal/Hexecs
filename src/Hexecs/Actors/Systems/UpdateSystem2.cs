@@ -9,18 +9,27 @@ public abstract class UpdateSystem<T1, T2> : UpdateSystem, IParallelJob
 {
     public readonly ActorFilter<T1, T2> Filter;
 
-    private WorldTime _currentTime;
     private readonly IParallelWorker? _parallelWorker;
+
+    private readonly int _degreeOfParallelism;
+    private int _currentBatchSize;
+    private int _currentLength;
+    private WorldTime _currentTime;
 
     protected UpdateSystem(
         ActorContext context,
         Action<ActorConstraint.Builder>? constraint = null,
         IParallelWorker? parallelWorker = null) : base(context)
     {
-        _parallelWorker = parallelWorker;
         Filter = constraint == null
             ? context.Filter<T1, T2>()
             : context.Filter<T1, T2>(constraint);
+
+        if (parallelWorker != null)
+        {
+            _parallelWorker = parallelWorker;
+            _degreeOfParallelism = parallelWorker.DegreeOfParallelism;
+        }
     }
 
     protected virtual void AfterUpdate(in WorldTime time)
@@ -33,37 +42,51 @@ public abstract class UpdateSystem<T1, T2> : UpdateSystem, IParallelJob
 
     public sealed override void Update(in WorldTime time)
     {
-        if (!Enabled) return;
-
-        BeforeUpdate(in time);
-
-        if (_parallelWorker == null)
+        if (Enabled)
         {
-            foreach (var actor in Filter)
+            var length = Filter.Length;
+            if (length > 0)
             {
-                Update(in actor, time);
+                BeforeUpdate(in time);
+
+                if (_parallelWorker == null)
+                {
+                    foreach (var actor in Filter)
+                    {
+                        Update(in actor, in time);
+                    }
+                }
+                else
+                {
+                    _currentTime = time;
+                    _currentLength = length;
+                    _currentBatchSize = length / _degreeOfParallelism;
+                    _parallelWorker.Run(this);
+                }
+
+                AfterUpdate(in time);
             }
         }
-        else
-        {
-            _currentTime = time;
-            _parallelWorker.Run(this);
-        }
-
-        AfterUpdate(in time);
     }
 
     protected abstract void Update(in ActorRef<T1, T2> actor, in WorldTime time);
 
     void IParallelJob.Execute(int workerIndex, int workerCount)
     {
-        var batchSize = Filter.Length / _parallelWorker!.DegreeOfParallelism;
-        var skip = workerIndex * batchSize;
-        var batch = Filter.Skip(skip, batchSize);
-
-        foreach (var actor in batch)
+        var start = workerIndex * _currentBatchSize;
+        var length = _currentLength;
+        
+        if ((uint)start < (uint)length)
         {
-            Update(in actor, _currentTime);
+            var batch = workerIndex == workerCount
+                ? Filter.Skip(start)
+                : Filter.Skip(start, _currentBatchSize);
+
+            ref readonly var currentTime = ref _currentTime;
+            foreach (var actor in batch)
+            {
+                Update(in actor, in currentTime);
+            }
         }
     }
 

@@ -14,7 +14,7 @@ public sealed partial class ActorFilter<T1>
 
     private uint[]?[] _sparsePages;
     private uint[] _dense;
-    private Entry[] _values;
+    private int[] _values;
     private int _count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,9 +41,9 @@ public sealed partial class ActorFilter<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool ContainsEntry(uint key)
+    private bool ContainsEntry(uint actorId)
     {
-        var pageIndex = (int)(key >> PageBits);
+        var pageIndex = (int)(actorId >> PageBits);
         var pages = _sparsePages;
 
         if ((uint)pageIndex < (uint)pages.Length)
@@ -51,8 +51,8 @@ public sealed partial class ActorFilter<T1>
             var page = pages[pageIndex];
             if (page != null)
             {
-                var denseIndexPlusOne = page[key & PageMask];
-                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == key;
+                var denseIndexPlusOne = page[actorId & PageMask];
+                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == actorId;
             }
         }
 
@@ -60,9 +60,9 @@ public sealed partial class ActorFilter<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref Entry GetEntryRef(uint actorId)
+    private ref int GetEntryRef(uint actorId)
     {
-        var pageIndex = (int)(actorId >> PageBits);
+        var pageIndex = actorId >> PageBits;
         if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
             var page = _sparsePages[pageIndex];
@@ -80,7 +80,7 @@ public sealed partial class ActorFilter<T1>
             }
         }
 
-        return ref Unsafe.NullRef<Entry>();
+        return ref Unsafe.NullRef<int>();
     }
 
     private bool RemoveEntry(uint actorId)
@@ -136,11 +136,11 @@ public sealed partial class ActorFilter<T1>
                     var idx = (uint)_count;
                     slot = idx + 1;
                     _dense[idx] = actorId;
-                    _values[idx] = new Entry(index1);
+                    _values[idx] = index1;
                     _count++;
-                    
+
                     Added?.Invoke(actorId);
-                    
+
                     return true;
                 }
 
@@ -175,11 +175,11 @@ public sealed partial class ActorFilter<T1>
         var denseIndex = (uint)_count;
         denseIndexPlusOne = denseIndex + 1;
         _dense[denseIndex] = actorId;
-        _values[denseIndex] = new Entry(index1);
+        _values[denseIndex] = index1;
         _count++;
-        
+
         Added?.Invoke(actorId);
-        
+
         return true;
     }
 

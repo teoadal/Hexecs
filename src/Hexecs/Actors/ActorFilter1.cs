@@ -30,7 +30,7 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
         _sparsePages = new uint[16][];
         _dense = new uint[capacity];
-        _values = new Entry[capacity];
+        _values = new int[capacity];
 
         _postponedUpdates = new Queue<Operation>(capacity);
         _postponedReadersCount = 0;
@@ -104,7 +104,7 @@ public sealed partial class ActorFilter<T1> : IActorFilter
         return new ActorRef<T1>(
             Context,
             actorId,
-            ref _pool1.GetByIndex(entry.Index1));
+            ref _pool1.GetByIndex(entry));
     }
 
     public ActorRef<T1> GetRef(ActorPredicate<T1> predicate)

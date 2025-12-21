@@ -67,6 +67,8 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
     {
         length ??= RandomInt(10, 100);
 
+        if (length is 0) return [];
+
         var actors = new Actor[length.Value];
         for (var i = 0; i < actors.Length; i++)
         {
@@ -82,6 +84,8 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
         where T2 : struct, IActorComponent
     {
         length ??= RandomInt(10, 100);
+
+        if (length is 0) return [];
 
         var actors = new Actor[length.Value];
         for (var i = 0; i < actors.Length; i++)
@@ -102,6 +106,8 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
         where T3 : struct, IActorComponent
     {
         length ??= RandomInt(10, 100);
+
+        if (length is 0) return [];
 
         var actors = new Actor[length.Value];
         for (var i = 0; i < actors.Length; i++)

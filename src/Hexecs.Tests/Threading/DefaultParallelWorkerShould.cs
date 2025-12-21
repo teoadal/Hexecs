@@ -5,17 +5,17 @@ using Hexecs.Worlds;
 
 namespace Hexecs.Tests.Threading;
 
-public sealed class DefaultParallelWorkerShould: IDisposable
+public sealed class DefaultParallelWorkerShould : IDisposable
 {
     private readonly ActorContext _context;
-    private readonly World _world; 
+    private readonly World _world;
 
     public DefaultParallelWorkerShould()
     {
         _world = new WorldBuilder().Build();
         _context = _world.Actors;
     }
-    
+
     [Fact(DisplayName = "Должен корректно выполнять параллельную работу")]
     public void ExecuteParallelJobCorrectly()
     {
@@ -40,7 +40,8 @@ public sealed class DefaultParallelWorkerShould: IDisposable
         using var worker = new DefaultParallelWorker(degreeOfParallelism);
 
         var executionCounts = new int[degreeOfParallelism];
-        var job = new TestParallelJob(_context, (workerIndex, _) => { Interlocked.Increment(ref executionCounts[workerIndex]); });
+        var job = new TestParallelJob(_context,
+            (workerIndex, _) => { Interlocked.Increment(ref executionCounts[workerIndex]); });
 
         worker.Run(job);
 
@@ -126,7 +127,7 @@ public sealed class DefaultParallelWorkerShould: IDisposable
         worker.Run(job);
 
         Assert.Equal(degreeOfParallelism, indices.Count);
-        Assert.All(counts, count => Assert.Equal(degreeOfParallelism, count));
+        Assert.All(counts, count => Assert.Equal(degreeOfParallelism - 1, count));
         Assert.Equal(Enumerable.Range(0, degreeOfParallelism).OrderBy(x => x), indices.OrderBy(x => x));
     }
 
@@ -146,24 +147,6 @@ public sealed class DefaultParallelWorkerShould: IDisposable
         // После Dispose воркер не должен использоваться
         // Проверяем, что потоки завершились
         Assert.True(true); // Если Dispose зависнет, тест провалится по таймауту
-    }
-
-    [Fact(DisplayName = "Должен корректно работать с DegreeOfParallelism = 1")]
-    public void WorkWithSingleWorker()
-    {
-        using var worker = new DefaultParallelWorker(1);
-
-        var counter = 0;
-        var job = new TestParallelJob(_context, (workerIndex, workerCount) =>
-        {
-            Assert.Equal(0, workerIndex);
-            Assert.Equal(1, workerCount);
-            Interlocked.Increment(ref counter);
-        });
-
-        worker.Run(job);
-
-        Assert.Equal(1, counter);
     }
 
     [Fact(DisplayName = "Должен корректно работать в игровом цикле")]
@@ -193,6 +176,12 @@ public sealed class DefaultParallelWorkerShould: IDisposable
         Assert.Equal(frameCount * 4, totalExecutions);
     }
 
+    [Fact(DisplayName = "НЕ должен работать с DegreeOfParallelism < 2")]
+    public void ThrowIfDegreeOfParallelismIsOne()
+    {
+        Assert.Throws<ArgumentException>(() => new DefaultParallelWorker(1));
+    }
+
     private sealed class TestParallelJob : IParallelJob
     {
         public ActorContext Context { get; }
@@ -210,6 +199,7 @@ public sealed class DefaultParallelWorkerShould: IDisposable
             _action(workerIndex, workerCount);
         }
     }
+
 
     public void Dispose()
     {

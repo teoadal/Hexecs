@@ -129,6 +129,7 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
 
         if (typeof(T) == typeof(Attack)) result = new Attack { Value = RandomInt() };
         if (typeof(T) == typeof(Defence)) result = new Defence { Value = RandomInt() };
+        if (typeof(T) == typeof(Description)) result = new Description { Name = RandomString(10) };
         if (typeof(T) == typeof(Speed)) result = new Speed { Value = RandomInt() };
 
         return result == null

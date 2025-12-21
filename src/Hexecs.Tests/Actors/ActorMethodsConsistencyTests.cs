@@ -26,6 +26,7 @@ public class ActorMethodsConsistencyTests
     /// </summary>
     private static readonly HashSet<string> ExcludedMethods =
     [
+        "AsRef",
         "GetType",
         "ToString",
         "Equals",

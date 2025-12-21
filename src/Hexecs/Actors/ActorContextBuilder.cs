@@ -437,6 +437,19 @@ public sealed partial class ActorContextBuilder
     /// <summary>
     /// Регистрирует систему параллельного обновления актёров с максимальным порядком выполнения.
     /// </summary>
+    /// <param name="parallelSystems">Множество систем, которые будут выполняться параллельно</param>
+    public ActorContextBuilder CreateParallelUpdateSystem(IEnumerable<IUpdateSystem> parallelSystems)
+    {
+        var builder = new ParallelSystemBuilder(int.MaxValue);
+        builder.Add(parallelSystems);
+
+        _updateSystems.Add(new Entry<IUpdateSystem>(builder.Build()));
+        return this;
+    }
+
+    /// <summary>
+    /// Регистрирует систему параллельного обновления актёров.
+    /// </summary>
     /// <param name="parallelSystem">Действие для конфигурации параллельной системы.</param>
     public ActorContextBuilder CreateParallelUpdateSystem(Action<ParallelSystemBuilder> parallelSystem)
     {

@@ -5,7 +5,7 @@ using Hexecs.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Hexecs.Benchmarks.MonoGame;
+namespace Hexecs.Benchmarks.MonoGame.Systems;
 
 public sealed class RenderSystem : DrawSystem
 {

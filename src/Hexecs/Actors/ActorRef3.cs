@@ -11,16 +11,30 @@ public readonly ref struct ActorRef<T1, T2, T3>
     where T2 : struct, IActorComponent
     where T3 : struct, IActorComponent
 {
+    /// <summary>
+    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
+    /// </summary>
+    public readonly ActorContext Context;
+
+    private readonly ref T1 _component1;
+    private readonly ref T2 _component2;
+    private readonly ref T3 _component3;
+
+    /// <summary>
+    /// Уникальный идентификатор актёра.
+    /// </summary>
+    public readonly uint Id;
+
     public static ActorRef<T1, T2, T3> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, Actor.EmptyId, ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>(), ref Unsafe.NullRef<T3>());
+        get => default;
     }
 
     public bool Alive
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Context?.ActorAlive(Id) ?? false;
+        get => Context != null && Context.ActorAlive(Id);
     }
 
     public ref T1 Component1
@@ -46,20 +60,6 @@ public readonly ref struct ActorRef<T1, T2, T3>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Context == null;
     }
-
-    /// <summary>
-    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
-    /// </summary>
-    public readonly ActorContext Context;
-
-    private readonly ref T1 _component1;
-    private readonly ref T2 _component2;
-    private readonly ref T3 _component3;
-
-    /// <summary>
-    /// Уникальный идентификатор актёра.
-    /// </summary>
-    public readonly uint Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ActorRef(ActorContext context, uint id, ref T1 component1, ref T2 component2, ref T3 component3)
@@ -170,7 +170,7 @@ public readonly ref struct ActorRef<T1, T2, T3>
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorRef<T1, T2, T3> other) => Id == other.Id && ReferenceEquals(Context, other.Context);
+    public bool Equals(ActorRef<T1, T2, T3> other) => Id == other.Id && Context == other.Context;
 
     public override bool Equals(object? obj) => obj is Actor other && Id == other.Id;
 

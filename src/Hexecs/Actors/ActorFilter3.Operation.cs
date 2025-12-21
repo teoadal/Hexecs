@@ -2,22 +2,11 @@ namespace Hexecs.Actors;
 
 public sealed partial class ActorFilter<T1, T2, T3>
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     private readonly struct Operation
     {
         private const int ClearFlag = -1;
         private const int RemoveFlag = -2;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Add(uint id, int index1, int index2, int index3)
-        {
-            return new Operation(id, index1, index2, index3);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Clear() => new(0, ClearFlag, 0, 0);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Remove(uint id) => new(id, RemoveFlag, 0, 0);
 
         public readonly uint Id;
         public readonly int Index1;
@@ -41,6 +30,15 @@ public sealed partial class ActorFilter<T1, T2, T3>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Index1 == RemoveFlag;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Operation Add(uint id, int index1, int index2, int index3) => new(id, index1, index2, index3);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Operation Clear() => new(0, ClearFlag, 0, 0);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Operation Remove(uint id) => new(id, RemoveFlag, 0, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Operation(uint id, int index1, int index2, int index3)

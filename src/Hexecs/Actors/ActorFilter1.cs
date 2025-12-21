@@ -17,7 +17,11 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
     private readonly Queue<Operation> _postponedUpdates;
     private int _postponedReadersCount;
-    private readonly Lock _postponedSyncLock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _postponedSyncLock = new();
+#else
+    private readonly object _postponedSyncLock = new();
+#endif
 
     private readonly ActorComponentPool<T1> _pool1;
 
@@ -30,11 +34,10 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
         _sparsePages = new uint[16][];
         _dense = new uint[capacity];
-        _values = new Entry[capacity];
+        _values = new int[capacity];
 
         _postponedUpdates = new Queue<Operation>(capacity);
         _postponedReadersCount = 0;
-        _postponedSyncLock = new Lock();
 
         if (constraint != null)
         {
@@ -81,9 +84,9 @@ public sealed partial class ActorFilter<T1> : IActorFilter
     {
         if (_disposed) return;
         _disposed = true;
-        
+
         ClearEntries();
-        
+
         if (Constraint != null)
         {
             Constraint.Added -= OnAdded;
@@ -104,7 +107,7 @@ public sealed partial class ActorFilter<T1> : IActorFilter
         return new ActorRef<T1>(
             Context,
             actorId,
-            ref _pool1.GetByIndex(entry.Index1));
+            ref _pool1.GetByIndex(entry));
     }
 
     public ActorRef<T1> GetRef(ActorPredicate<T1> predicate)
@@ -120,7 +123,11 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
     public Actor[] ToArray()
     {
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             Interlocked.Increment(ref _postponedReadersCount);
         }
@@ -177,10 +184,16 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
-            using var locker = _postponedSyncLock.EnterScope();
-            if (Volatile.Read(ref _postponedReadersCount) == 0)
+#if NET9_0_OR_GREATER
+            using (_postponedSyncLock.EnterScope())
+#else
+            lock (_postponedSyncLock)
+#endif
             {
-                AddEntry(actorId, index1);
+                if (Volatile.Read(ref _postponedReadersCount) == 0)
+                {
+                    AddEntry(actorId, index1);
+                }
             }
         }
         else
@@ -194,7 +207,11 @@ public sealed partial class ActorFilter<T1> : IActorFilter
         if (Interlocked.Decrement(ref _postponedReadersCount) > 0) return;
 
         var isClear = false;
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             if (Volatile.Read(ref _postponedReadersCount) > 0) return;
 
@@ -226,10 +243,16 @@ public sealed partial class ActorFilter<T1> : IActorFilter
     {
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
-            using var locker = _postponedSyncLock.EnterScope();
-            if (Volatile.Read(ref _postponedReadersCount) == 0)
+#if NET9_0_OR_GREATER
+            using (_postponedSyncLock.EnterScope())
+#else
+            lock (_postponedSyncLock)
+#endif
             {
-                RemoveEntry(actorId);
+                if (Volatile.Read(ref _postponedReadersCount) == 0)
+                {
+                    RemoveEntry(actorId);
+                }
             }
         }
         else

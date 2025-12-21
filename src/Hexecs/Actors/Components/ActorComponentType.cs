@@ -3,8 +3,11 @@
 internal static class ActorComponentType
 {
     private static readonly Dictionary<Type, ushort> ComponentTypes = new(128, ReferenceComparer<Type>.Instance);
+#if NET9_0_OR_GREATER
     private static readonly Lock LockObj = new();
-
+#else
+    private static readonly object LockObj = new();
+#endif
     private static ushort _nextId;
 
     /// <summary>
@@ -14,14 +17,19 @@ internal static class ActorComponentType
     /// <returns>Уникальный идентификатор типа компонента</returns>
     public static ushort GetId(Type type)
     {
-        using var locker = LockObj.EnterScope();
+#if NET9_0_OR_GREATER
+        using (LockObj.EnterScope())
+#else
+        lock (LockObj)
+#endif
+        {
+            if (ComponentTypes.TryGetValue(type, out var exists)) return exists;
 
-        if (ComponentTypes.TryGetValue(type, out var exists)) return exists;
+            var componentTypeId = _nextId++;
+            ComponentTypes[type] = componentTypeId;
 
-        var componentTypeId = _nextId++;
-        ComponentTypes[type] = componentTypeId;
-
-        return componentTypeId;
+            return componentTypeId;
+        }
     }
 
     /// <summary>
@@ -32,15 +40,20 @@ internal static class ActorComponentType
     /// <exception cref="Exception">Выбрасывается, если компонент с указанным идентификатором не найден</exception>
     public static Type GetType(ushort id)
     {
-        using var locker = LockObj.EnterScope();
-
-        foreach (var (type, existsId) in ComponentTypes)
+#if NET9_0_OR_GREATER
+        using (LockObj.EnterScope())
+#else
+        lock (LockObj)
+#endif
         {
-            if (existsId == id) return type;
-        }
+            foreach (var (type, existsId) in ComponentTypes)
+            {
+                if (existsId == id) return type;
+            }
 
-        ActorError.ComponentTypeNotFound(id);
-        return null;
+            ActorError.ComponentTypeNotFound(id);
+            return null;
+        }
     }
 }
 

@@ -2,67 +2,55 @@
 
 /// <summary>
 /// Структура, представляющая время в игровом мире.
+/// Оптимизирована для AOT и минимального footprint в памяти.
 /// </summary>
-/// <remarks>
-/// Содержит информацию о текущем цикле, прошедшем и общем времени.
-/// </remarks>
-public readonly struct WorldTime
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public readonly struct WorldTime(int cycle, long elapsedTicks, long totalTicks)
 {
-    /// <summary>
-    /// Возвращает нулевое (начальное) значение времени мира.
-    /// </summary>
     public static WorldTime Zero
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(0, TimeSpan.Zero, TimeSpan.Zero);
+        get => default;
     }
+    
+    private const float TicksToSeconds = 1f / TimeSpan.TicksPerSecond;
 
-    public float DeltaTime
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (float)Elapsed.TotalSeconds;
-    }
+    /// <summary>
+    /// Общее количество тактов с момента создания мира.
+    /// </summary>
+    public readonly long TotalTicks = totalTicks;
+
+    /// <summary>
+    /// Количество тактов, прошедших с момента последнего обновления.
+    /// </summary>
+    public readonly long ElapsedTicks = elapsedTicks;
+
+    /// <summary>
+    /// Время кадра в секундах. Кэшировано для производительности.
+    /// </summary>
+    public readonly float DeltaTime = elapsedTicks * TicksToSeconds;
 
     /// <summary>
     /// Текущий цикл обновления мира.
     /// </summary>
-    public readonly int Cycle;
+    public readonly int Cycle = cycle;
 
-    /// <summary>
-    /// Время, прошедшее с момента последнего обновления.
-    /// </summary>
-    public readonly TimeSpan Elapsed;
-
-    /// <summary>
-    /// Общее время с момента создания мира.
-    /// </summary>
-    public readonly TimeSpan Total;
-
-    /// <summary>
-    /// Инициализирует новый экземпляр структуры WorldTime с указанными значениями.
-    /// </summary>
-    /// <param name="cycle">Номер текущего цикла обновления.</param>
-    /// <param name="elapsed">Время, прошедшее с момента последнего обновления.</param>
-    /// <param name="total">Общее время с момента создания мира.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public WorldTime(int cycle, TimeSpan elapsed, TimeSpan total)
+    public TimeSpan Elapsed
     {
-        Cycle = cycle;
-        Elapsed = elapsed;
-        Total = total;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => TimeSpan.FromTicks(ElapsedTicks);
     }
 
-    /// <summary>
-    /// Инициализирует новый экземпляр структуры WorldTime с указанными значениями.
-    /// </summary>
-    /// <param name="cycle">Номер текущего цикла обновления.</param>
-    /// <param name="elapsedTicks">Количество тактов, прошедших с момента последнего обновления.</param>
-    /// <param name="totalTicks">Общее количество тактов с момента создания мира.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public WorldTime(int cycle, long elapsedTicks, long totalTicks)
+    public TimeSpan Total
     {
-        Cycle = cycle;
-        Elapsed = TimeSpan.FromTicks(elapsedTicks);
-        Total = TimeSpan.FromTicks(totalTicks);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => TimeSpan.FromTicks(TotalTicks);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public WorldTime(int cycle, TimeSpan elapsed, TimeSpan total)
+        : this(cycle, elapsed.Ticks, total.Ticks)
+    {
     }
 }

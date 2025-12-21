@@ -79,14 +79,12 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         _messageGroups = FrozenDictionary<string, MessageQueueGroup>.Empty;
 
         _componentPools = new IActorComponentPool?[32];
-        _componentPoolLock = new Lock();
         _componentConfigurations = componentConfigurations;
 
         _filters = new Dictionary<Type, IActorFilter>(8, ReferenceComparer<Type>.Instance);
         _filtersWithConstraint = new List<IActorFilter>(8);
 
         _relationPools = new IActorRelationPool?[32];
-        _relationPoolLock = new Lock();
 
         _freeIds = new ThreadLocalStack<uint>(capacity);
         _nextActorId = 0;
@@ -173,6 +171,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Actor CreateActor(uint? expectedId = null)
     {
+        if (expectedId == Actor.EmptyId) ActorError.WrongId();
         var actorId = expectedId ?? GetNextActorId();
 
         AddEntry(actorId);
@@ -215,7 +214,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         _filtersWithConstraint.Clear();
 
         _freeIds.Dispose();
-        
+
         _dependencyProvider.Dispose();
     }
 

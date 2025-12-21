@@ -10,16 +10,29 @@ public readonly ref struct ActorRef<T1, T2>
     where T1 : struct, IActorComponent
     where T2 : struct, IActorComponent
 {
+    /// <summary>
+    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
+    /// </summary>
+    public readonly ActorContext Context;
+
+    private readonly ref T1 _component1;
+    private readonly ref T2 _component2;
+
+    /// <summary>
+    /// Уникальный идентификатор актёра.
+    /// </summary>
+    public readonly uint Id;
+
     public static ActorRef<T1, T2> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, Actor.EmptyId, ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>());
+        get => default;
     }
 
     public bool Alive
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Context?.ActorAlive(Id) ?? false;
+        get => Context != null && Context.ActorAlive(Id);
     }
 
     public ref T1 Component1
@@ -39,19 +52,6 @@ public readonly ref struct ActorRef<T1, T2>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Context == null;
     }
-
-    /// <summary>
-    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
-    /// </summary>
-    public readonly ActorContext Context;
-
-    private readonly ref T1 _component1;
-    private readonly ref T2 _component2;
-
-    /// <summary>
-    /// Уникальный идентификатор актёра.
-    /// </summary>
-    public readonly uint Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ActorRef(ActorContext context, uint id, ref T1 component1, ref T2 component2)
@@ -161,7 +161,7 @@ public readonly ref struct ActorRef<T1, T2>
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorRef<T1, T2> other) => Id == other.Id && ReferenceEquals(Context, other.Context);
+    public bool Equals(ActorRef<T1, T2> other) => Id == other.Id && Context == other.Context;
 
     public override bool Equals(object? obj) => obj is Actor other && Id == other.Id;
 
@@ -179,7 +179,6 @@ public readonly ref struct ActorRef<T1, T2>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator bool(in ActorRef<T1, T2> actor) => !actor.IsEmpty;
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ActorId(in ActorRef<T1, T2> actor) => new(actor.Id);

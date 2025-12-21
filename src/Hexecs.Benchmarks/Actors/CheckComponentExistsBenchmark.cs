@@ -5,12 +5,21 @@ using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
 
-// componentPool
-//    | Method    | Mean     | Ratio | Allocated | Alloc Ratio |
-//    |---------- |---------:|------:|----------:|------------:|
-//    | Has       | 602.0 us |  1.00 |         - |          NA |
-//    | Is        | 627.3 us |  1.04 |         - |          NA |
-//    | Reference | 697.3 us |  1.16 |         - |          NA |
+// BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
+// Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
+//    .NET SDK 10.0.100
+//    [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//    .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//    | Method           | Mean     | Ratio | Allocated | Alloc Ratio |
+//    |----------------- |---------:|------:|----------:|------------:|
+//    | Hexecs_Is        | 307.7 us |  0.90 |         - |          NA |
+//    | Hexecs_Has       | 342.4 us |  1.00 |         - |          NA |
+//    | Hexecs_Reference | 380.7 us |  1.11 |         - |          NA |
+//    | DefaultEcs_Has   | 713.7 us |  2.08 |         - |          NA |
+
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
@@ -94,7 +103,7 @@ public class CheckComponentExistsBenchmark
     {
         _defaultWorld.Dispose();
         _defaultWorld = null!;
-        
+
         _world.Dispose();
         _world = null!;
     }

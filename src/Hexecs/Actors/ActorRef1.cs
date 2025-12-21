@@ -18,12 +18,27 @@ public readonly ref struct ActorRef<T1>
     where T1 : struct, IActorComponent
 {
     /// <summary>
+    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
+    /// </summary>
+    public readonly ActorContext Context;
+
+    /// <summary>
+    /// Ссылка на первый компонент актёра.
+    /// </summary>
+    private readonly ref T1 _component1;
+
+    /// <summary>
+    /// Уникальный идентификатор актёра.
+    /// </summary>
+    public readonly uint Id;
+    
+    /// <summary>
     /// Пустая ссылка на актёра, используемая по умолчанию.
     /// </summary>
     public static ActorRef<T1> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, Actor.EmptyId, ref Unsafe.NullRef<T1>());
+        get => default;
     }
 
     /// <summary>
@@ -32,7 +47,7 @@ public readonly ref struct ActorRef<T1>
     public bool Alive
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Context?.ActorAlive(Id) ?? false;
+        get => Context != null && Context.ActorAlive(Id);
     }
 
     /// <summary>
@@ -52,21 +67,6 @@ public readonly ref struct ActorRef<T1>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Context == null;
     }
-
-    /// <summary>
-    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
-    /// </summary>
-    public readonly ActorContext Context;
-
-    /// <summary>
-    /// Ссылка на первый компонент актёра.
-    /// </summary>
-    private readonly ref T1 _component1;
-
-    /// <summary>
-    /// Уникальный идентификатор актёра.
-    /// </summary>
-    public readonly uint Id;
 
     /// <summary>
     /// Внутренний конструктор для создания ссылки на актёра.
@@ -349,7 +349,7 @@ public readonly ref struct ActorRef<T1>
     /// <param name="other">Ссылка на актёра для сравнения.</param>
     /// <returns>Возвращает true, если ссылки на актёров равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorRef<T1> other) => Id == other.Id && ReferenceEquals(Context, other.Context);
+    public bool Equals(ActorRef<T1> other) => Id == other.Id && Context == other.Context;
 
     /// <summary>
     /// Проверяет равенство с другим объектом.

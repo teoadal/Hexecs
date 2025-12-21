@@ -16,13 +16,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ClCompile Include="Instancing.fx" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="Content\Instancing.mgfx">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ClCompile Include="Content\Instancing.fx" />
     </ItemGroup>
 
 </Project>

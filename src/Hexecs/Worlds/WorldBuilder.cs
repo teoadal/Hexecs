@@ -143,8 +143,8 @@ public sealed class WorldBuilder : IDependencyCollection
 
     public WorldBuilder DefaultParallelWorker(int? degreeOfParallelism = null)
     {
-        degreeOfParallelism ??= Environment.ProcessorCount;
-        return DefaultParallelWorker(new DefaultParallelWorker(degreeOfParallelism.Value));
+        var value = degreeOfParallelism ?? Environment.ProcessorCount;
+        return DefaultParallelWorker(new DefaultParallelWorker(value));
     }
 
     public WorldBuilder DefaultParallelWorker(IParallelWorker worker)

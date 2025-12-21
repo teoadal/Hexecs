@@ -1,6 +1,4 @@
-﻿using Hexecs.Actors;
-
-namespace Hexecs.Threading;
+﻿namespace Hexecs.Threading;
 
 public sealed class DefaultParallelWorker : IParallelWorker
 {
@@ -13,10 +11,10 @@ public sealed class DefaultParallelWorker : IParallelWorker
     private volatile bool _disposed;
 
     public DefaultParallelWorker(
-        int degreeOfParallelism, 
+        int degreeOfParallelism,
         ThreadPriority priority = ThreadPriority.AboveNormal)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(degreeOfParallelism, 1);
+        if (degreeOfParallelism < 2) ThreadingError.WrongDegreeOfParallelism();
 
         DegreeOfParallelism = degreeOfParallelism;
 
@@ -74,11 +72,13 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
         // Фаза завершения: ждём всех воркеров
         _barrier.SignalAndWait();
+
+        _job = null;
     }
 
     private void ExecuteWorker(int workerIndex)
     {
-        var workerCount = _workers.Length;
+        var lastWorkerIndex = _workers.Length - 1;
 
         try
         {
@@ -89,7 +89,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
                 if (_disposed) return;
 
-                _job?.Execute(workerIndex, workerCount);
+                _job?.Execute(workerIndex, lastWorkerIndex);
 
                 // Сообщаем о завершении фазы
                 _barrier.SignalAndWait();

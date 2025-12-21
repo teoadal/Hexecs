@@ -56,7 +56,7 @@ internal static class ActorError
         throw new Exception($"Actor component pool for {TypeOf.GetTypeName(componentType)} already configured");
     }
 
-    
+
     /// <summary>
     /// Генерирует исключение, когда тип компонента актёра с указанным идентификатором не найден.
     /// </summary>
@@ -130,7 +130,7 @@ internal static class ActorError
     {
         throw new Exception($"Draw system {TypeOf<T>.GetTypeName()} isn't found");
     }
-    
+
     /// <summary>
     /// Генерирует исключение, когда система указанного типа не найдена.
     /// </summary>
@@ -180,7 +180,7 @@ internal static class ActorError
     {
         throw new ArgumentException($"Type {TypeOf.GetTypeName(componentType)} isn't a actor component type");
     }
-    
+
     /// <summary>
     /// Генерирует исключение, когда актёр с указанным компонентом не единственный.
     /// </summary>
@@ -202,7 +202,7 @@ internal static class ActorError
     {
         throw new Exception($"Actor '{subject}' already has relation {TypeOf<T>.GetTypeName()} with '{relative}'");
     }
-    
+
     /// <summary>
     /// Генерирует исключение, когда у актёра отсутствует связь указанного типа с другим актёром.
     /// </summary>
@@ -254,5 +254,11 @@ internal static class ActorError
     public static void ValueNotFound(string name, Type type)
     {
         throw new Exception($"Value '{name}' (type {TypeOf.GetTypeName(type)}) isn't found");
+    }
+
+    [DoesNotReturn]
+    public static void WrongId()
+    {
+        throw new Exception("Wrong actor id");
     }
 }

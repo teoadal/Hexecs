@@ -23,6 +23,16 @@ public readonly struct Actor<T1> : IEquatable<Actor<T1>>
     private const uint EmptyId = 0;
 
     /// <summary>
+    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
+    /// </summary>
+    public readonly ActorContext Context;
+
+    /// <summary>
+    /// Уникальный идентификатор актёра.
+    /// </summary>
+    public readonly uint Id;
+    
+    /// <summary>
     /// Пустой актёр, используемый по умолчанию.
     /// </summary>
     public static Actor<T1> Empty
@@ -37,7 +47,7 @@ public readonly struct Actor<T1> : IEquatable<Actor<T1>>
     public bool Alive
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Context?.ActorAlive(Id) ?? false;
+        get => Context != null && Context.ActorAlive(Id);
     }
 
     /// <summary>
@@ -57,16 +67,6 @@ public readonly struct Actor<T1> : IEquatable<Actor<T1>>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Context == null;
     }
-
-    /// <summary>
-    /// Контекст актёра, управляющий его жизненным циклом и взаимодействием с компонентами.
-    /// </summary>
-    public readonly ActorContext Context;
-
-    /// <summary>
-    /// Уникальный идентификатор актёра.
-    /// </summary>
-    public readonly uint Id;
 
     /// <summary>
     /// Внутренний конструктор для создания актёра.

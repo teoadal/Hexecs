@@ -21,7 +21,6 @@ public sealed partial class AssetContext : IEnumerable<Asset>
         _entries = new Dictionary<uint, Entry>(HashHelper.GetPrime(capacity));
 
         _componentPools = new IAssetComponentPool?[16];
-        _componentPoolLock = new Lock();
 
         _filters = new Dictionary<Type, IAssetFilter>(8, ReferenceComparer<Type>.Instance);
         _filtersWithConstraint = new List<IAssetFilter>(8);
@@ -210,7 +209,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>
         if (printMore) builder.Append(", ...");
         builder.Append(')');
     }
-    
+
     /// <summary>
     /// Пытается получить типизированный ассет с указанным идентификатором.
     /// </summary>

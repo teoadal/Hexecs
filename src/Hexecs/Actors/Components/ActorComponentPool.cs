@@ -162,6 +162,9 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     public ref T GetByIndex(int index) => ref _values[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> GetValues() => _values.AsSpan(0, _count);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(uint ownerId) => ContainsEntry(ownerId);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -19,13 +19,17 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
     private readonly ConcurrentQueue<Operation> _postponedUpdates;
     private int _postponedReadersCount;
-    private readonly Lock _postponedSyncLock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _postponedSyncLock = new();
+#else
+    private readonly object _postponedSyncLock = new();
+#endif
 
     private readonly ActorComponentPool<T1> _pool1;
     private readonly ActorComponentPool<T2> _pool2;
 
     private bool _disposed;
-    
+
     internal ActorFilter(ActorContext context, ActorConstraint? constraint = null, int capacity = 16)
     {
         Constraint = constraint;
@@ -37,7 +41,6 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
         _postponedUpdates = new ConcurrentQueue<Operation>();
         _postponedReadersCount = 0;
-        _postponedSyncLock = new Lock();
 
         if (constraint != null)
         {
@@ -93,9 +96,9 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     {
         if (_disposed) return;
         _disposed = true;
-        
+
         ClearEntries();
-        
+
         if (Constraint != null)
         {
             Constraint.Added -= OnAdded;
@@ -109,7 +112,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
         Context.Cleared -= OnCleared;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActorRef<T1, T2> GetRef(uint actorId)
     {
@@ -136,7 +139,11 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
     public Actor[] ToArray()
     {
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             Interlocked.Increment(ref _postponedReadersCount);
         }
@@ -194,12 +201,18 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     {
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
-            using var locker = _postponedSyncLock.EnterScope();
-            if (_postponedReadersCount == 0)
+#if NET9_0_OR_GREATER
+            using (_postponedSyncLock.EnterScope())
+#else
+            lock (_postponedSyncLock)
+#endif
             {
-                ClearEntries();
-                Cleared?.Invoke();
-                return;
+                if (_postponedReadersCount == 0)
+                {
+                    ClearEntries();
+                    Cleared?.Invoke();
+                    return;
+                }
             }
         }
 
@@ -218,10 +231,16 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
-            using var locker = _postponedSyncLock.EnterScope();
-            if (Volatile.Read(ref _postponedReadersCount) == 0)
+#if NET9_0_OR_GREATER
+            using (_postponedSyncLock.EnterScope())
+#else
+            lock (_postponedSyncLock)
+#endif
             {
-                AddEntry(actorId, index1, index2);
+                if (Volatile.Read(ref _postponedReadersCount) == 0)
+                {
+                    AddEntry(actorId, index1, index2);
+                }
             }
         }
         else
@@ -235,7 +254,11 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         if (Interlocked.Decrement(ref _postponedReadersCount) > 0) return;
 
         var isClear = false;
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             if (Volatile.Read(ref _postponedReadersCount) > 0) return;
 
@@ -266,10 +289,16 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     {
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
-            using var locker = _postponedSyncLock.EnterScope();
-            if (Volatile.Read(ref _postponedReadersCount) == 0)
+#if NET9_0_OR_GREATER
+            using (_postponedSyncLock.EnterScope())
+#else
+            lock (_postponedSyncLock)
+#endif
             {
-                RemoveEntry(actorId);
+                if (Volatile.Read(ref _postponedReadersCount) == 0)
+                {
+                    RemoveEntry(actorId);
+                }
             }
         }
         else

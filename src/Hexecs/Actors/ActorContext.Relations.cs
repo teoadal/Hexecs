@@ -5,7 +5,11 @@ namespace Hexecs.Actors;
 public sealed partial class ActorContext
 {
     private IActorRelationPool?[] _relationPools;
-    private readonly Lock _relationPoolLock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _relationPoolLock = new();
+#else
+    private readonly object _relationPoolLock = new();
+#endif
 
     /// <summary>
     /// Добавляет отношение указанного типа между двумя актёрами.
@@ -145,12 +149,17 @@ public sealed partial class ActorContext
             if (existsPool != null) return Unsafe.As<ActorRelationPool<T>>(existsPool);
         }
 
-        using var locker = _relationPoolLock.EnterScope();
+#if NET9_0_OR_GREATER
+        using (_relationPoolLock.EnterScope())
+#else
+        lock (_relationPoolLock)
+#endif
+        {
+            ArrayUtils.EnsureCapacity(ref _relationPools, relationId);
+            ref var pool = ref _relationPools[relationId];
+            pool ??= new ActorRelationPool<T>(this);
 
-        ArrayUtils.EnsureCapacity(ref _relationPools, relationId);
-        ref var pool = ref _relationPools[relationId];
-        pool ??= new ActorRelationPool<T>(this);
-
-        return Unsafe.As<ActorRelationPool<T>>(pool);
+            return Unsafe.As<ActorRelationPool<T>>(pool);
+        }
     }
 }

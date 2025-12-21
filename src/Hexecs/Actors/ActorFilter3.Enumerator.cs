@@ -7,7 +7,11 @@ public sealed partial class ActorFilter<T1, T2, T3>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator()
     {
+#if NET9_0_OR_GREATER
         using (_postponedSyncLock.EnterScope())
+#else
+        lock (_postponedSyncLock)
+#endif
         {
             Interlocked.Increment(ref _postponedReadersCount);
         }
@@ -17,6 +21,17 @@ public sealed partial class ActorFilter<T1, T2, T3>
 
     public ref struct Enumerator
     {
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1, T2, T3> _filter;
+        private readonly ActorComponentPool<T1> _pool1;
+        private readonly ActorComponentPool<T2> _pool2;
+        private readonly ActorComponentPool<T3> _pool3;
+
+        private readonly ReadOnlySpan<uint> _keys;
+        private readonly ReadOnlySpan<Entry> _entries;
+
+        private int _index;
+
         public readonly ActorRef<T1, T2, T3> Current
         {
             get
@@ -38,17 +53,6 @@ public sealed partial class ActorFilter<T1, T2, T3>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _keys.Length;
         }
-
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1, T2, T3> _filter;
-        private readonly ActorComponentPool<T1> _pool1;
-        private readonly ActorComponentPool<T2> _pool2;
-        private readonly ActorComponentPool<T3> _pool3;
-
-        private readonly ReadOnlySpan<uint> _keys;
-        private readonly ReadOnlySpan<Entry> _entries;
-
-        private int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal Enumerator(ActorFilter<T1, T2, T3> filter)

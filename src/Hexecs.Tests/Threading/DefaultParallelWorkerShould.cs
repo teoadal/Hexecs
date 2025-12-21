@@ -200,7 +200,6 @@ public sealed class DefaultParallelWorkerShould : IDisposable
         }
     }
 
-
     public void Dispose()
     {
         _world.Dispose();

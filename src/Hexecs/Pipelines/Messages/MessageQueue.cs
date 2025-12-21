@@ -61,20 +61,18 @@ internal sealed class MessageQueue<TMessage> : IMessageQueue<TMessage>
 #endif
         if (!result) return false;
 
+        try
         {
-            try
-            {
-                _queue.Enqueue(message);
-                return true;
-            }
-            finally
-            {
+            _queue.Enqueue(message);
+            return true;
+        }
+        finally
+        {
 #if NET9_0_OR_GREATER
-                _lock.Exit();
+            _lock.Exit();
 #else
                 Monitor.Exit(_lock);
 #endif
-            }
         }
     }
 }

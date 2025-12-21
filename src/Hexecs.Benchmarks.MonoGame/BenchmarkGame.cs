@@ -144,7 +144,6 @@ public class BenchmarkGame : Game
             if (_secondsCounter >= 1)
             {
                 var alloc = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
-                ;
                 count = _entitiesCountFilter?.Length ?? 0;
                 Window.Title =
                     $"FPS: {_fps} | Avg FPS: {_avgFps:F1} | Entities: {count:N0} | Frame Time: {_frameTime:F2}ms | Alloc: {alloc:F2}Mb";

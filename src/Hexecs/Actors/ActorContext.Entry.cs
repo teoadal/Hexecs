@@ -27,7 +27,7 @@ public sealed partial class ActorContext
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal struct ComponentBucket()
     {
-        public const int InlineArraySize = 6;
+        public const int InlineArraySize = 6; // Чтобы структура Entry занимала 32 байта 
 
         public int Length
         {

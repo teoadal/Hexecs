@@ -6,7 +6,7 @@ using Hexecs.Threading;
 using Hexecs.Worlds;
 using Microsoft.Xna.Framework;
 
-namespace Hexecs.Benchmarks.MonoGame;
+namespace Hexecs.Benchmarks.MonoGame.Systems;
 
 public sealed class MovementSystem(
     ActorContext context,

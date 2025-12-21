@@ -1,5 +1,6 @@
 using Hexecs.Actors;
 using Hexecs.Benchmarks.MonoGame.Components;
+using Hexecs.Benchmarks.MonoGame.Systems;
 using Hexecs.Dependencies;
 using Hexecs.Threading;
 using Hexecs.Worlds;
@@ -31,7 +32,7 @@ public class BenchmarkGame : Game
     private double _avgFps;
 
 
-    private const int InitialEntityCount = 2_100_000;
+    private const int InitialEntityCount = 1_000_000;
     private const int MaxEntityCount = 3_000_000;
 
     public BenchmarkGame()
@@ -143,8 +144,9 @@ public class BenchmarkGame : Game
 
             if (_secondsCounter >= 1)
             {
+                var alloc  = GC.GetTotalMemory(false) / 1024.0 / 1024.0;;
                 count = _entitiesCountFilter?.Length ?? 0;
-                Window.Title = $"FPS: {_fps} | Avg FPS: {_avgFps:F1} | Entities: {count:N0} | Frame Time: {_frameTime:F2}ms";
+                Window.Title = $"FPS: {_fps} | Avg FPS: {_avgFps:F1} | Entities: {count:N0} | Frame Time: {_frameTime:F2}ms | Alloc: {alloc:F2}Mb";
 
                 _secondsCounter = 0;
             }

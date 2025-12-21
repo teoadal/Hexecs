@@ -67,6 +67,6 @@ public abstract class UpdateSystem<T1, T2, T3> : UpdateSystem, IParallelJob
             Update(in actor, _currentTime);
         }
     }
-    
+
     ActorContext IParallelJob.Context => Context;
 }

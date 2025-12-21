@@ -3,10 +3,29 @@ using Hexecs.Worlds;
 
 namespace Hexecs.Benchmarks.Actors;
 
+// BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
+// Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
+//    .NET SDK 10.0.100
+//    [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//    .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//    | Method                      | Count  | Mean         | Ratio | Gen0     | Allocated  | Alloc Ratio |
+//    |---------------------------- |------- |-------------:|------:|---------:|-----------:|------------:|
+//    | DefaultEcs_CreateAddDestroy | 1000   |     411.8 us |  0.72 |   1.4648 |    32000 B |          NA |
+//    | Hexecs_CreateAddDestroy     | 1000   |     574.8 us |  1.00 |        - |          - |          NA |
+//    |                             |        |              |       |          |            |             |
+//    | Hexecs_CreateAddDestroy     | 100000 |  76,251.7 us |  1.00 |        - |       40 B |        1.00 |
+//    | DefaultEcs_CreateAddDestroy | 100000 |  90,755.1 us |  1.19 | 166.6667 |  3200040 B |   80,001.00 |
+//    |                             |        |              |       |          |            |             |
+//    | DefaultEcs_CreateAddDestroy | 500000 | 470,864.8 us |  0.86 |        - | 16000040 B |  400,001.00 |
+//    | Hexecs_CreateAddDestroy     | 500000 | 548,102.0 us |  1.00 |        - |       40 B |        1.00 |
+
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
-[HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
+[HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 public class CreateAddComponentsDestroyBenchmark
 {
     [Params(1_000, 100_000, 500_000)] public int Count;

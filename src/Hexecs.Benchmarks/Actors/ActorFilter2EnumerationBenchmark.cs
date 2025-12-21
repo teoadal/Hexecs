@@ -19,7 +19,7 @@ namespace Hexecs.Benchmarks.Actors;
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
-[HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
+[HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 public class ActorFilter2EnumerationBenchmark
 {
     private const int Count = 100_000;

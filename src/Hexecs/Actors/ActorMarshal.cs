@@ -11,6 +11,19 @@ namespace Hexecs.Actors;
 public static class ActorMarshal
 {
     /// <summary>
+    /// Удаляет данные компонентов (не сами компоненты).
+    /// Фактически заменяет значение компонентов на default.
+    /// </summary>
+    /// <param name="context">Контекст компонентов.</param>
+    /// <typeparam name="T">Тип компонента</typeparam>
+    public static void ClearComponentsData<T>(ActorContext context)
+        where T : struct, IActorComponent
+    {
+        var pool = context.GetComponentPool<T>();
+        pool?.GetValues().Clear();
+    }
+    
+    /// <summary>
     /// Получает идентификатор типа компонента.
     /// </summary>
     /// <typeparam name="T">Тип компонента актёра.</typeparam>

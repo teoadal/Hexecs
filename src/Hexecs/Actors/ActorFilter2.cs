@@ -92,6 +92,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     public void Dispose()
     {
         if (_disposed) return;
+        _disposed = true;
         
         ClearEntries();
         

@@ -157,7 +157,7 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     public override int GetHashCode() => _hash;
 
     #endregion
-    
+
     /// <summary>
     /// Освобождает ресурсы, используемые экземпляром ActorConstraint.
     /// </summary>

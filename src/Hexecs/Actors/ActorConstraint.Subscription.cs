@@ -29,7 +29,7 @@ public sealed partial class ActorConstraint
         /// Флаг, указывающий, является ли подписка включающей (true) или исключающей (false).
         /// </summary>
         private readonly bool _include;
-        
+
         /// <summary>
         /// Пул компонентов, на события которого подписывается ограничение.
         /// </summary>
@@ -108,7 +108,8 @@ public sealed partial class ActorConstraint
         /// </summary>
         /// <param name="other">Подписка для сравнения</param>
         /// <returns>Возвращает true, если подписки равны; иначе false</returns>
-        public bool Equals(Subscription other) => _include == other._include && _pool.Id.Equals(other._pool.Id);
+        public bool Equals(Subscription other) => _include == other._include && 
+                                                  _pool.Id == other._pool.Id;
 
         /// <summary>
         /// Определяет, равен ли указанный объект текущей подписке.
@@ -121,7 +122,7 @@ public sealed partial class ActorConstraint
         /// Возвращает хеш-код для текущей подписки.
         /// </summary>
         /// <returns>Хеш-код</returns>
-        public override int GetHashCode() => HashCode.Combine(Check, _include ? 2 : 3);
+        public override int GetHashCode() => HashCode.Combine(_pool.Id, _include ? 2 : 3);
 
         #endregion
     }

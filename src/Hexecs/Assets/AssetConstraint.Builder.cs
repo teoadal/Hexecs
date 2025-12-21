@@ -96,7 +96,7 @@ public sealed partial class AssetConstraint
             var hash = 1;
 
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var subscription in _subscriptions)
+            foreach (var subscription in _subscriptions.AsSpan(0, _length))
             {
                 hash = HashCode.Combine(hash, subscription.GetHashCode());
             }

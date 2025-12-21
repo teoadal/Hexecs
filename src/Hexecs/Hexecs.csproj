@@ -9,7 +9,6 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
@@ -36,7 +35,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -233,13 +232,13 @@
             <DependentUpon>ActorRelationPool.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorFilter3.SkipTakeEnumerator.cs">
-          <DependentUpon>ActorFilter3.cs</DependentUpon>
+            <DependentUpon>ActorFilter3.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorFilter2.SkipTakeEnumerator.cs">
-          <DependentUpon>ActorFilter2.cs</DependentUpon>
+            <DependentUpon>ActorFilter2.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorFilter1.SkipTakeEnumerator.cs">
-          <DependentUpon>ActorFilter1.cs</DependentUpon>
+            <DependentUpon>ActorFilter1.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

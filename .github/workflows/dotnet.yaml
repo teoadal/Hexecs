@@ -37,6 +37,9 @@ jobs:
   benchmark:
     runs-on: ubuntu-latest
     needs: build-and-test
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -47,26 +50,38 @@ jobs:
 
       - name: Run Benchmarks
         run: |
-          mkdir -p ./BenchmarkArtifacts
+          # Создаем абсолютный путь для артефактов в корне репозитория
+          mkdir -p ${{ github.workspace }}/bench-results
           
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join --job LowRuntime --artifacts ./BenchmarkArtifacts
+            dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join --job LowRuntime --artifacts ${{ github.workspace }}/bench-results
           else
-            dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join --artifacts ./BenchmarkArtifacts
+            dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join --artifacts ${{ github.workspace }}/bench-results
           fi
 
-      - name: List results
-        run: ls -R ./BenchmarkArtifacts
+      - name: Locate Result File
+        run: |
+          # Находим созданный JSON (BenchmarkDotNet может положить его в подпапку results)
+          echo "Searching for benchmark results in ${{ github.workspace }}/bench-results..."
+          REPORT_FILE=$(find ${{ github.workspace }}/bench-results -name "*.json" | head -n 1)
+          
+          if [ -z "$REPORT_FILE" ]; then
+            echo "Error: No benchmark report found!"
+            exit 1
+          fi
+          
+          echo "Found report: $REPORT_FILE"
+          # Копируем его в фиксированное место для следующего шага
+          cp "$REPORT_FILE" ${{ github.workspace }}/final-report.json
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'benchmarkdotnet'
-          # BenchmarkDotNet при --join создает файл с именем '*-report-full.json' или 'BenchmarkRun-report.json'
-          output-file-path: './BenchmarkArtifacts/results/BenchmarkRun-report.json'
+          output-file-path: './final-report.json'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Пушим графики в gh-pages только при мердже в мастер
           auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
           comment-on-alert: true
           fail-on-alert: true
-          # Порог чувствительности: 120% (запас на шум облака)
           alert-threshold: "120%"

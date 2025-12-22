@@ -39,38 +39,44 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
     public void AssetFilterShouldEnumerable()
     {
         // arrange 
-        var expectedIds = new List<uint>();
+        var expectedIds = new Dictionary<uint, CarAsset>();
 
         var (context, world) = fixture.CreateAssetContext(loader =>
         {
-            for (int i = 0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
-                var asset = loader.CreateAsset(new CarAsset(i, i));
-                expectedIds.Add(asset.Id);
+                var component = new CarAsset(i, i);
+                var asset = loader.CreateAsset(component);
+
+                expectedIds.Add(asset.Id, component);
             }
         });
 
         // act
 
         var filter = context.Filter<CarAsset>();
+
+        // assert
+
         var actualIds = new List<uint>();
         foreach (var asset in filter)
         {
             actualIds.Add(asset.Id);
+            asset
+                .Component1
+                .Should().Be(expectedIds[asset.Id]);
         }
-
-        // assert
 
         filter.Length
             .Should().Be(expectedIds.Count);
-        
+
         actualIds
             .Should()
             .HaveCount(expectedIds.Count);
 
         actualIds
             .Should()
-            .Contain(expectedIds);
+            .Contain(expectedIds.Keys);
 
         world.Dispose();
     }

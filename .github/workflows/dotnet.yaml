@@ -47,6 +47,8 @@ jobs:
 
       - name: Run Benchmarks
         run: |
+          mkdir -p ./BenchmarkArtifacts
+          
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join --job LowRuntime --artifacts ./BenchmarkArtifacts
           else

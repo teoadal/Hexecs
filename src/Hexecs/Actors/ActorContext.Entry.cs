@@ -5,7 +5,6 @@ namespace Hexecs.Actors;
 
 public sealed partial class ActorContext
 {
-    [StructLayout(LayoutKind.Sequential)]
     private struct Entry
     {
         public uint Key;
@@ -27,7 +26,7 @@ public sealed partial class ActorContext
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal struct ComponentBucket()
     {
-        public const int InlineArraySize = 6; // Чтобы структура Entry занимала 32 байта 
+        public const int InlineArraySize = 6;
 
         public int Length
         {

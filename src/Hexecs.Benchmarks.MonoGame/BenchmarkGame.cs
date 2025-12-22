@@ -66,7 +66,10 @@ public class BenchmarkGame : Game
         _world = new WorldBuilder()
             .DefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
             .DefaultActorContext(builder => builder
-                // Передаем зависимости явно через фабрику или DI
+                .Capacity(InitialEntityCount)
+                .ConfigureComponentPool<CircleColor>(color => color.Capacity(InitialEntityCount))
+                .ConfigureComponentPool<Position>(position => position.Capacity(InitialEntityCount))
+                .ConfigureComponentPool<Velocity>(velocity => velocity.Capacity(InitialEntityCount))
                 .CreateUpdateSystem(ctx =>
                     new MovementSystem(ctx, ctx.GetRequiredService<IParallelWorker>(), width, height))
                 .CreateDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2)))

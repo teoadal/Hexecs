@@ -25,7 +25,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd ./src/Hexecs.Tests/
-          dotnet test -c Release --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
+          dotnet test -c Release --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover /p:Exclude="[*Tests*]*|[*Benchmarks*]*|[*Demo*]*"
       - name: Publish coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.dotnet-version == '10.0.x'
         uses: codecov/codecov-action@v3

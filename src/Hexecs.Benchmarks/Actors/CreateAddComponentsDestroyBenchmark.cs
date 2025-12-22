@@ -26,6 +26,9 @@ namespace Hexecs.Benchmarks.Actors;
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
+[JsonExporterAttribute.Full]
+[JsonExporterAttribute.FullCompressed]
+[BenchmarkCategory("Actors")]
 public class CreateAddComponentsDestroyBenchmark
 {
     [Params(1_000, 100_000, 500_000)] 

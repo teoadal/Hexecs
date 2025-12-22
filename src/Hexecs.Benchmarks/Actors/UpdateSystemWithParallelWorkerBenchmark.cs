@@ -23,6 +23,9 @@ namespace Hexecs.Benchmarks.Actors;
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
+[JsonExporterAttribute.Full]
+[JsonExporterAttribute.FullCompressed]
+[BenchmarkCategory("Actors")]
 public class UpdateSystemWithParallelWorkerBenchmark
 {
     [Params(100_000, 1_000_000)] 

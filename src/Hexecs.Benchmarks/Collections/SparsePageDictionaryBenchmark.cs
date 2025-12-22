@@ -25,6 +25,9 @@
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [MeanColumn, MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
+[JsonExporterAttribute.Full]
+[JsonExporterAttribute.FullCompressed]
+[BenchmarkCategory("Collections")]
 public class SparsePageDictionaryBenchmark
 {
     private SparsePageDictionary<int> _sparse = null!;

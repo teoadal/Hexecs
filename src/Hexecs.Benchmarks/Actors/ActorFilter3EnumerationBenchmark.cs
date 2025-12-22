@@ -21,6 +21,9 @@ namespace Hexecs.Benchmarks.Actors;
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
+[JsonExporterAttribute.Full]
+[JsonExporterAttribute.FullCompressed]
+[BenchmarkCategory("Actors")]
 public class ActorFilter3EnumerationBenchmark
 {
     [Params(10_000, 100_000)]

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using Hexecs.Collections;
 
 namespace Hexecs.Benchmarks.Collections;
@@ -21,6 +22,9 @@ namespace Hexecs.Benchmarks.Collections;
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
+[JsonExporterAttribute.Full]
+[JsonExporterAttribute.FullCompressed]
+[BenchmarkCategory("Collections")]
 public class ThreadLocalStackBenchmark
 {
     [Params(10_000)] 

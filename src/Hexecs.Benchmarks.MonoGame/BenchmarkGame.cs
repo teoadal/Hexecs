@@ -48,10 +48,12 @@ public class BenchmarkGame : Game
         };
 
         // Включаем поддержку сглаживания для устройства
-        _graphics.PreparingDeviceSettings += (sender, e) =>
+        _graphics.PreparingDeviceSettings += (_, e) =>
         {
             e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = 8; // 8x MSAA
         };
+
+        _graphics.ApplyChanges();
 
         IsFixedTimeStep = false;
     }
@@ -87,15 +89,18 @@ public class BenchmarkGame : Game
     }
 
 
-    private void SpawnEntity()
+    private void SpawnEntity(CircleColor? color = null)
     {
         var actor = _context.CreateActor();
-        actor.Add(new Position(new Vector2(_random.Next(_graphics.PreferredBackBufferWidth),
-            _random.Next(_graphics.PreferredBackBufferHeight))));
-        actor.Add(new Velocity(new Vector2((float)(_random.NextDouble() * 200 - 100),
-            (float)(_random.NextDouble() * 200 - 100))));
-        actor.Add(new CircleColor(new Color((byte)_random.Next(256), (byte)_random.Next(256), (byte)_random.Next(256),
-            (byte)255)));
+        actor.Add(Position.Create(
+            x: _graphics.PreferredBackBufferWidth / 2, 
+            y: _graphics.PreferredBackBufferHeight / 2));
+        
+        actor.Add(Velocity.Create(
+            x: (float)(_random.NextDouble() * 200 - 100),
+            y: (float)(_random.NextDouble() * 200 - 100)));
+        
+        actor.Add(color ?? CircleColor.CreateRgba(_random));
     }
 
     protected override void Update(GameTime gameTime)
@@ -105,6 +110,7 @@ public class BenchmarkGame : Game
         var keyboard = Keyboard.GetState();
         if (keyboard.IsKeyDown(Keys.Space))
         {
+            var color = CircleColor.CreateRgba(_random);
             for (var i = 0; i < 50; i++)
             {
                 if (count >= MaxEntityCount)
@@ -112,7 +118,7 @@ public class BenchmarkGame : Game
                     break;
                 }
 
-                SpawnEntity();
+                SpawnEntity(color);
             }
         }
 
@@ -160,7 +166,7 @@ public class BenchmarkGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.Black);
+        GraphicsDevice.Clear(Color.White);
 
         _world.Draw(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 

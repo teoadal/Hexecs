@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Hexecs.Actors;
 using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.MonoGame.Components;

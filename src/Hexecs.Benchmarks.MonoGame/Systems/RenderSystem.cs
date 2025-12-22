@@ -70,7 +70,6 @@ public sealed class RenderSystem : DrawSystem
             if (i >= _hostBuffer.Length) break;
 
             ref var data = ref _hostBuffer[i];
-            // Позиция + масштаб (3.0f)
             data.PositionScale = new Vector4(actor.Component1.Value.X, actor.Component1.Value.Y, 4.0f, 0f);
             data.Color = actor.Component2.Value;
             i++;

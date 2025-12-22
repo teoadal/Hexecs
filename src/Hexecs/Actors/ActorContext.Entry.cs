@@ -26,7 +26,7 @@ public sealed partial class ActorContext
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal struct ComponentBucket()
     {
-        public const int InlineArraySize = 10;
+        public const int InlineArraySize = 6;
 
         public int Length
         {
@@ -35,8 +35,8 @@ public sealed partial class ActorContext
         }
 
         private InlineItemArray _inlineArray;
-        private ushort[] _array = [];
         private int _length = 0;
+        private ushort[] _array = [];
 
         public void Add(ushort item)
         {

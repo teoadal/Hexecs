@@ -4,7 +4,7 @@ namespace Hexecs.Actors;
 
 [DebuggerDisplay("Length = {Length}")]
 public sealed class ActorDictionary<TKey, T> : IDisposable
-    where TKey : struct, IEquatable<TKey>
+    where TKey : IEquatable<TKey>
     where T : struct, IActorComponent
 {
     public event Action<uint>? Added;

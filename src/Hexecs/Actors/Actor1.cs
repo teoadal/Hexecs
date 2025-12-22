@@ -31,7 +31,7 @@ public readonly struct Actor<T1> : IEquatable<Actor<T1>>
     /// Уникальный идентификатор актёра.
     /// </summary>
     public readonly uint Id;
-    
+
     /// <summary>
     /// Пустой актёр, используемый по умолчанию.
     /// </summary>
@@ -119,6 +119,14 @@ public readonly struct Actor<T1> : IEquatable<Actor<T1>>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Actor<T> As<T>() where T : struct, IActorComponent => Context.GetActor<T>(Id);
+
+    /// <summary>
+    /// Преобразует актёра в ссылку на типизированного актёра.
+    /// </summary>
+    /// <returns>Ссылка на типизированного актёра.</returns>
+    /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ActorRef<T1> AsRef() => new(Context, Id, ref Context.GetComponent<T1>(Id));
 
     /// <summary>
     /// Преобразует актёра в ссылку на типизированного актёра.

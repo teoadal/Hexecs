@@ -16,7 +16,7 @@ public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<
         using var world = new WorldBuilder()
             .DefaultParallelWorker(degreeOfParallelism: 4)
             .DefaultActorContext(cfg => cfg
-                .CreateParallelUpdateSystem(parallel => parallel.Add(systems.Select(mock => mock.Object))))
+                .CreateParallelUpdateSystem(systems.Select(mock => mock.Object)))
             .Build();
 
         world.Update();

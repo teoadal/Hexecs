@@ -35,7 +35,8 @@ public class SparsePageDictionaryBenchmark
     private uint[] _lookupKeys = null!;
     private uint[] _missingKeys = null!;
 
-    [Params(1_000)] public int N;
+    [Params(500)] 
+    public int N;
 
     [GlobalSetup]
     public void Setup()

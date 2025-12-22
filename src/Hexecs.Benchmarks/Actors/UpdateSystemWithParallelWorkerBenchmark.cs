@@ -25,7 +25,8 @@ namespace Hexecs.Benchmarks.Actors;
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 public class UpdateSystemWithParallelWorkerBenchmark
 {
-    private const int Count = 2_000_000;
+    [Params(100_000, 1_000_000)] 
+    public int Count;
 
     private DefaultEcs.World _defaultWorld = null!;
     private DefaultEcsParallelSystem _defaultSystem = null!;

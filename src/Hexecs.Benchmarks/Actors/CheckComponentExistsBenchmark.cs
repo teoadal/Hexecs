@@ -26,7 +26,8 @@ namespace Hexecs.Benchmarks.Actors;
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
 public class CheckComponentExistsBenchmark
 {
-    private const int Count = 100_000;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorContext _context = null!;
     private DefaultEcs.World _defaultWorld = null!;

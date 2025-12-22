@@ -23,7 +23,9 @@ namespace Hexecs.Benchmarks.Collections;
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
 public class ThreadLocalStackBenchmark
 {
-    private const int Count = 100_000;
+    [Params(10_000)] 
+    public int Count = 10_000;
+
     private const int ThreadCount = 4;
 
     private ConcurrentStack<uint> _concurrentStack = null!;
@@ -34,10 +36,10 @@ public class ThreadLocalStackBenchmark
     [Benchmark(Baseline = true)]
     public int ThreadLocalStack_Parallel()
     {
+        var opsPerThread = Count / ThreadCount;
         var result = 0;
         Parallel.For(0, ThreadCount, _ =>
         {
-            const int opsPerThread = Count / ThreadCount;
             for (var i = 0; i < opsPerThread; i++)
             {
                 if (_threadLocalStack.TryPop(out var id))
@@ -53,10 +55,10 @@ public class ThreadLocalStackBenchmark
     [Benchmark]
     public int ConcurrentStack_Parallel()
     {
+        var opsPerThread = Count / ThreadCount;
         var result = 0;
         Parallel.For(0, ThreadCount, _ =>
         {
-            const int opsPerThread = Count / ThreadCount;
             for (var i = 0; i < opsPerThread; i++)
             {
                 if (_concurrentStack.TryPop(out var id))
@@ -72,10 +74,10 @@ public class ThreadLocalStackBenchmark
     [Benchmark]
     public int LockedStack_Parallel()
     {
+        var opsPerThread = Count / ThreadCount;
         var result = 0;
         Parallel.For(0, ThreadCount, _ =>
         {
-            const int opsPerThread = Count / ThreadCount;
             for (var i = 0; i < opsPerThread; i++)
             {
                 if (TryPopLocked(out var id))
@@ -103,7 +105,7 @@ public class ThreadLocalStackBenchmark
             _threadLocalStack.Push(i);
         }
     }
-    
+
     [GlobalCleanup]
     public void Cleanup()
     {

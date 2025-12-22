@@ -28,7 +28,8 @@ namespace Hexecs.Benchmarks.Actors;
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 public class CreateAddComponentsDestroyBenchmark
 {
-    [Params(1_000, 100_000, 500_000)] public int Count;
+    [Params(1_000, 100_000, 500_000)] 
+    public int Count;
 
     private List<DefaultEcs.EntitySet> _defaultSets = null!;
     private List<DefaultEcs.Entity> _defaultEntities = null!;

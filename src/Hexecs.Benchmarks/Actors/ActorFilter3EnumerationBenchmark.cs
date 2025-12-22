@@ -23,7 +23,8 @@ namespace Hexecs.Benchmarks.Actors;
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 public class ActorFilter3EnumerationBenchmark
 {
-    private const int Count = 100_000;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorFilter<Attack, Defence, Speed> _filter = null!;
     private World _world = null!;

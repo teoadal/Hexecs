@@ -5,29 +5,63 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
-  build:
-
+  build-and-test:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
-        dotnet-version: [ '8.0.x', '9.0.x', '10.0.x' ]
+        dotnet-version: [ '10.0.x' ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-      - name: Build with dotnet
+
+      - name: Build
         run: dotnet build -c Release
-      - name: Run tests with coverage
+
+      - name: Run Tests
         run: |
-          cd ./src/Hexecs.Tests/
           dotnet test -c Release --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
+
       - name: Publish coverage report
-        if: matrix.os == 'ubuntu-latest' && matrix.dotnet-version == '10.0.x'
-        uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run Benchmarks
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join --job LowRuntime
+          else
+            dotnet run -c Release --project ./src/Hexecs.Benchmarks/ -- --filter '*' --exporters json --join
+          fi
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'benchmarkdotnet'
+          # BenchmarkDotNet при --join создает файл с именем '*-report-full.json' или 'BenchmarkRun-report.json'
+          output-file-path: 'BenchmarkDotNet.Artifacts/results/BenchmarkRun-report.json'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          comment-on-alert: true
+          fail-on-alert: true
+          # Порог чувствительности: 120% (запас на шум облака)
+          alert-threshold: "120%"

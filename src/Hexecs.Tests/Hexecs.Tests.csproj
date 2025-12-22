@@ -3,6 +3,9 @@
     <PropertyGroup>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <CollectCoverage>true</CollectCoverage>
+        <CoverletOutputFormat>opencover</CoverletOutputFormat>
+        <Exclude>[*Tests*]*,[*Benchmarks*]*,[*Demo*]*</Exclude>
     </PropertyGroup>
 
     <ItemGroup>

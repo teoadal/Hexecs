@@ -8,7 +8,7 @@ public interface IAssetComponentPool
     
     ushort Id { get; }
 
-    IAssetComponent Get(uint ownerId);
+    IAssetComponent Get(uint assetId);
 
-    bool Has(uint ownerId);
+    bool Has(uint assetId);
 }

@@ -12,6 +12,7 @@ public sealed partial class AssetContext
 
     private ref Entry AddEntry(uint id)
     {
+        if (id == Asset.EmptyId) AssetError.InvalidId();
         ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_entries, id, out var exists);
         if (exists) AssetError.AlreadyExists(id);
         return ref entry;

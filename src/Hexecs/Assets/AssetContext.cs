@@ -76,7 +76,14 @@ public sealed partial class AssetContext : IEnumerable<Asset>
         where T1 : struct, IAssetComponent
     {
         var pool = GetComponentPool<T1>();
-        if (pool is { Length: > 0 }) return pool.First();
+        if (pool != null)
+        {
+            var firstId = pool.FirstId();
+            if (firstId != Asset.EmptyId)
+            {
+                return new Asset<T1>(this, firstId);
+            }
+        }
 
         AssetError.NotFound<T1>();
         return Asset<T1>.Empty;
@@ -92,8 +99,6 @@ public sealed partial class AssetContext : IEnumerable<Asset>
     public Asset<T1> GetAsset<T1>(uint assetId)
         where T1 : struct, IAssetComponent
     {
-        Debug.Assert(ExistsAsset(assetId), $"Asset {assetId} isn't found");
-
         var pool = GetComponentPool<T1>();
         if (pool == null || !pool.Has(assetId)) AssetError.ComponentNotFound<T1>(assetId);
 

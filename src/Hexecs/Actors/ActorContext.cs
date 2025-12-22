@@ -171,7 +171,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Actor CreateActor(uint? expectedId = null)
     {
-        if (expectedId == Actor.EmptyId) ActorError.WrongId();
+        if (expectedId == Actor.EmptyId) ActorError.InvalidId();
         var actorId = expectedId ?? GetNextActorId();
 
         AddEntry(actorId);

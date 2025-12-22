@@ -42,6 +42,25 @@ public sealed partial class AssetFilter<T1> : IAssetFilter
             ref _pool1.GetByIndex(entry.Index1));
     }
 
+    public Asset[] ToArray()
+    {
+        var dictionary = _dictionary;
+
+        var count = dictionary.Count;
+        if (count == 0) return [];
+
+        var assets = new Asset[count];
+        var ctx = Context;
+
+        var index = 0;
+        foreach (var assetId in dictionary.Keys)
+        {
+            assets[index++] = new Asset(ctx, assetId);
+        }
+
+        return assets;
+    }
+
     private static FrozenDictionary<uint, Entry> Collect(
         AssetContext context,
         AssetComponentPool<T1> pool1,
@@ -73,7 +92,8 @@ public sealed partial class AssetFilter<T1> : IAssetFilter
             length++;
         }
 
-        var result = buffer.ToFrozenDictionary();
+        var segment = new ArraySegment<KeyValuePair<uint, Entry>>(buffer, 0, length);
+        var result = segment.ToFrozenDictionary();
 
         bufferPool.Return(buffer, true);
 

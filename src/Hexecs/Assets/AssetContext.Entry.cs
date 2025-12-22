@@ -12,7 +12,7 @@ public sealed partial class AssetContext
             ArrayUtils.InsertOrCreate(ref _array, _length, componentId);
             _length++;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnlySpan<ushort> AsReadOnlySpan() => _length == 0
             ? ReadOnlySpan<ushort>.Empty

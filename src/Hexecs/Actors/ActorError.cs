@@ -142,6 +142,12 @@ internal static class ActorError
         throw new Exception($"System {TypeOf<T>.GetTypeName()} isn't found");
     }
 
+    [DoesNotReturn]
+    public static void InvalidId()
+    {
+        throw new Exception("Invalid actor id");
+    }
+    
     /// <summary>
     /// Генерирует исключение, когда актёр с указанным ключом не найден.
     /// </summary>
@@ -254,11 +260,5 @@ internal static class ActorError
     public static void ValueNotFound(string name, Type type)
     {
         throw new Exception($"Value '{name}' (type {TypeOf.GetTypeName(type)}) isn't found");
-    }
-
-    [DoesNotReturn]
-    public static void WrongId()
-    {
-        throw new Exception("Wrong actor id");
     }
 }

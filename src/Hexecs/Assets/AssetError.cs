@@ -97,6 +97,12 @@ internal static class AssetError
         throw new Exception($"Constraint for {TypeOf<T>.GetTypeName()} already exists");
     }
 
+    [DoesNotReturn]
+    public static void InvalidId()
+    {
+        throw new Exception("Invalid asset id");
+    }
+    
     /// <summary>
     /// Генерирует исключение при попытке использовать загрузчик ассетов, который уже освобожден.
     /// </summary>

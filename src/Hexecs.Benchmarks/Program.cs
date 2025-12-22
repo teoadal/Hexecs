@@ -1,4 +1,4 @@
 ﻿using BenchmarkDotNet.Running;
-using Hexecs.Benchmarks.Collections;
+using Hexecs.Benchmarks.Actors;
 
-BenchmarkRunner.Run<SparsePageDictionaryBenchmark>();
+BenchmarkRunner.Run<UpdateSystemWithParallelWorkerBenchmark>();

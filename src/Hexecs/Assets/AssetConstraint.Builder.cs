@@ -26,7 +26,7 @@ public sealed partial class AssetConstraint
             var subscriptions = new Subscription[_length];
             Array.Copy(_subscriptions, subscriptions, _length);
 
-            var instance = new AssetConstraint(_hash, _subscriptions);
+            var instance = new AssetConstraint(_hash, subscriptions);
 
             ArrayPool<Subscription>.Shared.Return(_subscriptions, true);
 
@@ -78,7 +78,7 @@ public sealed partial class AssetConstraint
             var id = AssetComponentType<T>.Id;
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var exists in _subscriptions)
+            foreach (var exists in _subscriptions.AsSpan(0, _length))
             {
                 if (exists.ComponentId == id) AssetError.ConstraintExists<T>();
             }
@@ -91,9 +91,9 @@ public sealed partial class AssetConstraint
 
             _length++;
 
-            Array.Sort(_subscriptions);
+            Array.Sort(_subscriptions, 0, _length);
 
-            var hash = 1;
+            var hash = 2;
 
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var subscription in _subscriptions.AsSpan(0, _length))

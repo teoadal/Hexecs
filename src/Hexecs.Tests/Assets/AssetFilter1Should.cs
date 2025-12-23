@@ -10,7 +10,7 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
         // arrange 
         var assetIds = new List<uint>();
 
-        var (context, world) = fixture.CreateAssetContext(loader =>
+        var context = fixture.CreateAssetContext(loader =>
         {
             for (int i = 1; i < 100; i++)
             {
@@ -31,8 +31,6 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
         actualActors
             .Should()
             .Contain(expectedAssets);
-
-        world.Dispose();
     }
 
     [Fact(DisplayName = "Фильтр ассетов можно перебирать как AssetRef")]
@@ -41,7 +39,7 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
         // arrange 
         var expectedIds = new Dictionary<uint, CarAsset>();
 
-        var (context, world) = fixture.CreateAssetContext(loader =>
+        var context = fixture.CreateAssetContext(loader =>
         {
             for (var i = 0; i < 100; i++)
             {
@@ -77,7 +75,108 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
         actualIds
             .Should()
             .Contain(expectedIds.Keys);
+    }
 
-        world.Dispose();
+    [Fact(DisplayName = "Фильтр должен быть пустым, если компоненты заданного типа отсутствуют")]
+    public void EmptyFilterWhenNoComponentsExist()
+    {
+        // arrange
+        var context = fixture.CreateAssetContext(loader => loader
+            .CreateAsset(new NonExistentAsset()));
+
+        // act
+        var filter = context.Filter<CarAsset>();
+
+        // assert
+        filter.Length
+            .Should()
+            .Be(0);
+    }
+
+    [Fact(DisplayName = "Фильтр должен учитывать constraint")]
+    public void FilterWithConstraint()
+    {
+        var notExpectedIds = new List<uint>();
+        uint expectedId = 0;
+
+        // arrange
+        var context = fixture.CreateAssetContext(loader =>
+        {
+            notExpectedIds.Add(loader.CreateAsset(
+                new CarAsset(10, 10),
+                new UnitAsset()).Id);
+
+            notExpectedIds.Add(loader.CreateAsset(
+                new CarAsset(30, 30)).Id);
+
+            expectedId = loader.CreateAsset(
+                new CarAsset(20, 20),
+                new BuildingAsset()).Id;
+        });
+
+        // act
+
+        var filter = context.Filter<CarAsset>(constraint => constraint
+            .Exclude<UnitAsset>()
+            .Include<BuildingAsset>());
+
+        // assert
+
+        filter.Length.Should().Be(1);
+
+        filter
+            .Contains(expectedId)
+            .Should()
+            .BeTrue();
+
+        foreach (var notExpectedId in notExpectedIds)
+        {
+            filter.Contains(notExpectedId)
+                .Should()
+                .BeFalse();
+        }
+    }
+
+    [Fact(DisplayName = "Метод Get должен выбрасывать исключение, если ассет не найден в фильтре")]
+    public void GetThrowsExceptionWhenNotFound()
+    {
+        // arrange
+        var context = fixture.CreateAssetContext(loader => { loader.CreateAsset(new CarAsset(1, 1)); });
+
+        var filter = context.Filter<CarAsset>();
+
+        // act
+
+        Action act = () => filter.Get(999); // Несуществующий ID
+
+        // assert
+        act
+            .Should()
+            .Throw<Exception>();
+    }
+
+    [Fact(DisplayName = "Contains возвращает корректный статус наличия ассета")]
+    public void ContainsReturnsCorrectStatus()
+    {
+        // arrange
+        uint existingId = 0;
+        var context = fixture.CreateAssetContext(loader =>
+        {
+            var asset = loader.CreateAsset(new CarAsset(1, 1));
+            existingId = asset.Id;
+        });
+
+        var filter = context.Filter<CarAsset>();
+
+        // act & assert
+        filter
+            .Contains(existingId)
+            .Should()
+            .BeTrue();
+
+        filter
+            .Contains(existingId + 100)
+            .Should()
+            .BeFalse();
     }
 }

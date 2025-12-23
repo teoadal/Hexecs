@@ -9,7 +9,7 @@ public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture
 
         var alias = fixture.RandomString();
         uint? assetId = null;
-        var (assets, world) = fixture.CreateAssetContext(loader =>
+        fixture.CreateAssetContext(loader =>
         {
             var asset = loader.CreateAsset(alias);
             assetId = asset.Id;
@@ -17,7 +17,7 @@ public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture
 
         // act
 
-        var actual = assets.Invoking(ctx => ctx.GetAsset(alias))
+        var actual = fixture.Assets.Invoking(ctx => ctx.GetAsset(alias))
             .Should()
             .NotThrow()
             .Which;
@@ -27,16 +27,15 @@ public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture
         actual.Id
             .Should()
             .Be(assetId);
-
-        world.Dispose();
     }
-    
+
     [Fact]
     public void Throw_IfAssetByAlias_NotFound()
     {
         // act && assert
 
-        fixture.Assets.Invoking(ctx => ctx.GetAsset(fixture.RandomString()))
+        var context = fixture.CreateAssetContext();
+        context.Invoking(ctx => ctx.GetAsset(fixture.RandomString()))
             .Should()
             .Throw<Exception>();
     }

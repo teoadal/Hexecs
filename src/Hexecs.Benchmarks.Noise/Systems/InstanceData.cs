@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Hexecs.Benchmarks.MonoGame.Systems;
+namespace Hexecs.Benchmarks.Noise.Systems;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct InstanceData : IVertexType

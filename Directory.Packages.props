@@ -1,0 +1,9 @@
+﻿<Project>
+    <PropertyGroup>
+        <ManagePackageVersionCentrally>true</ManagePackageVersionCentrally>
+        <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -8,21 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+        <PackageReference Include="MonoGame.Framework.DesktopGL"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Hexecs\Hexecs.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Update="Content\Instancing.mgfx">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ClCompile Include="Content\Instancing.fx" />
     </ItemGroup>
 
 </Project>

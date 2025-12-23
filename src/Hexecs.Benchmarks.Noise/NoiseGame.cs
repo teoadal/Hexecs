@@ -1,6 +1,6 @@
 using Hexecs.Actors;
-using Hexecs.Benchmarks.MonoGame.Components;
-using Hexecs.Benchmarks.MonoGame.Systems;
+using Hexecs.Benchmarks.Noise.Components;
+using Hexecs.Benchmarks.Noise.Systems;
 using Hexecs.Dependencies;
 using Hexecs.Threading;
 using Hexecs.Worlds;
@@ -8,33 +8,22 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Hexecs.Benchmarks.MonoGame;
+namespace Hexecs.Benchmarks.Noise;
 
-public class BenchmarkGame : Game
+public class NoiseGame : Game
 {
-    private ActorFilter<Position>? _entitiesCountFilter;
     private readonly GraphicsDeviceManager _graphics;
-    private World _world = null!;
-    private ActorContext _context = null!;
     private readonly Random _random = new();
 
-    // Поля для статистики
-    private double _frameTime;
-    private int _fps;
-    private int _frameCount;
-    private double _fpsTimer;
-    private int _secondsCounter;
-
-    // Для среднего значения за минуту (Rolling Average)
-    private readonly int[] _fpsHistory = new int[60];
-    private int _historyIndex;
-    private bool _historyFull;
-    private double _avgFps;
+    private ActorContext _context = null!;
+    private ActorFilter<Position>? _entitiesCountFilter;
+    private FpsCounter _fpsCounter = null!;
+    private World _world = null!;
 
     private const int InitialEntityCount = 2_000_000;
     private const int MaxEntityCount = 3_000_000;
 
-    public BenchmarkGame()
+    public NoiseGame()
     {
         _graphics = new GraphicsDeviceManager(this)
         {
@@ -78,7 +67,7 @@ public class BenchmarkGame : Game
             .Build();
 
         _context = _world.Actors;
-        _entitiesCountFilter = _context.Filter<Position>();
+        _fpsCounter = new FpsCounter(() => _context.Length, Window);
 
         for (var i = 0; i < InitialEntityCount; i++)
         {
@@ -93,23 +82,22 @@ public class BenchmarkGame : Game
     {
         var actor = _context.CreateActor();
         actor.Add(Position.Create(
-            x: _graphics.PreferredBackBufferWidth / 2, 
+            x: _graphics.PreferredBackBufferWidth / 2,
             y: _graphics.PreferredBackBufferHeight / 2));
-        
+
         actor.Add(Velocity.Create(
             x: (float)(_random.NextDouble() * 200 - 100),
             y: (float)(_random.NextDouble() * 200 - 100)));
-        
+
         actor.Add(color ?? CircleColor.CreateRgba(_random));
     }
 
     protected override void Update(GameTime gameTime)
     {
-        var count = _entitiesCountFilter?.Length ?? 0;
-
         var keyboard = Keyboard.GetState();
         if (keyboard.IsKeyDown(Keys.Space))
         {
+            var count = _entitiesCountFilter?.Length ?? 0;
             var color = CircleColor.CreateRgba(_random);
             for (var i = 0; i < 50; i++)
             {
@@ -124,49 +112,14 @@ public class BenchmarkGame : Game
 
         _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 
-        // Сбор статистики
-        var elapsedSeconds = gameTime.ElapsedGameTime.TotalSeconds;
-        _frameTime = gameTime.ElapsedGameTime.TotalMilliseconds;
-        _fpsTimer += elapsedSeconds;
-        _frameCount++;
-
-        // Считаем FPS каждую секунду для точности истории
-        if (_fpsTimer >= 1.0)
-        {
-            _fps = _frameCount;
-
-            // Обновляем историю для Avg
-            _fpsHistory[_historyIndex] = _fps;
-            _historyIndex = (_historyIndex + 1) % 60;
-            if (_historyIndex == 0) _historyFull = true;
-
-            // Считаем среднее за минуту
-            var historyCount = _historyFull ? 60 : _historyIndex;
-            var sum = 0;
-            for (var i = 0; i < historyCount; i++) sum += _fpsHistory[i];
-            _avgFps = (double)sum / historyCount;
-
-            _frameCount = 0;
-            _fpsTimer -= 1.0;
-            _secondsCounter++;
-
-            if (_secondsCounter >= 1)
-            {
-                var alloc = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
-                count = _entitiesCountFilter?.Length ?? 0;
-                Window.Title =
-                    $"FPS: {_fps} | Avg FPS: {_avgFps:F1} | Entities: {count:N0} | Frame Time: {_frameTime:F2}ms | Alloc: {alloc:F2}Mb";
-
-                _secondsCounter = 0;
-            }
-        }
-
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.White);
+
+        _fpsCounter.Draw(gameTime);
 
         _world.Draw(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 

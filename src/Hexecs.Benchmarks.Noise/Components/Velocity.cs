@@ -1,7 +1,7 @@
 using Hexecs.Actors;
 using Microsoft.Xna.Framework;
 
-namespace Hexecs.Benchmarks.MonoGame.Components;
+namespace Hexecs.Benchmarks.Noise.Components;
 
 public struct Velocity(Vector2 value) : IActorComponent
 {

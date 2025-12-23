@@ -1,11 +1,11 @@
 using Hexecs.Actors;
 using Hexecs.Actors.Systems;
-using Hexecs.Benchmarks.MonoGame.Components;
+using Hexecs.Benchmarks.Noise.Components;
 using Hexecs.Threading;
 using Hexecs.Worlds;
 using Microsoft.Xna.Framework;
 
-namespace Hexecs.Benchmarks.MonoGame.Systems;
+namespace Hexecs.Benchmarks.Noise.Systems;
 
 public sealed class MovementSystem(
     ActorContext context,

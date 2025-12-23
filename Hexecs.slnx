@@ -1,9 +1,0 @@
-﻿<Solution>
-    <Project Path="src\Hexecs\Hexecs.csproj" />
-
-    <Project Path="src\Hexecs.Tests\Hexecs.Tests.csproj" />
-
-    <Project Path="src\Hexecs.Benchmarks\Hexecs.Benchmarks.csproj" />
-    <Project Path="src/Hexecs.Benchmarks.Map/Hexecs.Benchmarks.Map.csproj" />
-    <Project Path="src\Hexecs.Benchmarks.Noise\Hexecs.Benchmarks.Noise.csproj" />
-</Solution>

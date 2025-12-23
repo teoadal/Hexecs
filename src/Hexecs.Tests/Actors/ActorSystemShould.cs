@@ -14,8 +14,8 @@ public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<
         var systems = fixture.CreateArray(_ => new Mock<IUpdateSystem>());
 
         using var world = new WorldBuilder()
-            .DefaultParallelWorker(degreeOfParallelism: 4)
-            .DefaultActorContext(cfg => cfg
+            .UseDefaultParallelWorker(degreeOfParallelism: 4)
+            .UseDefaultActorContext(cfg => cfg
                 .CreateParallelUpdateSystem(systems.Select(mock => mock.Object)))
             .Build();
 
@@ -40,8 +40,8 @@ public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<
         // arrange
 
         using var world = new WorldBuilder()
-            .DefaultParallelWorker(degreeOfParallelism)
-            .DefaultActorContext(cfg => cfg
+            .UseDefaultParallelWorker(degreeOfParallelism)
+            .UseDefaultActorContext(cfg => cfg
                 .CreateUpdateSystem(ctx => new ParallelUpdateSystem(
                     ctx,
                     ctx.GetRequiredService<IParallelWorker>())))

@@ -6,7 +6,7 @@ using Hexecs.Worlds;
 
 namespace Hexecs.Actors.Systems;
 
-public abstract class DrawSystem(ActorContext context) : IDrawSystem
+public abstract class DrawSystem(ActorContext context) : IDrawSystem, IDisposable
 {
     public bool Enabled { get; set; } = true;
 
@@ -52,6 +52,10 @@ public abstract class DrawSystem(ActorContext context) : IDrawSystem
         .CreateContext(GetType());
 
     ActorContext IDrawSystem.Context => Context;
+
+    public virtual void Dispose()
+    {
+    }
 }
 
 public abstract class DrawSystem<T1> : DrawSystem

@@ -25,9 +25,9 @@ public sealed class WorldBuilder : IDependencyCollection
     {
         return lifetime switch
         {
-            DependencyLifetime.Singleton => Singleton(contract, resolver),
-            DependencyLifetime.Scoped => Scoped(contract, resolver),
-            DependencyLifetime.Transient => Transient(contract, resolver),
+            DependencyLifetime.Singleton => UseSingleton(contract, resolver),
+            DependencyLifetime.Scoped => UseScoped(contract, resolver),
+            DependencyLifetime.Transient => UseTransient(contract, resolver),
             _ => DependencyError.NotSupportedLifetime<WorldBuilder>(lifetime)
         };
     }
@@ -37,37 +37,6 @@ public sealed class WorldBuilder : IDependencyCollection
         _registrars.Add(registrar);
         return this;
     }
-
-
-    #region AssetSource
-
-    public WorldBuilder AddAssetSource(IAssetSource source)
-    {
-        _assetSourceBuilders.Add(_ => source);
-        return this;
-    }
-
-    public WorldBuilder AddAssetSource<T>() where T : class, IAssetSource, new()
-    {
-        _assetSourceBuilders.Add(static _ => new T());
-        return this;
-    }
-
-    public WorldBuilder CreateAssetSource(Func<World, IAssetSource> source)
-    {
-        _assetSourceBuilders.Add(source);
-        return this;
-    }
-
-    public WorldBuilder CreateAssetData(int order, Action<IAssetLoader> source)
-    {
-        _assetSourceBuilders.Add(_ => new ActionAssetLoader(order, source));
-        return this;
-    }
-
-    public WorldBuilder CreateAssetData(Action<IAssetLoader> source) => CreateAssetData(int.MaxValue, source);
-
-    #endregion
 
     public World Build()
     {
@@ -99,7 +68,43 @@ public sealed class WorldBuilder : IDependencyCollection
         return instance;
     }
 
-    public WorldBuilder CreateConfiguration(Action<ConfigurationBuilder> configuration)
+    #region AssetSource
+
+    public WorldBuilder UseAddAssetSource(IAssetSource source)
+    {
+        _assetSourceBuilders.Add(_ => source);
+        return this;
+    }
+
+    public WorldBuilder UseAddAssetSource<T>() where T : class, IAssetSource, new()
+    {
+        _assetSourceBuilders.Add(static _ => new T());
+        return this;
+    }
+
+    public WorldBuilder CreateAssetSource(Func<World, IAssetSource> source)
+    {
+        _assetSourceBuilders.Add(source);
+        return this;
+    }
+
+    public WorldBuilder CreateAssetData(int order, Action<IAssetLoader> source)
+    {
+        _assetSourceBuilders.Add(_ => new ActionAssetLoader(order, source));
+        return this;
+    }
+
+    public WorldBuilder CreateAssetData(Action<IAssetLoader> source) => CreateAssetData(int.MaxValue, source);
+
+    #endregion
+
+    public WorldBuilder UseAsDebugWorld(bool value = true)
+    {
+        _debugWorld = value;
+        return this;
+    }
+
+    public WorldBuilder UseConfiguration(Action<ConfigurationBuilder> configuration)
     {
         var builder = new ConfigurationBuilder();
         configuration(builder);
@@ -109,7 +114,41 @@ public sealed class WorldBuilder : IDependencyCollection
         return this;
     }
 
-    public WorldBuilder CreateLogger(Action<LogBuilder> logger)
+    public WorldBuilder UseDefaultActorContext(Action<ActorContextBuilder> defaultActorContext)
+    {
+        _defaultActorContextBuilder = defaultActorContext;
+        return this;
+    }
+
+    #region ParallelWorker
+
+    public WorldBuilder UseDefaultParallelWorker(int? degreeOfParallelism = null)
+    {
+        return UseDefaultParallelWorker(ctx =>
+        {
+            if (degreeOfParallelism == null)
+            {
+                var configuration = ctx.GetService<ConfigurationService>();
+                degreeOfParallelism = configuration?.GetValue<int>("ParallelWorker:DegreeOfParallelism");
+            }
+
+            return new DefaultParallelWorker(degreeOfParallelism ?? Environment.ProcessorCount);
+        });
+    }
+
+    public WorldBuilder UseDefaultParallelWorker(IParallelWorker worker)
+    {
+        return UseDefaultParallelWorker(_ => worker);
+    }
+
+    public WorldBuilder UseDefaultParallelWorker(Func<IDependencyProvider, IParallelWorker> worker)
+    {
+        return UseSingleton(worker);
+    }
+
+    #endregion
+
+    public WorldBuilder UseLogger(Action<LogBuilder> logger)
     {
         var builder = new LogBuilder();
         logger(builder);
@@ -119,7 +158,7 @@ public sealed class WorldBuilder : IDependencyCollection
         return this;
     }
 
-    public WorldBuilder CreateValues(Action<ValueServiceBuilder> values)
+    public WorldBuilder UseValues(Action<ValueServiceBuilder> values)
     {
         var builder = new ValueServiceBuilder();
         values(builder);
@@ -129,61 +168,58 @@ public sealed class WorldBuilder : IDependencyCollection
         return this;
     }
 
-    public WorldBuilder DebugWorld(bool value = true)
+    #region Singleton
+
+    public WorldBuilder UseSingleton<T>(T value)
+        where T : class
     {
-        _debugWorld = value;
+        _dependencies.Add(new Dependency(DependencyLifetime.Singleton, typeof(T), _ => value));
         return this;
     }
 
-    public WorldBuilder DefaultActorContext(Action<ActorContextBuilder> defaultActorContext)
-    {
-        _defaultActorContextBuilder = defaultActorContext;
-        return this;
-    }
 
-    public WorldBuilder DefaultParallelWorker(int? degreeOfParallelism = null)
-    {
-        var value = degreeOfParallelism ?? Environment.ProcessorCount;
-        return DefaultParallelWorker(new DefaultParallelWorker(value));
-    }
-
-    public WorldBuilder DefaultParallelWorker(IParallelWorker worker)
-    {
-        return Singleton(typeof(IParallelWorker), _ => worker);
-    }
-
-    public WorldBuilder Singleton(Type contract, Func<IDependencyProvider, object> resolver)
+    public WorldBuilder UseSingleton(Type contract, Func<IDependencyProvider, object> resolver)
     {
         _dependencies.Add(new Dependency(DependencyLifetime.Singleton, contract, resolver));
         return this;
     }
 
-    public WorldBuilder Singleton<T>(Func<IDependencyProvider, T> resolver) where T : class
+    public WorldBuilder UseSingleton<T>(Func<IDependencyProvider, T> resolver) where T : class
     {
-        return Singleton(typeof(T), resolver);
+        return UseSingleton(typeof(T), resolver);
     }
 
-    public WorldBuilder Scoped(Type contract, Func<IDependencyProvider, object> resolver)
+    #endregion
+
+    #region Scoped
+
+    public WorldBuilder UseScoped(Type contract, Func<IDependencyProvider, object> resolver)
     {
         _dependencies.Add(new Dependency(DependencyLifetime.Scoped, contract, resolver));
         return this;
     }
 
-    public WorldBuilder Scoped<T>(Func<IDependencyProvider, T> resolver) where T : class
+    public WorldBuilder UseScoped<T>(Func<IDependencyProvider, T> resolver) where T : class
     {
-        return Scoped(typeof(T), resolver);
+        return UseScoped(typeof(T), resolver);
     }
 
-    public WorldBuilder Transient(Type contract, Func<IDependencyProvider, object> resolver)
+    #endregion
+
+    #region Transient
+
+    public WorldBuilder UseTransient(Type contract, Func<IDependencyProvider, object> resolver)
     {
         _dependencies.Add(new Dependency(DependencyLifetime.Transient, contract, resolver));
         return this;
     }
 
-    public WorldBuilder Transient<T>(Func<IDependencyProvider, T> resolver) where T : class
+    public WorldBuilder UseTransient<T>(Func<IDependencyProvider, T> resolver) where T : class
     {
-        return Transient(typeof(T), resolver);
+        return UseTransient(typeof(T), resolver);
     }
+
+    #endregion
 
     private void LoadAssets(World world)
     {
@@ -211,34 +247,34 @@ public sealed class WorldBuilder : IDependencyCollection
         return Add(lifetime, contract, resolver);
     }
 
-    IDependencyCollection IDependencyCollection.Singleton(Type contract, Func<IDependencyProvider, object> resolver)
+    IDependencyCollection IDependencyCollection.UseSingleton(Type contract, Func<IDependencyProvider, object> resolver)
     {
-        return Singleton(contract, resolver);
+        return UseSingleton(contract, resolver);
     }
 
-    IDependencyCollection IDependencyCollection.Singleton<T>(Func<IDependencyProvider, T> resolver) where T : class
+    IDependencyCollection IDependencyCollection.UseSingleton<T>(Func<IDependencyProvider, T> resolver) where T : class
     {
-        return Singleton(resolver);
+        return UseSingleton(resolver);
     }
 
-    IDependencyCollection IDependencyCollection.Scoped(Type contract, Func<IDependencyProvider, object> resolver)
+    IDependencyCollection IDependencyCollection.UseScoped(Type contract, Func<IDependencyProvider, object> resolver)
     {
-        return Scoped(contract, resolver);
+        return UseScoped(contract, resolver);
     }
 
-    IDependencyCollection IDependencyCollection.Scoped<T>(Func<IDependencyProvider, T> resolver) where T : class
+    IDependencyCollection IDependencyCollection.UseScoped<T>(Func<IDependencyProvider, T> resolver) where T : class
     {
-        return Scoped(resolver);
+        return UseScoped(resolver);
     }
 
-    IDependencyCollection IDependencyCollection.Transient(Type contract, Func<IDependencyProvider, object> resolver)
+    IDependencyCollection IDependencyCollection.UseTransient(Type contract, Func<IDependencyProvider, object> resolver)
     {
-        return Transient(contract, resolver);
+        return UseTransient(contract, resolver);
     }
 
-    IDependencyCollection IDependencyCollection.Transient<T>(Func<IDependencyProvider, T> resolver) where T : class
+    IDependencyCollection IDependencyCollection.UseTransient<T>(Func<IDependencyProvider, T> resolver) where T : class
     {
-        return Transient(resolver);
+        return UseTransient(resolver);
     }
 
     #endregion

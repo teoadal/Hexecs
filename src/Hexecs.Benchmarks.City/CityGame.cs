@@ -1,26 +1,31 @@
-﻿using Hexecs.Worlds;
-using Microsoft.Xna.Framework;
+﻿using Hexecs.Benchmarks.Map.Common;
+using Hexecs.Benchmarks.Map.Terrains;
+using Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
+using Hexecs.Benchmarks.Map.Utils;
+using Hexecs.Worlds;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Hexecs.Benchmarks.Map;
 
-internal sealed class MapGame : Game
+internal sealed class CityGame : Game
 {
+    private Camera2D _camera = null!;
     private readonly GraphicsDeviceManager _graphics;
     private World _world = null!;
 
-    public MapGame()
+    public CityGame()
     {
         _graphics = new GraphicsDeviceManager(this)
         {
             PreferredBackBufferWidth = 1280,
             PreferredBackBufferHeight = 720,
-            GraphicsProfile = GraphicsProfile.HiDef, // Используем профиль HiDef для поддержки расширенных возможностей
+            GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
             SynchronizeWithVerticalRetrace = false,
             IsFullScreen = false,
-            HardwareModeSwitch = false // Используем borderless fullscreen для удобства
+            HardwareModeSwitch = false
         };
 
         // Включаем поддержку сглаживания для устройства
@@ -38,27 +43,32 @@ internal sealed class MapGame : Game
     {
         GraphicsDevice.SamplerStates[0] = SamplerState.AnisotropicClamp;
 
+        _camera = new Camera2D(GraphicsDevice);
         _world = new WorldBuilder()
-            .Singleton<GraphicsDevice>(_ => GraphicsDevice)
-            .DefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
-            .DefaultActorContext(context => context
-                .Capacity(500_000))
+            .UseDefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
+            .UseSingleton(_ => Content)
+            .UseSingleton(_ => GraphicsDevice)
+            .UseSingleton(_camera)
+            .UseTerrain()
+            .UseDefaultActorContext(context => context
+                .Capacity(500_000)
+                .AddCommon()
+                .AddTerrain())
             .Build();
 
+        _world.Actors.Execute(new GenerateTerrainCommand());
 
         base.Initialize();
     }
 
-    protected override void Update(GameTime gameTime)
+    protected override void Dispose(bool disposing)
     {
-        var keyboard = Keyboard.GetState();
-        if (keyboard.IsKeyDown(Keys.Space))
+        if (disposing)
         {
+            _world.Dispose();
         }
 
-        _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
-
-        base.Update(gameTime);
+        base.Dispose(disposing);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -70,13 +80,17 @@ internal sealed class MapGame : Game
         base.Draw(gameTime);
     }
 
-    protected override void Dispose(bool disposing)
+    protected override void Update(GameTime gameTime)
     {
-        if (disposing)
+        var keyboard = Keyboard.GetState();
+        if (keyboard.IsKeyDown(Keys.Space))
         {
-            _world.Dispose();
         }
 
-        base.Dispose(disposing);
+        _camera.Update(gameTime);
+
+        _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
+
+        base.Update(gameTime);
     }
 }

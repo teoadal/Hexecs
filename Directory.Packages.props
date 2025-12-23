@@ -6,10 +6,6 @@
     <ItemGroup>
         <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     </ItemGroup>
-    
-    <ItemGroup>
-        <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
-    </ItemGroup>
 
     <ItemGroup>
         <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1"/>

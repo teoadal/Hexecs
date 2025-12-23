@@ -21,7 +21,7 @@
             </ItemGroup>
 
             <ItemGroup>
-                <PackageReference Include="BenchmarkDotNet"/>
+                <PackageReference Include="BenchmarkDotNet" Version="0.15.8"/>
             </ItemGroup>
         </When>
         <When Condition="$(MSBuildProjectName.EndsWith('Tests'))">

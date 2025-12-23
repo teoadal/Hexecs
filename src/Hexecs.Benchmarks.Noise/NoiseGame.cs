@@ -28,11 +28,11 @@ public class NoiseGame : Game
         {
             PreferredBackBufferWidth = 1280,
             PreferredBackBufferHeight = 720,
-            GraphicsProfile = GraphicsProfile.HiDef, // Используем профиль HiDef для поддержки расширенных возможностей
+            GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
             SynchronizeWithVerticalRetrace = false,
             IsFullScreen = false,
-            HardwareModeSwitch = false // Используем borderless fullscreen для удобства
+            HardwareModeSwitch = false
         };
 
         // Включаем поддержку сглаживания для устройства
@@ -54,8 +54,8 @@ public class NoiseGame : Game
         var height = _graphics.PreferredBackBufferHeight;
 
         _world = new WorldBuilder()
-            .DefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
-            .DefaultActorContext(builder => builder
+            .UseDefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
+            .UseDefaultActorContext(builder => builder
                 .Capacity(InitialEntityCount)
                 .ConfigureComponentPool<CircleColor>(color => color.Capacity(InitialEntityCount))
                 .ConfigureComponentPool<Position>(position => position.Capacity(InitialEntityCount))

@@ -7,10 +7,10 @@ namespace Hexecs.Tests.Worlds;
 public sealed class WordDependencyShould
 {
     private readonly World _world = new WorldBuilder()
-        .Singleton(_ => new Singleton())
-        .Singleton(_ => new Singleton())
-        .Scoped(_ => new Scoped())
-        .Transient(_ => new Transient())
+        .UseSingleton(_ => new Singleton())
+        .UseSingleton(_ => new Singleton())
+        .UseScoped(_ => new Scoped())
+        .UseTransient(_ => new Transient())
         .Build();
 
     [Fact]

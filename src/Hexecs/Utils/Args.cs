@@ -46,6 +46,29 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     }
 
     /// <summary>
+    /// Получает значение аргумента по имени.
+    /// Выбрасывает исключение, если значение не найдено.
+    /// </summary>
+    /// <typeparam name="TValue">Тип значения.</typeparam>
+    /// <param name="name">Имя аргумента.</param>
+    public TValue GetOrDefault<TValue>(string name)
+    {
+        return TryGet<TValue>(name, out var value) ? value : default!;
+    }
+
+    /// <summary>
+    /// Получает значение аргумента по имени.
+    /// Выбрасывает исключение, если значение не найдено.
+    /// </summary>
+    /// <typeparam name="TValue">Тип значения.</typeparam>
+    /// <param name="name">Имя аргумента.</param>
+    /// <param name="defaultValue">Значение по умолчанию</param>
+    public TValue GetOrDefault<TValue>(string name, TValue defaultValue)
+    {
+        return TryGet<TValue>(name, out var value) ? value : defaultValue;
+    }
+
+    /// <summary>
     /// Возвращает экземпляр Args в пул после использования.
     /// Очищает все хранилища значений и возвращает их в соответствующие пулы.
     /// </summary>

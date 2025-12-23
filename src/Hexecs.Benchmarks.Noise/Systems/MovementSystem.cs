@@ -21,8 +21,8 @@ public sealed class MovementSystem(
         in ActorRef<Position, Velocity> actor,
         in WorldTime time)
     {
-        ref var pos = ref actor.Component1;
-        ref var vel = ref actor.Component2;
+        var pos = actor.Component1;
+        var vel = actor.Component2;
 
         pos.Value += vel.Value * time.DeltaTime;
 
@@ -36,5 +36,8 @@ public sealed class MovementSystem(
         {
             vel.Value.Y *= -1;
         }
+
+        actor.Update(pos);
+        actor.Update(vel);
     }
 }

@@ -5,6 +5,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <PublishReadyToRun>true</PublishReadyToRun>
         <TieredCompilation>true</TieredCompilation>
+        <RootNamespace>Hexecs.Benchmarks.Map</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,6 +18,10 @@
     
     <ItemGroup>
         <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Terrains\Commands\" />
     </ItemGroup>
 
 </Project>

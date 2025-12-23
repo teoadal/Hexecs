@@ -7,8 +7,14 @@
         <TieredCompilation>true</TieredCompilation>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <OptimizationPreference>Speed</OptimizationPreference>
+        <PublishAot>true</PublishAot>
+        <TrimMode>link</TrimMode>
+    </PropertyGroup>
+    
     <ItemGroup>
-        <PackageReference Include="MonoGame.Framework.DesktopGL"/>
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.1" />
     </ItemGroup>
 
     <ItemGroup>

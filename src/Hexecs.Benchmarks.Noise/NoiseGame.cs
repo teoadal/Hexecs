@@ -16,7 +16,6 @@ public class NoiseGame : Game
     private readonly Random _random = new();
 
     private ActorContext _context = null!;
-    private ActorFilter<Position>? _entitiesCountFilter;
     private FpsCounter _fpsCounter = null!;
     private World _world = null!;
 
@@ -97,7 +96,7 @@ public class NoiseGame : Game
         var keyboard = Keyboard.GetState();
         if (keyboard.IsKeyDown(Keys.Space))
         {
-            var count = _entitiesCountFilter?.Length ?? 0;
+            var count = _context.Length;
             var color = CircleColor.CreateRgba(_random);
             for (var i = 0; i < 50; i++)
             {

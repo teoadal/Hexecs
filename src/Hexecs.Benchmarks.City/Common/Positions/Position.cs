@@ -3,4 +3,5 @@
 public struct Position : IActorComponent
 {
     public Point Grid;
+    public Point World;
 }

@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.1"/>
+        <PackageReference Include="MonoGame.Framework.DesktopGL"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -21,7 +21,9 @@
     </ItemGroup>
     
     <ItemGroup>
-      <Folder Include="Terrains\Commands\" />
+      <None Update="Content\roguelikeSheet_transparent.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

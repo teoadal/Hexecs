@@ -1,5 +1,6 @@
 ﻿using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Map.Common.Positions;
+using Hexecs.Benchmarks.Map.Common.Visibles;
 using Hexecs.Benchmarks.Map.Utils;
 using Hexecs.Worlds;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,47 +9,39 @@ namespace Hexecs.Benchmarks.Map.Terrains;
 
 internal sealed class TerrainDrawSystem : DrawSystem<Position, Terrain>
 {
-    private const int TileSize = 64;
-
-    private readonly Camera2D _camera;
-    private readonly TerrainGrid _grid;
+    private readonly Camera _camera;
     private readonly SpriteBatch _spriteBatch;
+    private readonly TextureStorage _textureStorage;
 
     public TerrainDrawSystem(
-        Camera2D camera,
+        Camera camera,
         ActorContext context,
         GraphicsDevice graphicsDevice,
-        TerrainGrid grid)
-        : base(context)
+        TextureStorage textureStorage)
+        : base(context, constraint => constraint.Include<Visible>())
     {
         _camera = camera;
-        _grid = grid;
+        _textureStorage = textureStorage;
         _spriteBatch = new SpriteBatch(graphicsDevice);
     }
 
-    protected override void BeforeDraw(in WorldTime time)
+    protected override bool BeforeDraw(in WorldTime time)
     {
         _spriteBatch.Begin(
             transformMatrix: _camera.GetTransformationMatrix(),
             samplerState: SamplerState.PointClamp,
             blendState: BlendState.AlphaBlend);
+
+        return true;
     }
 
     protected override void Draw(in ActorRef<Position, Terrain> actor, in WorldTime time)
     {
-        ref readonly var gridPosition = ref actor.Component1.Grid;
         ref readonly var terrain = ref actor.Component2;
+        ref readonly var texture = ref _textureStorage.GetTerrainTexture(terrain.Type, terrain.Overlay);
 
-        var drawPosition = new Vector2(
-            gridPosition.X * TileSize,
-            gridPosition.Y * TileSize);
-
-        Texture2D texture = null!; //TODO: set it!!!
-        
-        _spriteBatch.Draw(
-            texture,
-            drawPosition,
-            Color.White);
+        ref readonly var worldPosition = ref actor.Component1.World;
+        texture.Draw(_spriteBatch, new Vector2(worldPosition.X, worldPosition.Y));
     }
 
     protected override void AfterDraw(in WorldTime time)

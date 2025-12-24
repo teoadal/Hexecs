@@ -38,9 +38,12 @@ public abstract class UpdateSystem<T1, T2, T3> : UpdateSystem, IParallelJob
     {
     }
 
-    protected virtual void BeforeUpdate(in WorldTime time)
-    {
-    }
+    /// <summary>
+    /// Метод запускается до полного обновления
+    /// </summary>
+    /// <param name="time">Время мира</param>
+    /// <returns>Если возвращает false, то обновление не происходит</returns>
+    protected virtual bool BeforeUpdate(in WorldTime time) => true;
 
     public sealed override void Update(in WorldTime time)
     {

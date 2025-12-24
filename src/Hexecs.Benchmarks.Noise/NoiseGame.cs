@@ -30,7 +30,7 @@ public class NoiseGame : Game
             PreferredBackBufferHeight = 720,
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
-            SynchronizeWithVerticalRetrace = false,
+            SynchronizeWithVerticalRetrace = true,
             IsFullScreen = false,
             HardwareModeSwitch = false
         };

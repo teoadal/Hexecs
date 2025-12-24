@@ -1,8 +1,7 @@
 using Hexecs.Actors.Pipelines;
 using Hexecs.Benchmarks.Map.Terrains.Assets;
-using Hexecs.Benchmarks.Map.ValueTypes;
+using Hexecs.Benchmarks.Map.Terrains.ValueTypes;
 using Hexecs.Pipelines;
-using Hexecs.Worlds;
 
 namespace Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
 

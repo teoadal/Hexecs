@@ -1,9 +1,9 @@
 ﻿using Hexecs.Benchmarks.Map.Common;
+using Hexecs.Benchmarks.Map.Common.Visibles;
 using Hexecs.Benchmarks.Map.Terrains;
 using Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
 using Hexecs.Benchmarks.Map.Utils;
 using Hexecs.Worlds;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -11,8 +11,9 @@ namespace Hexecs.Benchmarks.Map;
 
 internal sealed class CityGame : Game
 {
-    private Camera2D _camera = null!;
+    private Camera _camera = null!;
     private readonly GraphicsDeviceManager _graphics;
+    private FpsCounter _fpsCounter = null!;
     private World _world = null!;
 
     public CityGame()
@@ -23,7 +24,7 @@ internal sealed class CityGame : Game
             PreferredBackBufferHeight = 720,
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
-            SynchronizeWithVerticalRetrace = false,
+            SynchronizeWithVerticalRetrace = true,
             IsFullScreen = false,
             HardwareModeSwitch = false
         };
@@ -43,20 +44,24 @@ internal sealed class CityGame : Game
     {
         GraphicsDevice.SamplerStates[0] = SamplerState.AnisotropicClamp;
 
-        _camera = new Camera2D(GraphicsDevice);
+        _camera = new Camera(GraphicsDevice);
         _world = new WorldBuilder()
+            .UseSingleton<TextureStorage>()
             .UseDefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
-            .UseSingleton(_ => Content)
-            .UseSingleton(_ => GraphicsDevice)
+            .UseSingleton(Content)
+            .UseSingleton(GraphicsDevice)
             .UseSingleton(_camera)
             .UseTerrain()
             .UseDefaultActorContext(context => context
-                .Capacity(500_000)
+                .Capacity(3_000_000)
                 .AddCommon()
-                .AddTerrain())
+                .AddTerrain()
+                .AddVisible())
             .Build();
 
         _world.Actors.Execute(new GenerateTerrainCommand());
+
+        _fpsCounter = new FpsCounter(() => _world.Actors.Length, Window);
 
         base.Initialize();
     }
@@ -75,6 +80,7 @@ internal sealed class CityGame : Game
     {
         GraphicsDevice.Clear(Color.White);
 
+        _fpsCounter.Draw(gameTime);
         _world.Draw(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 
         base.Draw(gameTime);

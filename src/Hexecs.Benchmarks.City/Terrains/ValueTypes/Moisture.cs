@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Hexecs.Benchmarks.Map.ValueTypes;
+namespace Hexecs.Benchmarks.Map.Terrains.ValueTypes;
 
 [DebuggerDisplay("{Value:F2}%")]
 public readonly struct Moisture

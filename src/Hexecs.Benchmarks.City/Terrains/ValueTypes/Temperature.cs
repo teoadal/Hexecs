@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Hexecs.Benchmarks.Map.ValueTypes;
+namespace Hexecs.Benchmarks.Map.Terrains.ValueTypes;
 
 public readonly struct Temperature
 {

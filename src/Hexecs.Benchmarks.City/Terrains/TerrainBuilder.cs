@@ -1,6 +1,5 @@
 using Hexecs.Benchmarks.Map.Terrains.Assets;
 using Hexecs.Benchmarks.Map.Terrains.ValueTypes;
-using Hexecs.Benchmarks.Map.ValueTypes;
 
 namespace Hexecs.Benchmarks.Map.Terrains;
 

@@ -17,6 +17,9 @@ internal sealed class TerrainAssetSource : IAssetSource
         
         Create(TerrainAsset.River, "Река", TerrainType.WaterRiver)
             .WithPosition();
+        
+        Create(TerrainAsset.UrbanConcrete, "Бетон", TerrainType.UrbanConcrete)
+            .WithPosition();
     }
 
     private AssetConfigurator Create(

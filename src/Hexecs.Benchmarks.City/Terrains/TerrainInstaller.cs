@@ -1,3 +1,4 @@
+using Hexecs.Benchmarks.Map.Terrains.Assets;
 using Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
 using Hexecs.Configurations;
 using Hexecs.Dependencies;
@@ -26,9 +27,13 @@ internal static class TerrainInstaller
 
     public static WorldBuilder UseTerrain(this WorldBuilder builder)
     {
-        builder.UseSingleton(ctx => ctx
-            .GetService<ConfigurationService>()?
-            .GetValue<TerrainSettings>(TerrainSettings.Key) ?? TerrainSettings.Default);
+        builder
+            .UseAddAssetSource(new TerrainAssetSource());
+
+        builder
+            .UseSingleton(ctx => ctx
+                .GetService<ConfigurationService>()?
+                .GetValue<TerrainSettings>(TerrainSettings.Key) ?? TerrainSettings.Default);
 
         return builder;
     }

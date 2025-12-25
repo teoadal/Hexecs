@@ -3,6 +3,8 @@ using Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
 using Hexecs.Configurations;
 using Hexecs.Dependencies;
 using Hexecs.Worlds;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Hexecs.Benchmarks.Map.Terrains;
 
@@ -12,7 +14,7 @@ internal static class TerrainInstaller
     {
         var terrainSettings = builder.World.GetRequiredService<TerrainSettings>();
 
-        builder.AddBuilder<TerrainBuilder>();
+        builder.CreateBuilder<TerrainBuilder>();
 
         builder
             .ConfigureComponentPool<Terrain>(terrain => terrain
@@ -29,6 +31,12 @@ internal static class TerrainInstaller
     {
         builder
             .UseAddAssetSource(new TerrainAssetSource());
+
+        builder
+            .UseSingleton(ctx => new TerrainSpriteAtlas(
+                contentManager: ctx.GetRequiredService<ContentManager>(),
+                fileName: "terrain_atlas",
+                settings: ctx.GetRequiredService<TerrainSettings>()));
 
         builder
             .UseSingleton(ctx => ctx

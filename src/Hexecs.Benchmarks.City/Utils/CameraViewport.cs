@@ -2,13 +2,12 @@
 
 namespace Hexecs.Benchmarks.Map.Utils;
 
-[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-public readonly struct CameraViewport(int x, int y, int width, int height) : IEquatable<CameraViewport>
+public struct CameraViewport : IEquatable<CameraViewport>
 {
-    public readonly int Left = x;
-    public readonly int Right = x + width;
-    public readonly int Top = y;
-    public readonly int Bottom = y + height;
+    public int Left;
+    public int Right;
+    public int Top;
+    public int Bottom;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Hidden(int x, int y, int width, int height) => !Visible(x, y, width, height);
@@ -29,4 +28,10 @@ public readonly struct CameraViewport(int x, int y, int width, int height) : IEq
     public override bool Equals(object? obj) => obj is CameraViewport other && Equals(other);
 
     public override int GetHashCode() => HashCode.Combine(Left, Right, Top, Bottom);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(in CameraViewport left, in CameraViewport right) => left.Equals(right);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(in CameraViewport left, in CameraViewport right) => !left.Equals(right);
 }

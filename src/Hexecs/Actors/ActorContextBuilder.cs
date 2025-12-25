@@ -94,17 +94,6 @@ public sealed partial class ActorContextBuilder
     }
 
     /// <summary>
-    /// Регистрирует строитель актёров указанного типа.
-    /// </summary>
-    /// <typeparam name="T">Тип строителя актёров.</typeparam>
-    /// <returns>Этот же экземпляр ActorContextBuilder для цепочки вызовов.</returns>
-    public ActorContextBuilder AddBuilder<T>() where T : class, IActorBuilder, new()
-    {
-        _builders.Add(new Entry<IActorBuilder>(static _ => new T()));
-        return this;
-    }
-
-    /// <summary>
     /// Регистрирует функцию для создания строителя актёров с доступом к контексту актёров.
     /// </summary>
     /// <param name="builder">Функция, создающая строитель актёров.</param>

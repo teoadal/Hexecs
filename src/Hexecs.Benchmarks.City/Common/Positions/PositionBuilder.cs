@@ -1,10 +1,10 @@
-﻿using Hexecs.Benchmarks.Map.Utils;
+﻿using Hexecs.Benchmarks.Map.Terrains;
 
 namespace Hexecs.Benchmarks.Map.Common.Positions;
 
-internal sealed class PositionBuilder : IActorBuilder<PositionAbility>
+internal sealed class PositionBuilder(TerrainSettings terrainSettings) : IActorBuilder<PositionAbility>
 {
-    private const int TileSize = TextureStorage.TerrainTileSize;
+    private readonly int _terrainTileSize = terrainSettings.TileSize;
 
     public void Build(in Actor actor, in AssetRef<PositionAbility> asset, Args args)
     {
@@ -12,7 +12,7 @@ internal sealed class PositionBuilder : IActorBuilder<PositionAbility>
         actor.Add(new Position
         {
             Grid = grid,
-            World = new Point(grid.X * TileSize, grid.Y * TileSize)
+            World = new Point(grid.X * _terrainTileSize, grid.Y * _terrainTileSize)
         });
     }
 }

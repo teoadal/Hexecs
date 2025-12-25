@@ -4,7 +4,6 @@ using Hexecs.Benchmarks.Noise.Systems;
 using Hexecs.Dependencies;
 using Hexecs.Threading;
 using Hexecs.Worlds;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -12,11 +11,10 @@ namespace Hexecs.Benchmarks.Noise;
 
 public class NoiseGame : Game
 {
+    private BenchmarkCounter _benchmarkCounter = null!;
+    private ActorContext _context = null!;
     private readonly GraphicsDeviceManager _graphics;
     private readonly Random _random = new();
-
-    private ActorContext _context = null!;
-    private FpsCounter _fpsCounter = null!;
     private World _world = null!;
 
     private const int InitialEntityCount = 2_000_000;
@@ -44,6 +42,7 @@ public class NoiseGame : Game
         _graphics.ApplyChanges();
 
         IsFixedTimeStep = false;
+        Content.RootDirectory = "Content";
     }
 
     protected override void Initialize()
@@ -66,7 +65,7 @@ public class NoiseGame : Game
             .Build();
 
         _context = _world.Actors;
-        _fpsCounter = new FpsCounter(() => _context.Length, Window);
+        _benchmarkCounter = new BenchmarkCounter(() => _context.Length, Content, GraphicsDevice);
 
         for (var i = 0; i < InitialEntityCount; i++)
         {
@@ -109,6 +108,7 @@ public class NoiseGame : Game
             }
         }
 
+        _benchmarkCounter.Update(gameTime);
         _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 
         base.Update(gameTime);
@@ -118,9 +118,8 @@ public class NoiseGame : Game
     {
         GraphicsDevice.Clear(Color.White);
 
-        _fpsCounter.Draw(gameTime);
-
         _world.Draw(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
+        _benchmarkCounter.Draw(gameTime);
 
         base.Draw(gameTime);
     }

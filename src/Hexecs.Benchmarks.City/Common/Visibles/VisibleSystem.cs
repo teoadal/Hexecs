@@ -1,6 +1,8 @@
 ﻿using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Map.Common.Positions;
+using Hexecs.Benchmarks.Map.Terrains;
 using Hexecs.Benchmarks.Map.Utils;
+using Hexecs.Benchmarks.Map.Utils.Sprites;
 using Hexecs.Threading;
 using Hexecs.Worlds;
 
@@ -8,16 +10,16 @@ namespace Hexecs.Benchmarks.Map.Common.Visibles;
 
 internal sealed class VisibleSystem : UpdateSystem<Position>
 {
-    private const int TileSize = TextureStorage.TerrainTileSize;
-
     private readonly Camera _camera;
+    private readonly int _tileSize;
 
     private CameraViewport _currentViewport;
 
-    public VisibleSystem(ActorContext context, Camera camera, IParallelWorker parallelWorker)
+    public VisibleSystem(ActorContext context, Camera camera, IParallelWorker parallelWorker, TerrainSettings settings)
         : base(context, parallelWorker: parallelWorker)
     {
         _camera = camera;
+        _tileSize = settings.TileSize;
     }
 
     protected override bool BeforeUpdate(in WorldTime time)
@@ -35,7 +37,7 @@ internal sealed class VisibleSystem : UpdateSystem<Position>
     {
         ref readonly var position = ref actor.Component1.World;
 
-        if (_currentViewport.Visible(position.X, position.Y, TileSize, TileSize))
+        if (_currentViewport.Visible(position.X, position.Y, _tileSize, _tileSize))
         {
             actor.TryAdd(new Visible());
         }

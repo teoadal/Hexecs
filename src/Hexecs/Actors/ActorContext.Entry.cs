@@ -16,7 +16,15 @@ public sealed partial class ActorContext
             writer.WriteStartObject();
 
             writer.WriteProperty("Key", Key);
-            //writer.WriteProperty("Components", in Components);
+            writer.WritePropertyName("Components");
+
+            writer.WriteStartArray();
+            foreach (var component in Components)
+            {
+                writer.WriteNumberValue(component);
+            }
+
+            writer.WriteStartArray();
 
             writer.WriteEndObject();
         }
@@ -26,7 +34,7 @@ public sealed partial class ActorContext
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal struct ComponentBucket()
     {
-        public const int InlineArraySize = 6;
+        private const int InlineArraySize = 6;
 
         public int Length
         {

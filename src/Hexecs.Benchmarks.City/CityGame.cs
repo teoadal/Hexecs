@@ -11,9 +11,9 @@ namespace Hexecs.Benchmarks.Map;
 
 internal sealed class CityGame : Game
 {
+    private BenchmarkCounter _benchmarkCounter = null!;
     private Camera _camera = null!;
     private readonly GraphicsDeviceManager _graphics;
-    private FpsCounter _fpsCounter = null!;
     private World _world = null!;
 
     public CityGame()
@@ -38,6 +38,7 @@ internal sealed class CityGame : Game
         _graphics.ApplyChanges();
 
         IsFixedTimeStep = false;
+        Content.RootDirectory = "Content";
     }
 
     protected override void Initialize()
@@ -46,7 +47,6 @@ internal sealed class CityGame : Game
 
         _camera = new Camera(GraphicsDevice);
         _world = new WorldBuilder()
-            .UseSingleton<TextureStorage>()
             .UseDefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
             .UseSingleton(Content)
             .UseSingleton(GraphicsDevice)
@@ -61,7 +61,7 @@ internal sealed class CityGame : Game
 
         _world.Actors.Execute(new GenerateTerrainCommand());
 
-        _fpsCounter = new FpsCounter(() => _world.Actors.Length, Window);
+        _benchmarkCounter = new BenchmarkCounter(() => _world.Actors.Length, Content, GraphicsDevice);
 
         base.Initialize();
     }
@@ -80,8 +80,8 @@ internal sealed class CityGame : Game
     {
         GraphicsDevice.Clear(Color.White);
 
-        _fpsCounter.Draw(gameTime);
         _world.Draw(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
+        _benchmarkCounter.Draw(gameTime);
 
         base.Draw(gameTime);
     }
@@ -94,7 +94,7 @@ internal sealed class CityGame : Game
         }
 
         _camera.Update(gameTime);
-
+        _benchmarkCounter.Update(gameTime);
         _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 
         base.Update(gameTime);

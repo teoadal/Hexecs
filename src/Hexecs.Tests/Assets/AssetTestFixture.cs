@@ -94,6 +94,7 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
 
     public void Dispose()
     {
+        _assets?.Dispose();
         _world?.Dispose();
     }
 }

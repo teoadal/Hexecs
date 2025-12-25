@@ -18,6 +18,16 @@ public sealed partial class AssetContext
         return ref entry;
     }
 
+    private void ClearEntries()
+    {
+        foreach (var value in _entries.Values)
+        {
+            value.Dispose();
+        }
+
+        _entries.Clear();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref Entry GetEntry(uint id) => ref CollectionsMarshal.GetValueRefOrNullRef(_entries, id);
 

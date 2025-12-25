@@ -3,7 +3,6 @@ using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Noise.Components;
 using Hexecs.Threading;
 using Hexecs.Worlds;
-using Microsoft.Xna.Framework;
 
 namespace Hexecs.Benchmarks.Noise.Systems;
 

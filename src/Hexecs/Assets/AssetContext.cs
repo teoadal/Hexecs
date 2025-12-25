@@ -7,11 +7,13 @@ namespace Hexecs.Assets;
 /// Контекст ассетов, управляющий их жизненным циклом и содержащий коллекции их компонентов.
 /// </summary>
 [DebuggerDisplay("Length = {Length}")]
-public sealed partial class AssetContext : IEnumerable<Asset>
+public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
 {
     public readonly World World;
 
     private readonly Dictionary<string, uint> _aliases;
+    
+    private bool _disposed;
 
     internal AssetContext(World world, int capacity = 256)
     {
@@ -26,6 +28,16 @@ public sealed partial class AssetContext : IEnumerable<Asset>
         _filtersWithConstraint = new List<IAssetFilter>(8);
     }
 
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        
+        ClearEntries();
+        
+        _aliases.Clear();
+    }
+    
     /// <summary>
     /// Проверяет существование ассета с указанным идентификатором.
     /// </summary>
@@ -134,8 +146,6 @@ public sealed partial class AssetContext : IEnumerable<Asset>
     public AssetRef<T1> GetAssetRef<T1>(uint assetId)
         where T1 : struct, IAssetComponent
     {
-        Debug.Assert(ExistsAsset(assetId), $"Asset {assetId} isn't found");
-
         var pool = GetComponentPool<T1>();
         if (pool == null) AssetError.ComponentNotFound<T1>(assetId);
 
@@ -172,7 +182,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>
         builder.Append("Id = ");
         builder.Append(assetId);
 
-        var components = entry.AsReadOnlySpan();
+        ref var components = ref entry;
         var componentsLength = components.Length;
         if (componentsLength == 0) return;
 

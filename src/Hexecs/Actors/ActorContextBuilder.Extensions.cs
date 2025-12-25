@@ -9,6 +9,21 @@ public static class ActorContextBuilderExtensions
     extension(ActorContextBuilder builder)
     {
         /// <summary>
+        /// Создаёт строитель актёров указанного типа.
+        /// </summary>
+        /// <typeparam name="T">Тип строителя актёров.</typeparam>
+        /// <returns>Этот же экземпляр ActorContextBuilder для цепочки вызовов.</returns>
+        public ActorContextBuilder CreateBuilder<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+                                        DynamicallyAccessedMemberTypes.PublicConstructors)]
+            T>() where T : class, IActorBuilder
+        {
+            builder.CreateBuilder(static ctx => (IActorBuilder)ctx.Activate(typeof(T)));
+            return builder;
+        }
+
+
+        /// <summary>
         /// Регистрирует метод создания обработчика команды указанного типа.
         /// </summary>
         /// <remarks>

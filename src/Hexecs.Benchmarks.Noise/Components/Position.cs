@@ -1,5 +1,4 @@
 using Hexecs.Actors;
-using Microsoft.Xna.Framework;
 
 namespace Hexecs.Benchmarks.Noise.Components;
 

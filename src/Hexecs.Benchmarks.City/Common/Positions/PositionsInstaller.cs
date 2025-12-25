@@ -9,7 +9,7 @@ internal static class PositionsInstaller
     {
         var terrainSettings = builder.World.GetRequiredService<TerrainSettings>();
 
-        builder.AddBuilder<PositionBuilder>();
+        builder.CreateBuilder<PositionBuilder>();
 
         builder
             .ConfigureComponentPool<Position>(terrain => terrain

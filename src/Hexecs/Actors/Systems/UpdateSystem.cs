@@ -1,7 +1,6 @@
 using Hexecs.Assets;
 using Hexecs.Dependencies;
 using Hexecs.Loggers;
-using Hexecs.Threading;
 using Hexecs.Values;
 using Hexecs.Worlds;
 

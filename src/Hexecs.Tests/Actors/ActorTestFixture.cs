@@ -16,8 +16,8 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
         World = new WorldBuilder()
             .CreateAssetData(CreateAssets)
             .UseDefaultActorContext(ctx => ctx
-                .AddBuilder<AttackBuilder>()
-                .AddBuilder<DefenceBuilder>()
+                .CreateBuilder<AttackBuilder>()
+                .CreateBuilder<DefenceBuilder>()
                 .ConfigureComponentPool<DisposableComponent>(c => c.AddDisposeHandler()))
             .Build();
     }

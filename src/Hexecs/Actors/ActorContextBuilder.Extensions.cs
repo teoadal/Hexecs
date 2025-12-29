@@ -22,7 +22,6 @@ public static class ActorContextBuilderExtensions
             return builder;
         }
 
-
         /// <summary>
         /// Регистрирует метод создания обработчика команды указанного типа.
         /// </summary>

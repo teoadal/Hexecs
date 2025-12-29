@@ -47,7 +47,6 @@ public sealed partial class AssetContext
         {
             if (_length == 0) return -1;
 
-
             var inlineLength = Math.Min(_length, InlineArraySize);
             for (var i = 0; i < inlineLength; i++)
             {

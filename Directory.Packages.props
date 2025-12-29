@@ -1,14 +1,24 @@
 ﻿<Project>
     <PropertyGroup>
-        <ManagePackageVersionCentrally>true</ManagePackageVersionCentrally>
-        <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageVersionOverrideEnabled>true</CentralPackageVersionOverrideEnabled>
     </PropertyGroup>
+
     <ItemGroup>
-        <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="DefaultEcs" Version="0.17.2"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1"/>
+        <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
         <PackageVersion Include="FluentAssertions" Version="8.8.0"/>
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1"/>
         <PackageVersion Include="Moq" Version="4.20.72"/>

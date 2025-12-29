@@ -8,49 +8,47 @@
         <WarningsAsErrors>true</WarningsAsErrors>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
-    <Choose>
-        <When Condition="$(MSBuildProjectName.EndsWith('Benchmarks'))">
-            <PropertyGroup>
-                <OutputType>Exe</OutputType>
-                <IsPackable>false</IsPackable>
-                <IsPublishable>false</IsPublishable>
-            </PropertyGroup>
 
-            <ItemGroup>
-                <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute"/>
-            </ItemGroup>
+    <!-- Для проектов Benchmarks -->
+    
+    <PropertyGroup Condition="$(MSBuildProjectName.Contains('Benchmarks'))">
+        <IsPackable>false</IsPackable>
+        <IsPublishable>false</IsPublishable>
+    </PropertyGroup>
 
-            <ItemGroup>
-                <PackageReference Include="BenchmarkDotNet" Version="0.15.8"/>
-            </ItemGroup>
-        </When>
-        <When Condition="$(MSBuildProjectName.EndsWith('Tests'))">
-            <PropertyGroup>
-                <IsPackable>false</IsPackable>
-                <IsTestProject>true</IsTestProject>
-                <IsPublishable>false</IsPublishable>
-            </PropertyGroup>
+    <ItemGroup Condition="$(MSBuildProjectName.Contains('Benchmarks'))">
+        <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute"/>
+    </ItemGroup>
 
-            <ItemGroup>
-                <PackageReference Include="AutoFixture.Xunit2"/>
-                <PackageReference Include="FluentAssertions"/>
-                <PackageReference Include="Microsoft.NET.Test.Sdk"/>
-                <PackageReference Include="Moq"/>
-                <PackageReference Include="xunit"/>
-                <PackageReference Include="JunitXml.TestLogger"/>
-                <PackageReference Include="xunit.runner.visualstudio">
-                    <PrivateAssets>all</PrivateAssets>
-                    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-                </PackageReference>
-                <PackageReference Include="coverlet.msbuild">
-                    <PrivateAssets>all</PrivateAssets>
-                    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-                </PackageReference>
-                <PackageReference Include="coverlet.collector">
-                    <PrivateAssets>all</PrivateAssets>
-                    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-                </PackageReference>
-            </ItemGroup>
-        </When>
-    </Choose>
+    <ItemGroup Condition="$(MSBuildProjectName.EndsWith('Benchmarks'))">
+        <PackageReference Include="BenchmarkDotNet"/>
+    </ItemGroup>
+
+    <!-- Для проектов Tests -->
+    <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <IsPublishable>false</IsPublishable>
+    </PropertyGroup>
+
+    <ItemGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+        <PackageReference Include="AutoFixture.Xunit2"/>
+        <PackageReference Include="FluentAssertions"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="Moq"/>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="JunitXml.TestLogger"/>
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.msbuild">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 </Project>

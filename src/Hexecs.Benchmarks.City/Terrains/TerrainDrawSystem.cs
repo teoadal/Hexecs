@@ -2,7 +2,6 @@
 using Hexecs.Benchmarks.Map.Common.Positions;
 using Hexecs.Benchmarks.Map.Common.Visibles;
 using Hexecs.Benchmarks.Map.Utils;
-using Hexecs.Benchmarks.Map.Utils.Sprites;
 using Hexecs.Worlds;
 using Microsoft.Xna.Framework.Graphics;
 

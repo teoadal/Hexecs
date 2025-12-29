@@ -1,10 +1,10 @@
+using Hexecs.Benchmarks.Map.Common.Positions;
 using Hexecs.Benchmarks.Map.Terrains.Assets;
 using Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
 using Hexecs.Configurations;
 using Hexecs.Dependencies;
 using Hexecs.Worlds;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Hexecs.Benchmarks.Map.Terrains;
 
@@ -23,7 +23,7 @@ internal static class TerrainInstaller
         builder.CreateCommandHandler<GenerateTerrainHandler>();
 
         builder.CreateDrawSystem<TerrainDrawSystem>();
-
+        
         return builder;
     }
 
@@ -32,6 +32,11 @@ internal static class TerrainInstaller
         builder
             .UseAddAssetSource(new TerrainAssetSource());
 
+        builder
+            .UseScoped(ctx => new ActorDictionary<Point, Position>(
+                context: ctx.GetRequiredService<ActorContext>(),
+                keyExtractor: terrain => terrain.Grid));
+        
         builder
             .UseSingleton(ctx => new TerrainSpriteAtlas(
                 contentManager: ctx.GetRequiredService<ContentManager>(),

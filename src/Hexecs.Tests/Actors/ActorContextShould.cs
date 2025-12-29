@@ -1,6 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using Hexecs.Assets;
 using Hexecs.Tests.Mocks;
+using Hexecs.Tests.Mocks.ActorComponents;
+using Hexecs.Tests.Mocks.Assets;
 
 namespace Hexecs.Tests.Actors;
 

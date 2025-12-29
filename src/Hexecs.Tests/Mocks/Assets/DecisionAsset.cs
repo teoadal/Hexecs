@@ -1,6 +1,6 @@
 ﻿using Hexecs.Assets;
 
-namespace Hexecs.Tests.Mocks;
+namespace Hexecs.Tests.Mocks.Assets;
 
 public readonly struct DecisionAsset(int min, int max) : IAssetComponent
 {

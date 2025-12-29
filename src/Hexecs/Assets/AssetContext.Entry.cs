@@ -21,7 +21,7 @@ public sealed partial class AssetContext
         public void Add(ushort item)
         {
             if (_length < InlineArraySize) _inlineArray[_length] = item;
-            else ArrayUtils.Insert(ref _array, ArrayPool<ushort>.Shared, _length - InlineArraySize, item);
+            else ArrayUtils.Insert(ref _array, _length - InlineArraySize, item);
 
             _length++;
         }
@@ -31,7 +31,6 @@ public sealed partial class AssetContext
 
         public void Dispose()
         {
-            if (_array is { Length: > 0 }) ArrayPool<ushort>.Shared.Return(_array);
             _array = [];
             _length = 0;
         }

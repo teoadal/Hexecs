@@ -1,7 +1,6 @@
 ﻿using Hexecs.Benchmarks.Map.Terrains.ValueTypes;
 using Hexecs.Benchmarks.Map.Utils.Sprites;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Hexecs.Benchmarks.Map.Terrains;
 

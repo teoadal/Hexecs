@@ -1,5 +1,5 @@
 ﻿using Hexecs.Assets;
 
-namespace Hexecs.Tests.Mocks;
+namespace Hexecs.Tests.Mocks.Assets;
 
 public readonly struct BuildingAsset : IAssetComponent;

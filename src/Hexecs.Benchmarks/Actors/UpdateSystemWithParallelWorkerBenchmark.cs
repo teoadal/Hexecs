@@ -70,8 +70,8 @@ public class UpdateSystemWithParallelWorkerBenchmark
             new DefaultEcs.Threading.DefaultParallelRunner(4));
 
         _hexecsWorld = new WorldBuilder()
-            .DefaultParallelWorker(4)
-            .DefaultActorContext(ctx => ctx.CreateUpdateSystem<HexecsUpdateParallelSystem>())
+            .UseDefaultParallelWorker(4)
+            .UseDefaultActorContext(ctx => ctx.CreateUpdateSystem<HexecsUpdateParallelSystem>())
             .Build();
         _hexecsSystem = _hexecsWorld.Actors.GetUpdateSystem<HexecsUpdateParallelSystem>();
 

@@ -41,6 +41,9 @@ public sealed class Dice(int? seed = null)
         return (int)value + start;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double GetNextDouble() => GetNext() / 32768.0;
+
     #region Roll
 
     /// <summary>

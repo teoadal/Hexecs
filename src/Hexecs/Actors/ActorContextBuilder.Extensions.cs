@@ -6,59 +6,76 @@ namespace Hexecs.Actors;
 
 public static class ActorContextBuilderExtensions
 {
-    /// <summary>
-    /// Регистрирует метод создания обработчика команды указанного типа.
-    /// </summary>
-    /// <remarks>
-    /// Использует рефлексию.
-    /// </remarks>
-    public static ActorContextBuilder CreateCommandHandler<
+    extension(ActorContextBuilder builder)
+    {
+        /// <summary>
+        /// Создаёт строитель актёров указанного типа.
+        /// </summary>
+        /// <typeparam name="T">Тип строителя актёров.</typeparam>
+        /// <returns>Этот же экземпляр ActorContextBuilder для цепочки вызовов.</returns>
+        public ActorContextBuilder CreateBuilder<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
                                         DynamicallyAccessedMemberTypes.PublicConstructors)]
-            THandler>
-        (this ActorContextBuilder builder)
-        where THandler : class, ICommandHandler
-    {
-        var commandType = PipelineUtils.GetCommandType(typeof(THandler));
-        var commandId = CommandType.GetId(commandType);
+            T>() where T : class, IActorBuilder
+        {
+            builder.CreateBuilder(static ctx => (IActorBuilder)ctx.Activate(typeof(T)));
+            return builder;
+        }
 
-        builder.InsertCommandHandlerEntry(
-            commandId,
-            commandType,
-            new ActorContextBuilder.Entry<ICommandHandler>(static ctx =>
-                (ICommandHandler)ctx.Activate(typeof(THandler))));
+        /// <summary>
+        /// Регистрирует метод создания обработчика команды указанного типа.
+        /// </summary>
+        /// <remarks>
+        /// Использует рефлексию.
+        /// </remarks>
+        public ActorContextBuilder CreateCommandHandler<
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+                                            DynamicallyAccessedMemberTypes.PublicConstructors)]
+                THandler>
+            ()
+            where THandler : class, ICommandHandler
+        {
+            var commandType = PipelineUtils.GetCommandType(typeof(THandler));
+            var commandId = CommandType.GetId(commandType);
 
-        return builder;
-    }
+            builder.InsertCommandHandlerEntry(
+                commandId,
+                commandType,
+                new ActorContextBuilder.Entry<ICommandHandler>(static ctx =>
+                    (ICommandHandler)ctx.Activate(typeof(THandler))));
 
-    /// <summary>
-    /// Регистрирует метод создания системы отрисовки актёров.
-    /// </summary>
-    /// <remarks>
-    /// Использует рефлексию.
-    /// </remarks>
-    public static ActorContextBuilder CreateDrawSystem<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-            TSystem>
-        (this ActorContextBuilder builder) where TSystem : class, IDrawSystem
-    {
-        builder.CreateDrawSystem(static ctx => (IDrawSystem)ctx.Activate(typeof(TSystem)));
-        return builder;
-    }
+            return builder;
+        }
 
-    /// <summary>
-    /// Регистрирует метод создания системы обновления актёров.
-    /// </summary>
-    /// <remarks>
-    /// Использует рефлексию.
-    /// </remarks>
-    public static ActorContextBuilder CreateUpdateSystem<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-            TSystem>
-        (this ActorContextBuilder builder) where TSystem : class, IUpdateSystem
-    {
-        builder.CreateUpdateSystem(static ctx => (IUpdateSystem)ctx.Activate(typeof(TSystem)));
-        return builder;
+        /// <summary>
+        /// Регистрирует метод создания системы отрисовки актёров.
+        /// </summary>
+        /// <remarks>
+        /// Использует рефлексию.
+        /// </remarks>
+        public ActorContextBuilder CreateDrawSystem<
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+                TSystem>
+            () where TSystem : class, IDrawSystem
+        {
+            builder.CreateDrawSystem(static ctx => (IDrawSystem)ctx.Activate(typeof(TSystem)));
+            return builder;
+        }
+
+        /// <summary>
+        /// Регистрирует метод создания системы обновления актёров.
+        /// </summary>
+        /// <remarks>
+        /// Использует рефлексию.
+        /// </remarks>
+        public ActorContextBuilder CreateUpdateSystem<
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+                TSystem>
+            () where TSystem : class, IUpdateSystem
+        {
+            builder.CreateUpdateSystem(static ctx => (IUpdateSystem)ctx.Activate(typeof(TSystem)));
+            return builder;
+        }
     }
 
     /// <summary>

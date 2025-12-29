@@ -6,15 +6,15 @@ public interface IDependencyCollection
 
     IDependencyCollection AddRegistrar(IDependencyRegistrar registrar);
 
-    IDependencyCollection Singleton(Type contract, Func<IDependencyProvider, object> resolver);
+    IDependencyCollection UseSingleton(Type contract, Func<IDependencyProvider, object> resolver);
 
-    IDependencyCollection Singleton<T>(Func<IDependencyProvider, T> resolver) where T : class;
+    IDependencyCollection UseSingleton<T>(Func<IDependencyProvider, T> resolver) where T : class;
 
-    IDependencyCollection Scoped(Type contract, Func<IDependencyProvider, object> resolver);
+    IDependencyCollection UseScoped(Type contract, Func<IDependencyProvider, object> resolver);
 
-    IDependencyCollection Scoped<T>(Func<IDependencyProvider, T> resolver) where T : class;
+    IDependencyCollection UseScoped<T>(Func<IDependencyProvider, T> resolver) where T : class;
 
-    IDependencyCollection Transient(Type contract, Func<IDependencyProvider, object> resolver);
+    IDependencyCollection UseTransient(Type contract, Func<IDependencyProvider, object> resolver);
 
-    IDependencyCollection Transient<T>(Func<IDependencyProvider, T> resolver) where T : class;
+    IDependencyCollection UseTransient<T>(Func<IDependencyProvider, T> resolver) where T : class;
 }

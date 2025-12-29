@@ -21,7 +21,7 @@ public sealed partial class AssetContext
         ref var entry = ref GetEntry(assetId);
         return Unsafe.IsNullRef(ref entry)
             ? ComponentEnumerator.Empty
-            : new ComponentEnumerator(assetId, _componentPools, entry.AsReadOnlySpan());
+            : new ComponentEnumerator(assetId, _componentPools, entry.ToArray());
     }
 
     /// <summary>

@@ -32,8 +32,7 @@ public sealed class LogBuilder
             new KeyValuePair<Type, ILogValueWriter>(typeof(Actor), ActorLogWriter.Instance),
             new KeyValuePair<Type, ILogValueWriter>(typeof(Asset), AssetLogWriter.Instance),
             new KeyValuePair<Type, ILogValueWriter>(typeof(ActorId), ActorIdLogWriter.Instance),
-            new KeyValuePair<Type, ILogValueWriter>(typeof(AssetId), AssetIdLogWriter.Instance),
-            new KeyValuePair<Type, ILogValueWriter>(typeof(Money), new DefaultMoneyWriter()),
+            new KeyValuePair<Type, ILogValueWriter>(typeof(AssetId), AssetIdLogWriter.Instance)
         ], ReferenceComparer<Type>.Instance);
 
         _valueFactories = new Queue<ILogValueWriterFactory>(4);

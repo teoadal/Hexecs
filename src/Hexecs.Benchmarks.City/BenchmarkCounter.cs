@@ -54,7 +54,6 @@ internal sealed class BenchmarkCounter
         _frameTime = gameTime.ElapsedGameTime.TotalMilliseconds;
         _fpsTimer += elapsedSeconds;
 
-
         if (_fpsTimer >= 1.0)
         {
             _fps = _frameCount;

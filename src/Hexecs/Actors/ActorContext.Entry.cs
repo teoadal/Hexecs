@@ -33,9 +33,6 @@ public sealed partial class ActorContext
             _length++;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool Contains(ushort item) => IndexOf(item) > -1;
-
         public void Dispose()
         {
             if (_array is { Length: > 0 }) ArrayPool<ushort>.Shared.Return(_array);
@@ -54,7 +51,6 @@ public sealed partial class ActorContext
         public readonly int IndexOf(ushort item)
         {
             if (_length == 0) return -1;
-
 
             var inlineLength = Math.Min(_length, InlineArraySize);
             for (var i = 0; i < inlineLength; i++)
@@ -140,8 +136,8 @@ public sealed partial class ActorContext
         public readonly ushort this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => index < InlineArraySize 
-                ? _inlineArray[index] 
+            get => index < InlineArraySize
+                ? _inlineArray[index]
                 : _array![index - InlineArraySize];
         }
 
@@ -160,7 +156,7 @@ public sealed partial class ActorContext
 
         public bool TryAdd(ushort item)
         {
-            var has = Contains(item);
+            var has = IndexOf(item) > -1;
             if (has) return false;
 
             Add(item);

@@ -43,7 +43,6 @@ namespace Hexecs.Benchmarks.Actors;
 //     | Hexecs_CreateAddDestroy     | 500000 | 113,317.3 us |  1.00 |         - |        - |       40 B |        1.00 |
 //     | DefaultEcs_CreateAddDestroy | 500000 | 124,066.4 us |  1.09 | 1800.0000 | 800.0000 | 16000040 B |  400,001.00 |
 
-
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]

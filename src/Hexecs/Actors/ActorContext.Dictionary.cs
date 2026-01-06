@@ -144,10 +144,10 @@ public sealed partial class ActorContext
         var denseIndex = (int)denseIndexPlusOne - 1;
         if (_dense[denseIndex] != actorId) return false;
 
-        // 1. Уведомляем системы
+        // 1. Уведомляем системы ПЕРЕД какими-либо изменениями структуры
         Destroying?.Invoke(actorId);
 
-        // 2. Получаем ссылку ОДИН раз и работаем через неё
+        // 2. Очищаем данные сущности (пулы компонентов и т.д.)
         ref var entryToRemove = ref _values[denseIndex];
         ClearEntry(actorId, ref entryToRemove);
 
@@ -159,16 +159,20 @@ public sealed partial class ActorContext
             // Переносим ключ
             _dense[denseIndex] = lastKey;
 
-            // Копируем данные из последней ячейки в текущую (удаляемую) ссылку
-            // Это заменяет _values[denseIndex] = _values[lastIndex]
-            entryToRemove = _values[lastIndex];
+            // ВАЖНО: Переносим данные. 
+            // Поскольку мы уже вызвали ClearEntry для entryToRemove, 
+            // мы можем просто перезаписать её.
+            _values[denseIndex] = _values[lastIndex];
 
-            // Обновляем индекс перемещенного ключа в sparse-страницах
+            // Обновляем индекс перемещенного ключа
             var lastKeyPageIndex = (int)(lastKey >> PageBits);
             _sparsePages[lastKeyPageIndex]![lastKey & PageMask] = (uint)denseIndex + 1;
         }
 
-        // 3. Зачищаем хвост
+        // 3. ОБЯЗАТЕЛЬНО обнуляем хвост, чтобы не было дубликатов ссылок на массивы
+        _values[lastIndex] = default; 
+            
+        // 4. Финализируем удаление
         page[offset] = 0;
         _count = lastIndex;
 

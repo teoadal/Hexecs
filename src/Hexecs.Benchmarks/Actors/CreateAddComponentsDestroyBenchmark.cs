@@ -21,6 +21,28 @@ namespace Hexecs.Benchmarks.Actors;
 //    |                             |        |              |       |          |            |             |
 //    | DefaultEcs_CreateAddDestroy | 500000 | 470,864.8 us |  0.86 |        - | 16000040 B |  400,001.00 |
 //    | Hexecs_CreateAddDestroy     | 500000 | 548,102.0 us |  1.00 |        - |       40 B |        1.00 |
+//
+// ------------------------------------------------------------------------------------
+//
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
+//     .NET SDK 10.0.101
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//     | Method                      | Count  | Mean         | Ratio | Gen0      | Gen1     | Allocated  | Alloc Ratio |
+//     |---------------------------- |------- |-------------:|------:|----------:|---------:|-----------:|------------:|
+//     | Hexecs_CreateAddDestroy     | 1000   |     176.2 us |  1.00 |         - |        - |          - |          NA |
+//     | DefaultEcs_CreateAddDestroy | 1000   |     206.9 us |  1.17 |    3.6621 |        - |    32000 B |          NA |
+//     |                             |        |              |       |           |          |            |             |
+//     | Hexecs_CreateAddDestroy     | 100000 |  19,361.3 us |  1.00 |         - |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 100000 |  22,897.9 us |  1.18 |  375.0000 | 156.2500 |  3200040 B |   80,001.00 |
+//     |                             |        |              |       |           |          |            |             |
+//     | Hexecs_CreateAddDestroy     | 500000 | 113,317.3 us |  1.00 |         - |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 500000 | 124,066.4 us |  1.09 | 1800.0000 | 800.0000 | 16000040 B |  400,001.00 |
+
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -31,7 +53,7 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class CreateAddComponentsDestroyBenchmark
 {
-    [Params(1_000)] public int Count;
+    [Params(1_000, 100_000, 500_000)] public int Count;
 
     private List<DefaultEcs.EntitySet> _defaultSets = null!;
     private List<DefaultEcs.Entity> _defaultEntities = null!;

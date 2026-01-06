@@ -3,6 +3,7 @@ using Hexecs.Actors.Delegates;
 
 namespace Hexecs.Actors;
 
+[SuppressMessage("ReSharper", "InvertIf")]
 public sealed partial class ActorContext
 {
     private IActorComponentPool?[] _componentPools;
@@ -65,8 +66,8 @@ public sealed partial class ActorContext
     public ComponentEnumerator Components(uint actorId)
     {
         ref var entry = ref GetEntryRef(actorId);
-        return Unsafe.IsNullRef(ref entry) 
-            ? ComponentEnumerator.Empty 
+        return Unsafe.IsNullRef(ref entry)
+            ? ComponentEnumerator.Empty
             : new ComponentEnumerator(actorId, _componentPools, entry.ToArray());
     }
 
@@ -190,12 +191,14 @@ public sealed partial class ActorContext
         where T : struct, IActorComponent
     {
         var pool = GetComponentPool<T>();
-        if (pool == null || !pool.Remove(actorId)) return false;
+        if (pool != null && pool.Remove(actorId))
+        {
+            ref var entry = ref GetEntryRefExact(actorId);
+            entry.Remove(ActorComponentType<T>.Id);
+            return true;
+        }
 
-        ref var entry = ref GetEntryRefExact(actorId);
-        entry.Remove(ActorComponentType<T>.Id);
-
-        return true;
+        return false;
     }
 
     /// <summary>
@@ -296,15 +299,17 @@ public sealed partial class ActorContext
     internal ActorComponentPool<T>? GetComponentPool<T>() where T : struct, IActorComponent
     {
         var id = ActorComponentType<T>.Id;
-
         var pools = _componentPools;
 
-        if (id >= pools.Length) return null;
-        var pool = pools[id];
+        if (id < pools.Length)
+        {
+            var pool = pools[id];
+            return pool == null
+                ? null
+                : Unsafe.As<ActorComponentPool<T>>(pool);
+        }
 
-        return pool == null
-            ? null
-            : Unsafe.As<ActorComponentPool<T>>(pool);
+        return null;
     }
 
     /// <summary>
@@ -314,21 +319,40 @@ public sealed partial class ActorContext
     /// <returns>
     /// Пул компонентов указанного типа (существующий или вновь созданный).
     /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ActorComponentPool<T> GetOrCreateComponentPool<T>() where T : struct, IActorComponent
     {
         var id = ActorComponentType<T>.Id;
-        if (id < _componentPools.Length)
+        var pools = _componentPools;
+
+        if ((uint)id < (uint)pools.Length)
         {
-            var existsPool = _componentPools[id];
-            if (existsPool != null) return Unsafe.As<ActorComponentPool<T>>(existsPool);
+            var existsPool = pools[id];
+            if (existsPool != null)
+            {
+                return Unsafe.As<ActorComponentPool<T>>(existsPool);
+            }
         }
 
+        return CreateComponentPoolSlow<T>(id);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ActorComponentPool<T> CreateComponentPoolSlow<T>(ushort id) where T : struct, IActorComponent
+    {
 #if NET9_0_OR_GREATER
         using (_componentPoolLock.EnterScope())
 #else
         lock (_componentPoolLock)
 #endif
         {
+            // Повторная проверка под локом (Double-Check Locking)
+            if (id < _componentPools.Length)
+            {
+                var existsPool = _componentPools[id];
+                if (existsPool != null) return Unsafe.As<ActorComponentPool<T>>(existsPool);
+            }
+
             ArrayUtils.EnsureCapacity(ref _componentPools, id);
             ref var pool = ref _componentPools[id];
             pool ??= new ActorComponentPool<T>(this, GetOrCreateComponentConfiguration<T>());

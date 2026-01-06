@@ -18,6 +18,24 @@ namespace Hexecs.Benchmarks.Actors;
 //    |-------------------- |-----------:|------:|----------:|------------:|
 //    | Hexecs_Parallel     |   769.8 us |  1.00 |         - |          NA |
 //    | DefaultEcs_Parallel | 1,576.7 us |  2.05 |         - |          NA |
+//
+// ------------------------------------------------------------------------------------
+//
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
+//     .NET SDK 10.0.101
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//     | Method              | Count   | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |-------------------- |-------- |----------:|------:|----------:|------------:|
+//     | Hexecs_Parallel     | 100000  |  51.38 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 100000  |  77.63 us |  1.51 |         - |          NA |
+//     |                     |         |           |       |           |             |
+//     | Hexecs_Parallel     | 1000000 | 390.26 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 1000000 | 804.39 us |  2.06 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -28,8 +46,7 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class UpdateSystemWithParallelWorkerBenchmark
 {
-    [Params(100_000, 1_000_000)] 
-    public int Count;
+    [Params(100_000, 1_000_000)] public int Count;
 
     private DefaultEcs.World _defaultWorld = null!;
     private DefaultEcsParallelSystem _defaultSystem = null!;

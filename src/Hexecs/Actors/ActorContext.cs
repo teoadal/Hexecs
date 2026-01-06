@@ -100,7 +100,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор актёра для проверки</param>
     /// <returns>Возвращает true, если актёр существует, иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ActorAlive(uint actorId) => !Unsafe.IsNullRef(ref GetEntry(actorId));
+    public bool ActorAlive(uint actorId) => !Unsafe.IsNullRef(ref GetEntryRef(actorId));
 
     /// <summary>
     /// Очищает контекст актёров, удаляя всех актёров и их компоненты.
@@ -138,7 +138,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         var cloneId = GetNextActorId();
         ref var cloneEntry = ref AddEntry(cloneId);
 
-        ref var entry = ref GetEntryExact(actorId);
+        ref var entry = ref GetEntryRefExact(actorId);
         foreach (var componentId in entry)
         {
             var componentPool = _componentPools[componentId]!;
@@ -346,7 +346,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
 
     public void GetDescription(uint actorId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
     {
-        ref var entry = ref GetEntry(actorId);
+        ref var entry = ref GetEntryRef(actorId);
         if (Unsafe.IsNullRef(ref entry))
         {
             builder.Append('\'');

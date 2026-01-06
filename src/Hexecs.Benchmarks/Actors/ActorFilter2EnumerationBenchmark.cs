@@ -15,6 +15,24 @@ namespace Hexecs.Benchmarks.Actors;
 //    |----------- |---------:|------:|----------:|------------:|
 //    | DefaultEcs | 165.8 us |  0.70 |         - |          NA |
 //    | Hexecs     | 236.0 us |  1.00 |         - |          NA |
+//
+// ------------------------------------------------------------------------------------
+//
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
+//     .NET SDK 10.0.101
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//     | Method     | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
+//     |----------- |------- |-----------:|------:|----------:|------------:|
+//     | DefaultEcs | 10000  |   9.140 us |  0.88 |         - |          NA |
+//     | Hexecs     | 10000  |  10.444 us |  1.00 |         - |          NA |
+//     |            |        |            |       |           |             |
+//     | DefaultEcs | 100000 |  89.176 us |  0.88 |         - |          NA |
+//     | Hexecs     | 100000 | 101.793 us |  1.00 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -25,8 +43,7 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class ActorFilter2EnumerationBenchmark
 {
-    [Params(10_000, 100_000)] 
-    public int Count;
+    [Params(10_000, 100_000)] public int Count;
 
     private ActorFilter<Attack, Defence> _filter = null!;
     private World _world = null!;
@@ -81,7 +98,7 @@ public class ActorFilter2EnumerationBenchmark
 
         _defaultEntitySet = _defaultWorld.GetEntities().With<Attack>().With<Defence>().AsSet();
         _filter = _world.Actors.Filter<Attack, Defence>();
-        
+
         var context = _world.Actors;
         for (var i = 0; i < Count; i++)
         {

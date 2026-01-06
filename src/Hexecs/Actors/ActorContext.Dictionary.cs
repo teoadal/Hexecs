@@ -94,7 +94,7 @@ public sealed partial class ActorContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref Entry GetEntry(uint actorId)
+    private ref Entry GetEntryRef(uint actorId)
     {
         var pageIndex = (int)(actorId >> PageBits);
         if ((uint)pageIndex < (uint)_sparsePages.Length)
@@ -117,9 +117,9 @@ public sealed partial class ActorContext
         return ref Unsafe.NullRef<Entry>();
     }
 
-    private ref Entry GetEntryExact(uint key)
+    private ref Entry GetEntryRefExact(uint key)
     {
-        ref var entry = ref GetEntry(key);
+        ref var entry = ref GetEntryRef(key);
         if (!Unsafe.IsNullRef(ref entry))
         {
             return ref entry;

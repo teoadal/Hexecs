@@ -19,6 +19,28 @@ namespace Hexecs.Benchmarks.Actors;
 //    | Hexecs_Has       | 342.4 us |  1.00 |         - |          NA |
 //    | Hexecs_Reference | 380.7 us |  1.11 |         - |          NA |
 //    | DefaultEcs_Has   | 713.7 us |  2.08 |         - |          NA |
+//
+// ------------------------------------------------------------------------------------
+//
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
+//     .NET SDK 10.0.101
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//     | Method           | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |----------------- |----------:|------:|----------:|------------:|
+//     | Hexecs_Is        |  12.76 us |  0.93 |         - |          NA |
+//     | Hexecs_Has       |  13.79 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference |  15.44 us |  1.12 |         - |          NA |
+//     | DefaultEcs_Has   |  25.32 us |  1.84 |         - |          NA |
+//     |                  |           |       |           |             |
+//     | Hexecs_Is        | 127.64 us |  0.92 |         - |          NA |
+//     | Hexecs_Has       | 139.17 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 155.12 us |  1.11 |         - |          NA |
+//     | DefaultEcs_Has   | 255.36 us |  1.83 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -29,8 +51,7 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class CheckComponentExistsBenchmark
 {
-    [Params(10_000, 100_000)]
-    public int Count;
+    [Params(10_000, 100_000)] public int Count;
 
     private ActorContext _context = null!;
     private DefaultEcs.World _defaultWorld = null!;

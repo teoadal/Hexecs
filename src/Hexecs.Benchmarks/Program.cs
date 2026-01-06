@@ -1,3 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
+using Hexecs.Benchmarks.Actors;
 
-BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+BenchmarkRunner.Run<CreateAddComponentsDestroyBenchmark>();
+//BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);

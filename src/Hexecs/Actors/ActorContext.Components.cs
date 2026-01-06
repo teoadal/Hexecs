@@ -27,7 +27,7 @@ public sealed partial class ActorContext
         ref var result = ref pool.Add(actorId, in component);
 
         ref var entry = ref GetEntryExact(actorId);
-        entry.Components.Add(ActorComponentType<T>.Id);
+        entry.Add(ActorComponentType<T>.Id);
 
         return ref result;
     }
@@ -47,7 +47,7 @@ public sealed partial class ActorContext
         if (pool == null) ActorError.ComponentNotFound<T>(ownerId);
 
         ref var clone = ref GetEntryExact(cloneId);
-        if (clone.Components.TryAdd(ActorComponentType<T>.Id))
+        if (clone.TryAdd(ActorComponentType<T>.Id))
         {
             return ref pool.Clone(ownerId, cloneId);
         }
@@ -65,10 +65,9 @@ public sealed partial class ActorContext
     public ComponentEnumerator Components(uint actorId)
     {
         ref var entry = ref GetEntry(actorId);
-        if (Unsafe.IsNullRef(ref entry)) return ComponentEnumerator.Empty;
-
-        ref readonly var entryComponents = ref entry.Components;
-        return new ComponentEnumerator(actorId, _componentPools, entryComponents.ToArray());
+        return Unsafe.IsNullRef(ref entry) 
+            ? ComponentEnumerator.Empty 
+            : new ComponentEnumerator(actorId, _componentPools, entry.ToArray());
     }
 
     /// <summary>
@@ -102,7 +101,7 @@ public sealed partial class ActorContext
         if (added)
         {
             ref var entry = ref GetEntryExact(actorId);
-            entry.Components.Add(ActorComponentType<T>.Id);
+            entry.Add(ActorComponentType<T>.Id);
         }
 
         return ref component;
@@ -194,7 +193,7 @@ public sealed partial class ActorContext
         if (pool == null || !pool.Remove(actorId)) return false;
 
         ref var entry = ref GetEntryExact(actorId);
-        entry.Components.Remove(ActorComponentType<T>.Id);
+        entry.Remove(ActorComponentType<T>.Id);
 
         return true;
     }
@@ -217,7 +216,7 @@ public sealed partial class ActorContext
         }
 
         ref var entry = ref GetEntryExact(actorId);
-        entry.Components.Remove(ActorComponentType<T>.Id);
+        entry.Remove(ActorComponentType<T>.Id);
 
         return true;
     }
@@ -238,7 +237,7 @@ public sealed partial class ActorContext
         if (!result) return false;
 
         ref var entry = ref GetEntryExact(actorId);
-        entry.Components.Add(ActorComponentType<T>.Id);
+        entry.Add(ActorComponentType<T>.Id);
         return true;
     }
 
@@ -253,8 +252,12 @@ public sealed partial class ActorContext
         where T : struct, IActorComponent
     {
         var pool = GetComponentPool<T>();
-        if (pool == null) return ref Unsafe.NullRef<T>();
-        return ref pool.TryGet(actorId);
+        if (pool != null)
+        {
+            return ref pool.TryGet(actorId);
+        }
+
+        return ref Unsafe.NullRef<T>();
     }
 
     /// <summary>

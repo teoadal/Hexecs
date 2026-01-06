@@ -2,51 +2,44 @@
 
 public sealed partial class ActorContext
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Enumerator GetEnumerator() => new(this);
+
+    IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator() => GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
     [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass")]
     public struct Enumerator : IEnumerator<Actor>, IEnumerable<Actor>
     {
         public readonly Actor Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, _context._entries[_index].Key);
+            get => new(_context, _dense[_index]);
         }
 
         public readonly int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _context.Length;
+            get => _count;
         }
         
         private int _index;
         private readonly ActorContext _context;
+        private readonly uint[] _dense;
+        private readonly int _count;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal Enumerator(ActorContext context)
         {
             _index = -1;
             _context = context;
+            _dense = context._dense;
+            _count = context._count;
         }
 
-        public bool MoveNext()
-        {
-            var index = _index + 1;
-            var length = _context._length;
-            var entries = _context._entries;
-            while ((uint)index < (uint)length)
-            {
-                ref readonly var entry = ref entries[index];
-                if (entry.Next >= -1)
-                {
-                    _index = index;
-                    return true;
-                }
-
-                index++;
-            }
-
-            _index = length;
-            return false;
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext() => ++_index < _count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator() => this;
@@ -67,17 +60,11 @@ public sealed partial class ActorContext
 
         readonly IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator() => this;
 
-        readonly void IEnumerator.Reset()
+        void IEnumerator.Reset()
         {
+            _index = -1;
         }
 
         #endregion
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
-
-    IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator() => GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

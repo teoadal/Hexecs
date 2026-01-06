@@ -63,11 +63,9 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
 
         capacity = HashHelper.GetPrime(capacity);
 
-        _buckets = new int[capacity];
-        _entries = new Entry[capacity];
-        _freeCount = 0;
-        _freeList = 0;
-        _length = 0;
+        _sparsePages = new uint[16][];
+        _dense = new uint[capacity];
+        _values = new Entry[capacity];
 
         _builders = [];
 
@@ -102,11 +100,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор актёра для проверки</param>
     /// <returns>Возвращает true, если актёр существует, иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ActorAlive(uint actorId)
-    {
-        ref var entry = ref GetEntry(actorId);
-        return !Unsafe.IsNullRef(ref entry) && entry.Key == actorId;
-    }
+    public bool ActorAlive(uint actorId) => !Unsafe.IsNullRef(ref GetEntry(actorId));
 
     /// <summary>
     /// Очищает контекст актёров, удаляя всех актёров и их компоненты.
@@ -145,12 +139,12 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         ref var cloneEntry = ref AddEntry(cloneId);
 
         ref var entry = ref GetEntryExact(actorId);
-        foreach (var componentId in entry.Components)
+        foreach (var componentId in entry)
         {
             var componentPool = _componentPools[componentId]!;
             componentPool.Clone(actorId, cloneId);
 
-            cloneEntry.Components.Add(componentId);
+            cloneEntry.Add(componentId);
         }
 
         // ReSharper disable once InvertIf
@@ -362,9 +356,8 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
 
         builder.Append("Id = ");
         builder.Append(actorId);
-
-        ref var components = ref entry.Components;
-        var componentsLength = components.Length;
+        
+        var componentsLength = entry.Length;
         if (componentsLength == 0) return;
 
         builder.Append(" (");
@@ -375,7 +368,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         var printMore = false;
 
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var componentId in components)
+        foreach (var componentId in entry)
         {
             if (maxComponentDescription == index)
             {

@@ -35,11 +35,11 @@ public sealed partial class AssetContext
             _length = 0;
         }
 
-        public ComponentBucketEnumerator GetEnumerator()
+        public EntryComponentEnumerator GetEnumerator()
         {
             ref var reference = ref Unsafe.As<InlineItemArray, ushort>(ref _inlineArray);
             var span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
-            return new ComponentBucketEnumerator(span, _array, _length);
+            return new EntryComponentEnumerator(span, _array, _length);
         }
 
         public readonly int IndexOf(ushort item)
@@ -90,7 +90,7 @@ public sealed partial class AssetContext
             return result;
         }
 
-        public ref struct ComponentBucketEnumerator
+        public ref struct EntryComponentEnumerator
         {
             public readonly ref ushort Current
             {
@@ -106,7 +106,7 @@ public sealed partial class AssetContext
             private int _index;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal ComponentBucketEnumerator(Span<ushort> inlineArray, ushort[] array, int length)
+            internal EntryComponentEnumerator(Span<ushort> inlineArray, ushort[] array, int length)
             {
                 _inlineArray = inlineArray;
                 _array = array;

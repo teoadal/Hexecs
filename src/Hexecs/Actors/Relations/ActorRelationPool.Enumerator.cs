@@ -1,41 +1,42 @@
 ﻿namespace Hexecs.Actors.Relations;
 
-public struct ActorRelationEnumerator<T>
+public ref struct ActorRelationEnumerator<T>
     where T : struct
 {
     public static ActorRelationEnumerator<T> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, 0);
+        get => new(null!, ReadOnlySpan<int>.Empty);
     }
 
     public readonly ActorRelation<T> Current
     {
         get
         {
-            var current = _enumerator.Current;
-            ref var reference = ref CollectionsMarshal.GetValueRefOrNullRef(_pool.Relations, current);
-            return new ActorRelation<T>(_pool.Context, current.Second, ref reference);
+            var index = _indices[_currentIndex];
+            var key = _pool.Keys[index];
+            ref var reference = ref _pool.Values[index];
+            return new ActorRelation<T>(_pool.Context, key.First == _subject ? key.Second : key.First, ref reference);
         }
     }
 
     public readonly int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _pool.Count(_subject);
+        get => _indices.Length;
     }
 
-    private Dictionary<ActorRelationPool<T>.RelationKey, T>.KeyCollection.Enumerator _enumerator;
+    private readonly ReadOnlySpan<int> _indices;
     private readonly ActorRelationPool<T> _pool;
     private readonly uint _subject;
+    private int _currentIndex;
 
-    internal ActorRelationEnumerator(ActorRelationPool<T>? pool, uint subject)
+    internal ActorRelationEnumerator(ActorRelationPool<T> pool, ReadOnlySpan<int> indices, uint subject = 0)
     {
-        _pool = pool!;
-        _enumerator = pool == null
-            ? new Dictionary<ActorRelationPool<T>.RelationKey, T>.KeyCollection.Enumerator()
-            : pool.Relations.Keys.GetEnumerator();
+        _pool = pool;
+        _indices = indices;
         _subject = subject;
+        _currentIndex = -1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,17 +44,12 @@ public struct ActorRelationEnumerator<T>
 
     public void Dispose()
     {
-        _enumerator.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext()
     {
-        while (_enumerator.MoveNext())
-        {
-            if (_enumerator.Current.Is(_subject)) return true;
-        }
-
-        return false;
+        _currentIndex++;
+        return _currentIndex < _indices.Length;
     }
 }

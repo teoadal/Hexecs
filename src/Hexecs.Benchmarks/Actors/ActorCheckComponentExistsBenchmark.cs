@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Hexecs.Benchmarks.Mocks;
+using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 using World = Hexecs.Worlds.World;
 
@@ -49,7 +50,7 @@ namespace Hexecs.Benchmarks.Actors;
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
-public class CheckComponentExistsBenchmark
+public class ActorCheckComponentExistsBenchmark
 {
     [Params(10_000, 100_000)] public int Count;
 

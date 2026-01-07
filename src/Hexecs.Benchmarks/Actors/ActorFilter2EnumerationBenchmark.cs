@@ -1,4 +1,5 @@
 ﻿using Hexecs.Benchmarks.Mocks;
+using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 
 namespace Hexecs.Benchmarks.Actors;

@@ -370,42 +370,6 @@ public class BucketShould
         bucket.Has(2).Should().BeFalse();
     }
 
-    [Fact(DisplayName = "Remove: должен удалять первый элемент")]
-    public void Remove_FirstItem_ShouldRemoveAndShift()
-    {
-        // Arrange
-        var bucket = new Bucket<int>(3);
-        bucket.Add(10);
-        bucket.Add(20);
-        bucket.Add(30);
-
-        // Act
-        var removed = bucket.Remove(10);
-
-        // Assert
-        removed.Should().BeTrue();
-        bucket.Length.Should().Be(2);
-        bucket.ToArray().Should().Equal(20, 30);
-    }
-
-    [Fact(DisplayName = "Remove: должен удалять последний элемент")]
-    public void Remove_LastItem_ShouldRemove()
-    {
-        // Arrange
-        var bucket = new Bucket<int>(3);
-        bucket.Add(10);
-        bucket.Add(20);
-        bucket.Add(30);
-
-        // Act
-        var removed = bucket.Remove(30);
-
-        // Assert
-        removed.Should().BeTrue();
-        bucket.Length.Should().Be(2);
-        bucket.ToArray().Should().Equal(10, 20);
-    }
-
     [Fact(DisplayName = "Remove: должен возвращать false, если элемент не существует")]
     public void Remove_ItemDoesNotExist_ShouldReturnFalse()
     {

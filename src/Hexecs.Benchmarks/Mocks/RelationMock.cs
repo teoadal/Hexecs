@@ -1,6 +1,6 @@
 namespace Hexecs.Benchmarks.Mocks;
 
-public struct Attack : IActorComponent
+public struct RelationMock
 {
     public int Value;
 }

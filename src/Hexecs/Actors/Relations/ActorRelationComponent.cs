@@ -3,6 +3,7 @@ using Hexecs.Collections;
 
 namespace Hexecs.Actors.Relations;
 
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposable
 {
     public static ActorRelationComponent Create(uint actorId) => new(4);
@@ -31,15 +32,19 @@ internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposa
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ReadOnlySpan<uint> AsReadOnlySpan() => _length == 0
+    public readonly ReadOnlySpan<uint> AsReadOnlySpan() => _array == null
         ? ReadOnlySpan<uint>.Empty
-        : new ReadOnlySpan<uint>(_array, 0, _length);
+        : _array.AsSpan(0, _length);
 
     public void Dispose()
     {
-        if (_array is { Length: > 0 }) ArrayPool<uint>.Shared.Return(_array);
+        var arr = _array;
+        if (arr != null)
+        {
+            _array = null; // Защита от двойного Dispose
+            ArrayPool<uint>.Shared.Return(arr);
+        }
 
-        _array = [];
         _length = 0;
     }
 
@@ -48,29 +53,22 @@ internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposa
         ? ArrayEnumerator<uint>.Empty
         : new ArrayEnumerator<uint>(_array, _length);
 
-    public readonly bool Has(uint relationId)
-    {
-        if (_length == 0) return false;
-
-        foreach (var exists in AsReadOnlySpan())
-        {
-            if (exists == relationId) return true;
-        }
-
-        return false;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool Has(uint relationId) => _length != 0 && AsReadOnlySpan().Contains(relationId);
 
     public bool Remove(uint relationId)
     {
-        if (_length == 0) return false;
-
         var span = AsReadOnlySpan();
         for (var i = 0; i < span.Length; i++)
         {
             if (span[i] != relationId) continue;
 
-            ArrayUtils.Cut(_array!, i);
-            _length--;
+            // Swap-Back: $O(1)$
+            var lastIndex = --_length;
+            if (i < lastIndex)
+            {
+                _array![i] = _array[lastIndex];
+            }
 
             return true;
         }

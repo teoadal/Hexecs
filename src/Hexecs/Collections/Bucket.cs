@@ -94,23 +94,30 @@ internal struct Bucket<T>(int capacity) : IEnumerable<T>, IActorComponent, IAsse
 
     public bool Remove(T item, IEqualityComparer<T>? equalityComparer = null)
     {
-        if (_length == 0) return false;
+        var index = IndexOf(item, equalityComparer);
+        if (index == -1) return false;
 
-        equalityComparer ??= EqualityComparer<T?>.Default;
-
-        var span = AsReadOnlySpan();
-        for (var i = 0; i < span.Length; i++)
-        {
-            if (!equalityComparer.Equals(span[i], item)) continue;
-
-            ArrayUtils.Cut(_array!, i);
-            _length--;
-            return true;
-        }
-
-        return false;
+        RemoveAtSwapBack(index);
+        return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void RemoveAtSwapBack(int index)
+    {
+        var lastIndex = _length - 1;
+        if (index < lastIndex)
+        {
+            _array![index] = _array[lastIndex];
+        }
+
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            _array![lastIndex] = default!;
+        }
+
+        _length--;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly T[] ToArray() => AsReadOnlySpan().ToArray();
 

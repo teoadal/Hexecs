@@ -1,6 +1,7 @@
 using DefaultEcs.System;
 using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Mocks;
+using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Threading;
 using Hexecs.Worlds;
 

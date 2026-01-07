@@ -1,4 +1,5 @@
 ﻿using Hexecs.Benchmarks.Mocks;
+using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 using World = Hexecs.Worlds.World;
 

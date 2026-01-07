@@ -1,4 +1,4 @@
-namespace Hexecs.Benchmarks.Mocks;
+namespace Hexecs.Benchmarks.Mocks.ActorComponents;
 
 public struct Defence : IActorComponent
 {

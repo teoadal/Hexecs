@@ -15,4 +15,13 @@
         <PackageReference Include="DefaultEcs"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Mocks\ActorComponents\AttackBuilder.cs">
+        <DependentUpon>Attack.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Mocks\ActorComponents\DefenceBuilder.cs">
+        <DependentUpon>Defence.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

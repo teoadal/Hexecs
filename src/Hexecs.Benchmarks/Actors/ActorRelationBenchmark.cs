@@ -5,17 +5,18 @@ using Hexecs.Worlds;
 namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
-// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.101
-//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores                                                                                                 
+//     .NET SDK 10.0.101                                                                                                                                     
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a                                                                            
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a                                                                            
+//                                                                                                                                                       
+// Job=.NET 10.0  Runtime=.NET 10.0  
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  Error=2.80 ms  
-//     StdDev=2.34 ms  
-//
-//     | Method | Count | Mean     | Allocated |
-//     |------- |------ |---------:|----------:|
-//     | Do     | 1000  | 254.5 ms |         - |
+//     | Method | Count | Mean           | Allocated |
+//     |------- |------ |---------------:|----------:|
+//     | Do     | 100   |       798.9 us |         - |                                                                                                       
+//     | Do     | 1000  |   261,046.6 us |         - |
+//     | Do     | 2000  | 2,049,070.5 us |         - |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

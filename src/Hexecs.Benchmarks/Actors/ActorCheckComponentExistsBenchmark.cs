@@ -115,7 +115,6 @@ public class ActorCheckComponentExistsBenchmark
         return result;
     }
 
-
     [Benchmark]
     public int Hexecs_Is()
     {

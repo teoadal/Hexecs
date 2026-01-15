@@ -73,7 +73,7 @@ public class ActorHierarchyBenchmark
             _parents[i] = _actorContext.CreateActor();
             for (var j = 0; j < Count; j++)
             {
-                var index = i * Count + j;
+                var index = (i * Count) + j;
                 _children[index] = _actorContext.CreateActor();
             }
         }

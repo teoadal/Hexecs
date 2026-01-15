@@ -114,8 +114,8 @@ public class ActorCheckComponentExistsBenchmark
 
         return result;
     }
-    
-    
+
+
     [Benchmark]
     public int Hexecs_Is()
     {
@@ -158,7 +158,7 @@ public class ActorCheckComponentExistsBenchmark
         _defaultWorld = null!;
 
         _frifloWorld = null!;
-        
+
         _world.Dispose();
         _world = null!;
     }
@@ -183,11 +183,11 @@ public class ActorCheckComponentExistsBenchmark
             defaultEntity.Set<Defence>();
 
             var frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence());
-            
+
             if (i % 10 != 0) continue;
 
             actor.Add(new Speed());
-            
+
             defaultEntity.Set<Speed>();
             frifloEntity.Add(new Speed());
         }

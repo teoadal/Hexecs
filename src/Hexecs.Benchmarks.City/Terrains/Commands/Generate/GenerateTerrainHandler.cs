@@ -42,7 +42,6 @@ internal sealed class GenerateTerrainHandler : ActorCommandHandler<GenerateTerra
                 {
                     Context.BuildActor<Terrain>(urbanConcrete, args);
                 }
-
                 else // just ground
                 {
                     Context.BuildActor<Terrain>(ground, args);

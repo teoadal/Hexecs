@@ -1,29 +1,35 @@
-using Hexecs.Benchmarks.Mocks;
+using DefaultEcs;
+using Friflo.Engine.ECS;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
+using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//    .NET SDK 10.0.100
-//    [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//    .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.100
+//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//    | Method                      | Count  | Mean         | Ratio | Gen0     | Allocated  | Alloc Ratio |
-//    |---------------------------- |------- |-------------:|------:|---------:|-----------:|------------:|
-//    | DefaultEcs_CreateAddDestroy | 1000   |     411.8 us |  0.72 |   1.4648 |    32000 B |          NA |
-//    | Hexecs_CreateAddDestroy     | 1000   |     574.8 us |  1.00 |        - |          - |          NA |
-//    |                             |        |              |       |          |            |             |
-//    | Hexecs_CreateAddDestroy     | 100000 |  76,251.7 us |  1.00 |        - |       40 B |        1.00 |
-//    | DefaultEcs_CreateAddDestroy | 100000 |  90,755.1 us |  1.19 | 166.6667 |  3200040 B |   80,001.00 |
-//    |                             |        |              |       |          |            |             |
-//    | DefaultEcs_CreateAddDestroy | 500000 | 470,864.8 us |  0.86 |        - | 16000040 B |  400,001.00 |
-//    | Hexecs_CreateAddDestroy     | 500000 | 548,102.0 us |  1.00 |        - |       40 B |        1.00 |
+//     | Method                      | Count  | Mean         | Ratio | Gen0   | Allocated  | Alloc Ratio |
+//     |---------------------------- |------- |-------------:|------:|-------:|-----------:|------------:|
+//     | FriFlo_CreateAddDestroy     | 1000   |     153.5 us |  0.29 |      - |          - |          NA |
+//     | DefaultEcs_CreateAddDestroy | 1000   |     401.1 us |  0.77 | 1.4648 |    32000 B |          NA |
+//     | Hexecs_CreateAddDestroy     | 1000   |     523.6 us |  1.00 |      - |          - |          NA |
+//     |                             |        |              |       |        |            |             |
+//     | FriFlo_CreateAddDestroy     | 100000 |  16,519.0 us |  0.25 |      - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 100000 |  65,924.0 us |  1.00 |      - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 100000 | 105,603.9 us |  1.60 |      - |  3200040 B |   80,001.00 |
+//     |                             |        |              |       |        |            |             |
+//     | FriFlo_CreateAddDestroy     | 500000 |  85,496.9 us |  0.18 |      - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 500000 | 474,476.8 us |  1.00 |      - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 500000 | 539,368.3 us |  1.14 |      - | 16000040 B |  400,001.00 |
 //
 // ------------------------------------------------------------------------------------
+//
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
 //     .NET SDK 10.0.101
@@ -54,9 +60,13 @@ public class ActorCreateAddComponentsDestroyBenchmark
 {
     [Params(1_000, 100_000, 500_000)] public int Count;
 
-    private List<DefaultEcs.EntitySet> _defaultSets = null!;
     private List<DefaultEcs.Entity> _defaultEntities = null!;
+    private List<EntitySet> _defaultSets = null!;
     private DefaultEcs.World _defaultWorld = null!;
+
+    private List<Friflo.Engine.ECS.Entity> _frifloEntities = null!;
+    private List<ArchetypeQuery> _frifloQueries = null!;
+    private EntityStore _frifloWorld = null!;
 
     private List<Actor> _hexecsActors = null!;
     private ActorContext _hexecsContext = null!;
@@ -117,11 +127,40 @@ public class ActorCreateAddComponentsDestroyBenchmark
         return _defaultSets.Sum(static x => x.Count);
     }
 
+    [Benchmark]
+    public int FriFlo_CreateAddDestroy()
+    {
+        _frifloEntities.Clear();
+
+        for (var i = 0; i < Count; i++)
+        {
+            var entity = _frifloWorld.CreateEntity();
+            entity.AddComponent(new Attack { Value = i });
+            entity.AddComponent(new Defence());
+            entity.AddComponent(new Speed());
+
+            _frifloEntities.Add(entity);
+        }
+
+        foreach (var entity in _frifloEntities)
+        {
+            entity.RemoveComponent<Attack>();
+            entity.RemoveComponent<Defence>();
+            entity.RemoveComponent<Speed>();
+
+            entity.DeleteEntity();
+        }
+
+        return _frifloQueries.Sum(static x => x.Count);
+    }
+
     [GlobalCleanup]
     public void Cleanup()
     {
         _defaultWorld.Dispose();
         _defaultWorld = null!;
+
+        _frifloWorld = null!;
 
         _hexecsWorld.Dispose();
         _hexecsWorld = null!;
@@ -143,6 +182,19 @@ public class ActorCreateAddComponentsDestroyBenchmark
             _defaultWorld.GetEntities().With<Attack>().With<Defence>().With<Speed>().AsSet()
         ];
 
+        _frifloEntities = new List<Friflo.Engine.ECS.Entity>(Count);
+        _frifloWorld = new EntityStore();
+        _frifloQueries =
+        [
+            _frifloWorld.Query<Attack>(),
+            _frifloWorld.Query<Defence>(),
+            _frifloWorld.Query<Speed>(),
+            _frifloWorld.Query<Attack, Defence>(),
+            _frifloWorld.Query<Attack, Speed>(),
+            _frifloWorld.Query<Defence, Speed>(),
+            _frifloWorld.Query<Attack, Defence, Speed>()
+        ];
+
         _hexecsActors = new List<Actor>(Count);
         _hexecsWorld = new WorldBuilder().Build();
         _hexecsContext = _hexecsWorld.Actors;
@@ -155,35 +207,46 @@ public class ActorCreateAddComponentsDestroyBenchmark
             _hexecsContext.Filter<Attack, Speed>(),
             _hexecsContext.Filter<Defence, Speed>(),
             _hexecsContext.Filter<Attack, Defence, Speed>()
-            // warmup
         ];
 
         // warmup
         for (var i = 0; i < Count; i++)
         {
-            var actor = _hexecsContext.CreateActor();
-            actor.Add(new Attack());
-            actor.Add(new Defence());
-            actor.Add(new Speed());
-
-            _hexecsActors.Add(actor);
-
             var defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set<Attack>();
             defaultEntity.Set<Defence>();
             defaultEntity.Set<Speed>();
 
             _defaultEntities.Add(defaultEntity);
-        }
 
-        foreach (var actor in _hexecsActors)
-        {
-            actor.Destroy();
+            var frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence(), new Speed());
+            _frifloEntities.Add(frifloEntity);
+
+            var actor = _hexecsContext.CreateActor();
+            actor.Add(new Attack());
+            actor.Add(new Defence());
+            actor.Add(new Speed());
+
+            _hexecsActors.Add(actor);
         }
 
         foreach (var entity in _defaultEntities)
         {
             entity.Dispose();
         }
+
+        foreach (var entity in _frifloEntities)
+        {
+            entity.DeleteEntity();
+        }
+
+        foreach (var actor in _hexecsActors)
+        {
+            actor.Destroy();
+        }
+        
+        _defaultEntities.Clear();
+        _frifloEntities.Clear();
+        _hexecsActors.Clear();
     }
 }

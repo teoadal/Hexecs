@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using Hexecs.Collections;
 
 namespace Hexecs.Benchmarks.Collections;

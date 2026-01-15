@@ -1,6 +1,8 @@
-﻿namespace Hexecs.Benchmarks.Mocks.ActorComponents;
+﻿using Friflo.Engine.ECS;
 
-public struct Speed: IActorComponent
+namespace Hexecs.Benchmarks.Mocks.ActorComponents;
+
+public struct Speed: IActorComponent, IComponent
 {
     public int Value;
 }

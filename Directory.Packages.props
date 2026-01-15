@@ -1,31 +1,26 @@
 ﻿<Project>
-    <PropertyGroup>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <CentralPackageVersionOverrideEnabled>true</CentralPackageVersionOverrideEnabled>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageVersion Include="DefaultEcs" Version="0.17.2"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1"/>
-        <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
-        <PackageVersion Include="FluentAssertions" Version="8.8.0"/>
-        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1"/>
-        <PackageVersion Include="Moq" Version="4.20.72"/>
-        <PackageVersion Include="xunit" Version="2.9.3"/>
-        <PackageVersion Include="JunitXml.TestLogger" Version="7.1.0"/>
-        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5"/>
-        <PackageVersion Include="coverlet.msbuild" Version="6.0.4"/>
-        <PackageVersion Include="coverlet.collector" Version="6.0.4"/>
-    </ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageVersionOverrideEnabled>true</CentralPackageVersionOverrideEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Friflo.Engine.ECS" Version="3.4.2" />
+    <PackageVersion Include="DefaultEcs" Version="0.17.2" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="JunitXml.TestLogger" Version="7.1.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+  </ItemGroup>
 </Project>

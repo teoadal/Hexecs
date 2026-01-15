@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <PackageReference Include="DefaultEcs"/>
+        <PackageReference Include="Friflo.Engine.ECS" />
     </ItemGroup>
 
     <ItemGroup>

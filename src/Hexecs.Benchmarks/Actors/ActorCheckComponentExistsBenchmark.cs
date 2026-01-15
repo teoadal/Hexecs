@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using Hexecs.Benchmarks.Mocks;
+using Friflo.Engine.ECS;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 using World = Hexecs.Worlds.World;
@@ -8,18 +8,25 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//    .NET SDK 10.0.100
-//    [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//    .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.100
+//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//    | Method           | Mean     | Ratio | Allocated | Alloc Ratio |
-//    |----------------- |---------:|------:|----------:|------------:|
-//    | Hexecs_Is        | 307.7 us |  0.90 |         - |          NA |
-//    | Hexecs_Has       | 342.4 us |  1.00 |         - |          NA |
-//    | Hexecs_Reference | 380.7 us |  1.11 |         - |          NA |
-//    | DefaultEcs_Has   | 713.7 us |  2.08 |         - |          NA |
+//     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |----------------- |------- |----------:|------:|----------:|------------:|
+//     | Hexecs_Is        | 10000  |  20.42 us |  0.96 |         - |          NA |
+//     | Hexecs_Has       | 10000  |  21.19 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 10000  |  24.30 us |  1.15 |         - |          NA |
+//     | FriFlo_Has       | 10000  |  40.28 us |  1.90 |         - |          NA |
+//     | DefaultEcs_Has   | 10000  |  73.24 us |  3.46 |         - |          NA |
+//     |                  |        |           |       |           |             |
+//     | Hexecs_Is        | 100000 | 204.98 us |  0.94 |         - |          NA |
+//     | Hexecs_Has       | 100000 | 219.12 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 100000 | 251.83 us |  1.15 |         - |          NA |
+//     | FriFlo_Has       | 100000 | 409.48 us |  1.87 |         - |          NA |
+//     | DefaultEcs_Has   | 100000 | 712.00 us |  3.25 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //
@@ -46,7 +53,7 @@ namespace Hexecs.Benchmarks.Actors;
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
-[HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
+[HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
@@ -56,6 +63,8 @@ public class ActorCheckComponentExistsBenchmark
 
     private ActorContext _context = null!;
     private DefaultEcs.World _defaultWorld = null!;
+    private EntityStore _frifloWorld = null!;
+    private ArchetypeQuery _frifloAllEntitiesQuery = null!;
     private World _world = null!;
 
     [Benchmark(Baseline = true)]
@@ -89,6 +98,24 @@ public class ActorCheckComponentExistsBenchmark
         return result;
     }
 
+    [Benchmark]
+    public int FriFlo_Has()
+    {
+        var result = 0;
+
+        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+        foreach (var entity in _frifloAllEntitiesQuery.Entities)
+        {
+            if (entity.HasComponent<Speed>())
+            {
+                result++;
+            }
+        }
+
+        return result;
+    }
+    
+    
     [Benchmark]
     public int Hexecs_Is()
     {
@@ -130,6 +157,8 @@ public class ActorCheckComponentExistsBenchmark
         _defaultWorld.Dispose();
         _defaultWorld = null!;
 
+        _frifloWorld = null!;
+        
         _world.Dispose();
         _world = null!;
     }
@@ -138,6 +167,8 @@ public class ActorCheckComponentExistsBenchmark
     public void Setup()
     {
         _defaultWorld = new DefaultEcs.World();
+        _frifloWorld = new EntityStore();
+        _frifloAllEntitiesQuery = _frifloWorld.Query();
         _world = new WorldBuilder().Build();
         _context = _world.Actors;
 
@@ -151,10 +182,14 @@ public class ActorCheckComponentExistsBenchmark
             defaultEntity.Set<Attack>();
             defaultEntity.Set<Defence>();
 
+            var frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence());
+            
             if (i % 10 != 0) continue;
 
             actor.Add(new Speed());
+            
             defaultEntity.Set<Speed>();
+            frifloEntity.Add(new Speed());
         }
     }
 }

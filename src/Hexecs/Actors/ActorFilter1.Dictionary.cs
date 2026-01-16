@@ -1,5 +1,6 @@
 namespace Hexecs.Actors;
 
+[SuppressMessage("ReSharper", "InvertIf")]
 public sealed partial class ActorFilter<T1>
 {
     private const int PageBits = 12;
@@ -62,7 +63,7 @@ public sealed partial class ActorFilter<T1>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref int GetEntryRef(uint actorId)
     {
-        var pageIndex = actorId >> PageBits;
+        var pageIndex = (int)(actorId >> PageBits);
         if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
             var page = _sparsePages[pageIndex];

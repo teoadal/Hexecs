@@ -32,7 +32,8 @@ public readonly ref struct ActorRelation<T1>
 
     private readonly ref T1 _relation;
 
-    public ActorRelation(ActorContext context, uint id, ref T1 relation)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ActorRelation(ActorContext context, uint id, ref T1 relation)
     {
         Id = id;
         Context = context;

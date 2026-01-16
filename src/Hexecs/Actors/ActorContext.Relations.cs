@@ -120,11 +120,17 @@ public sealed partial class ActorContext
 
         var relationId = ActorRelationType<T>.Id;
 
-        ref var subjectRelations = ref GetComponent<ActorRelationComponent>(subject);
-        subjectRelations.Remove(relationId);
+        if (pool.Count(subject) == 0)
+        {
+            ref var subjectRelations = ref GetComponent<ActorRelationComponent>(subject);
+            subjectRelations.Remove(relationId);
+        }
 
-        ref var relativeRelations = ref GetComponent<ActorRelationComponent>(relative);
-        relativeRelations.Remove(relationId);
+        if (pool.Count(relative) == 0)
+        {
+            ref var relativeRelations = ref GetComponent<ActorRelationComponent>(relative);
+            relativeRelations.Remove(relationId);
+        }
 
         return true;
     }

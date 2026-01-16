@@ -194,7 +194,7 @@ internal sealed partial class ActorComponentPool<T>
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int TryGetEntryIndex(uint ownerId)
+    private int TryGetEntryIndex(uint ownerId)
     {
         var pageIndex = (int)(ownerId >> PageBits);
         var pages = _sparsePages;

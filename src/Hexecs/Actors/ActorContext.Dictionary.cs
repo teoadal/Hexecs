@@ -5,70 +5,36 @@ namespace Hexecs.Actors;
 [SuppressMessage("ReSharper", "InvertIf")]
 public sealed partial class ActorContext
 {
+    private const int PageBits = 12;
+    private const int PageSize = 1 << PageBits; // 4096
+    private const int PageMask = PageSize - 1;
+
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _length - _freeCount;
+        get => _count;
     }
 
-    private int[] _buckets;
-    private Entry[] _entries;
-    private int _freeCount;
-    private int _freeList;
-    private int _length;
+    private uint[]?[] _sparsePages;
+    private uint[] _dense;
+    private Entry[] _values;
+    private int _count;
 
-    private ref Entry AddEntry(uint key)
+    private ref Entry AddEntry(uint actorId)
     {
-        if (_buckets.Length == 0) ResizeEntries();
-
-        ref var bucket = ref GetBucket(key);
-        var entries = _entries;
-        var i = bucket - 1;
-
-        while ((uint)i < (uint)entries.Length)
+        ref var entry = ref TryAddEntry(actorId);
+        if (!Unsafe.IsNullRef(ref entry))
         {
-            ref readonly var existsEntry = ref entries[i];
-
-            if (existsEntry.Key == key) ActorError.AlreadyExists(key);
-            i = existsEntry.Next;
+            Created?.Invoke(actorId);
+            return ref entry;
         }
 
-        int index;
-        if (_freeCount > 0)
-        {
-            index = _freeList;
-            _freeList = CollectionUtils.StartOfFreeList - entries[index].Next;
-            _freeCount--;
-        }
-        else
-        {
-            index = _length;
-            if (index == entries.Length)
-            {
-                ResizeEntries();
-                bucket = ref GetBucket(key);
-                entries = _entries;
-            }
-
-            _length++;
-        }
-
-        ref var entry = ref entries[index];
-
-        entry.Key = key;
-        entry.Next = bucket - 1;
-
-        bucket = index + 1;
-
-        Created?.Invoke(key);
-
-        return ref entry;
+        ActorError.AlreadyExists(actorId); // выбрасывает ошибку
+        return ref Unsafe.NullRef<Entry>();
     }
 
-    private void ClearEntry(ref Entry entry)
+    private void ClearEntry(uint actorId, ref Entry entry)
     {
-        var actorId = entry.Key;
-
         ref var relationsComponent = ref TryGetComponentRef<ActorRelationComponent>(actorId);
         if (!Unsafe.IsNullRef(ref relationsComponent))
         {
@@ -78,123 +44,203 @@ public sealed partial class ActorContext
                 relationPool?.Remove(actorId);
             }
         }
-        
-        ref var components = ref entry.Components;
-        foreach (var componentId in components)
+
+        foreach (var componentId in entry)
         {
             var componentPool = _componentPools[componentId];
             componentPool?.Remove(actorId);
         }
 
-        components.Dispose();
+        entry.Dispose();
     }
 
     private void ClearEntries()
     {
-        var index = 0;
-        while ((uint)index < (uint)_length)
-        {
-            ref var entry = ref _entries[index];
-            if (entry.Next >= -1)
-            {
-                entry.Components.Dispose();
-            }
+        var dense = _dense;
+        var values = _values;
+        var sparsePages = _sparsePages;
 
-            index++;
+        for (var i = 0; i < _count; i++)
+        {
+            var key = dense[i];
+
+            ref var entry = ref values[i];
+            entry.Dispose();
+
+            var pageIndex = (int)(key >> PageBits);
+            sparsePages[pageIndex]![key & PageMask] = 0;
         }
 
-        ArrayUtils.Clear(_buckets);
-        ArrayUtils.Clear(_entries, _length);
+        _count = 0;
+    }
 
-        _freeCount = 0;
-        _freeList = 0;
-        _length = 0;
+    private void EnsureDenseCapacity()
+    {
+        if (_count >= _dense.Length)
+        {
+            var newSize = _dense.Length * 2;
+            Array.Resize(ref _dense, newSize);
+            Array.Resize(ref _values, newSize);
+        }
+    }
+
+    private void EnsurePageArraySize(int pageIndex)
+    {
+        if (pageIndex >= _sparsePages.Length)
+        {
+            var newSize = Math.Max(_sparsePages.Length * 2, pageIndex + 1);
+            Array.Resize(ref _sparsePages, newSize);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref int GetBucket(uint keyHash) => ref _buckets[keyHash % (uint)_buckets.Length];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref Entry GetEntry(uint key)
+    private ref Entry GetEntryRef(uint actorId)
     {
-        if (_length > 0)
+        var pageIndex = (int)(actorId >> PageBits);
+        if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
-            var i = _buckets[key % (uint)_buckets.Length] - 1;
-            var entries = _entries;
-            while ((uint)i < (uint)entries.Length)
+            var page = _sparsePages[pageIndex];
+            if (page != null)
             {
-                ref var entry = ref entries[i];
-                if (entry.Key == key) return ref entry;
-                i = entry.Next;
+                var denseIndexPlusOne = page[actorId & PageMask];
+                if (denseIndexPlusOne != 0)
+                {
+                    var index = (int)denseIndexPlusOne - 1;
+                    if (_dense[index] == actorId)
+                    {
+                        return ref _values[index];
+                    }
+                }
             }
         }
 
         return ref Unsafe.NullRef<Entry>();
     }
 
-    private ref Entry GetEntryExact(uint key)
+    private ref Entry GetEntryRefExact(uint key)
     {
-        ref var entry = ref GetEntry(key);
-        if (Unsafe.IsNullRef(ref entry)) ActorError.NotFound(key);
-        return ref entry;
+        ref var entry = ref GetEntryRef(key);
+        if (!Unsafe.IsNullRef(ref entry))
+        {
+            return ref entry;
+        }
+
+        ActorError.NotFound(key); // exception
+        return ref Unsafe.NullRef<Entry>();
     }
 
-    private bool RemoveEntry(uint key)
+    private bool RemoveEntry(uint actorId)
     {
-        if (_length == 0) return false;
+        var pageIndex = (int)(actorId >> PageBits);
+        if ((uint)pageIndex >= (uint)_sparsePages.Length) return false;
 
-        ref var bucket = ref GetBucket(key);
-        var entries = _entries;
-        var i = bucket - 1;
-        var last = -1;
+        var page = _sparsePages[pageIndex];
+        if (page == null) return false;
 
-        while (i >= 0)
+        var offset = (int)(actorId & PageMask);
+        var denseIndexPlusOne = page[offset];
+        if (denseIndexPlusOne == 0) return false;
+
+        var denseIndex = (int)denseIndexPlusOne - 1;
+        if (_dense[denseIndex] != actorId) return false;
+
+        // 1. Уведомляем системы ПЕРЕД какими-либо изменениями структуры
+        Destroying?.Invoke(actorId);
+
+        // 2. Очищаем данные сущности (пулы компонентов и т.д.)
+        ref var entryToRemove = ref _values[denseIndex];
+        ClearEntry(actorId, ref entryToRemove);
+
+        var lastIndex = _count - 1;
+        if (denseIndex != lastIndex)
         {
-            ref var entry = ref entries[i];
-            if (entry.Key == key)
+            var lastKey = _dense[lastIndex];
+
+            // Переносим ключ
+            _dense[denseIndex] = lastKey;
+
+            // ВАЖНО: Переносим данные. 
+            // Поскольку мы уже вызвали ClearEntry для entryToRemove, 
+            // мы можем просто перезаписать её.
+            _values[denseIndex] = _values[lastIndex];
+
+            // Обновляем индекс перемещенного ключа
+            var lastKeyPageIndex = (int)(lastKey >> PageBits);
+            _sparsePages[lastKeyPageIndex]![lastKey & PageMask] = (uint)denseIndex + 1;
+        }
+
+        // 3. ОБЯЗАТЕЛЬНО обнуляем хвост, чтобы не было дубликатов ссылок на массивы
+        _values[lastIndex] = default; 
+            
+        // 4. Финализируем удаление
+        page[offset] = 0;
+        _count = lastIndex;
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ref Entry TryAddEntry(uint actorId)
+    {
+        var pageIndex = (int)(actorId >> PageBits);
+        var pages = _sparsePages;
+
+        // Максимально компактная проверка на готовность страницы и места
+        if ((uint)pageIndex < (uint)pages.Length)
+        {
+            var page = pages[pageIndex];
+            if (page != null && (uint)_count < (uint)_dense.Length)
             {
-                Destroying?.Invoke(key);
-                ClearEntry(ref entry);
+                ref var slot = ref page[actorId & PageMask];
+                if (slot == 0) // Чистая вставка (самый частый случай в ECS)
+                {
+                    var idx = (uint)_count;
+                    slot = idx + 1;
+                    _dense[idx] = actorId;
+                    _count++;
 
-                if (last < 0) bucket = entry.Next + 1;
-                else entries[last].Next = entry.Next;
+                    return ref _values[idx];
+                }
 
-                entry.Next = CollectionUtils.StartOfFreeList - _freeList;
-
-                _freeCount++;
-                _freeList = i;
-                return true;
+                // Если не 0, проверяем на дубликат (чуть медленнее)
+                if (_dense[slot - 1] == actorId)
+                {
+                    return ref Unsafe.NullRef<Entry>();
+                }
             }
-
-            last = i;
-            i = entry.Next;
         }
 
-        return false;
+        return ref TryAddEntrySlow(actorId);
     }
 
-    private void ResizeEntries()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ref Entry TryAddEntrySlow(uint actorId)
     {
-        var length = _length;
-        var newSize = HashHelper.GetPrime(length == 0 ? 4 : length << 1);
+        EnsureDenseCapacity();
+        var pageIndex = (int)(actorId >> PageBits);
+        EnsurePageArraySize(pageIndex);
 
-        var buckets = new int[newSize];
-        var entries = new Entry[newSize];
-
-        Array.Copy(_entries, entries, length);
-
-        for (var i = 0; i < length; i++)
+        ref var page = ref _sparsePages[pageIndex];
+        if (page == null)
         {
-            ref var entry = ref entries[i];
-
-            if (entry.Next < -1) continue;
-
-            ref var bucket = ref buckets[entry.Key % (uint)buckets.Length];
-            entry.Next = bucket - 1;
-            bucket = i + 1;
+            page = ArrayUtils.Create<uint>(PageSize);
+            Array.Clear(page, 0, page.Length);
         }
 
-        _buckets = buckets;
-        _entries = entries;
+        ref var denseIndexPlusOne = ref page[actorId & PageMask];
+        if (denseIndexPlusOne != 0)
+        {
+            if (_dense[denseIndexPlusOne - 1] == actorId)
+            {
+                return ref Unsafe.NullRef<Entry>();
+            }
+        }
+
+        var denseIndex = (uint)_count;
+        denseIndexPlusOne = denseIndex + 1;
+        _dense[denseIndex] = actorId;
+        _count++;
+
+        return ref _values[denseIndex];
     }
 }

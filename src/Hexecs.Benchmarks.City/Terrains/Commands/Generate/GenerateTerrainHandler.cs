@@ -1,6 +1,8 @@
 using Hexecs.Actors.Pipelines;
+using Hexecs.Benchmarks.Map.Common.Positions;
 using Hexecs.Benchmarks.Map.Terrains.Assets;
 using Hexecs.Benchmarks.Map.Terrains.ValueTypes;
+using Hexecs.Benchmarks.Map.Utils;
 using Hexecs.Pipelines;
 
 namespace Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
@@ -9,7 +11,9 @@ internal sealed class GenerateTerrainHandler : ActorCommandHandler<GenerateTerra
 {
     private readonly TerrainSettings _settings;
 
-    public GenerateTerrainHandler(ActorContext context, TerrainSettings settings) : base(context)
+    public GenerateTerrainHandler(
+        ActorContext context,
+        TerrainSettings settings) : base(context)
     {
         _settings = settings;
     }
@@ -28,17 +32,20 @@ internal sealed class GenerateTerrainHandler : ActorCommandHandler<GenerateTerra
             for (var x = 0; x < width; x++)
             {
                 var args = Args.Rent(nameof(Point), new Point(x, y));
-                var actor = x switch
+                if (x is > 45 and < 55) // river
                 {
-                    // river
-                    > 45 and < 55 => Context.BuildActor<Terrain>(river, args
-                        .Set(nameof(Terrain.Elevation), Elevation.FromValue(-10))
-                        .Set(nameof(Terrain.Moisture), Moisture.FromValue(35))),
-                    // urban concrete
-                    < 10 when y < 10 => Context.BuildActor<Terrain>(urbanConcrete, args),
-                    // just ground
-                    _ => Context.BuildActor<Terrain>(ground, args)
-                };
+                    Context.BuildActor<Terrain>(river,
+                        args.Set(nameof(Terrain.Elevation), Elevation.FromValue(-10))
+                            .Set(nameof(Terrain.Moisture), Moisture.FromValue(35)));
+                }
+                else if (x < 10 && y < 10) // urban concrete
+                {
+                    Context.BuildActor<Terrain>(urbanConcrete, args);
+                }
+                else // just ground
+                {
+                    Context.BuildActor<Terrain>(ground, args);
+                }
             }
         }
 

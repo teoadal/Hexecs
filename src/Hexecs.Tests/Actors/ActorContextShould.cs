@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Hexecs.Assets;
-using Hexecs.Tests.Mocks;
+using Hexecs.Tests.Mocks.ActorComponents;
+using Hexecs.Tests.Mocks.Assets;
 
 namespace Hexecs.Tests.Actors;
 
@@ -264,7 +265,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         var actor = fixture.Actors.CreateActor();
 
         // act
-        ref var component = ref fixture.Actors.GetOrAddComponent(actor.Id, id => new Attack { Value = 30 });
+        ref var component = ref fixture.Actors.GetOrAddComponent(actor.Id, _ => new Attack { Value = 30 });
 
         // assert
         component.Value.Should().Be(30);

@@ -1,7 +1,8 @@
 ﻿using Hexecs.Assets;
+using Hexecs.Tests.Mocks.Assets;
 using Hexecs.Utils;
 
-namespace Hexecs.Tests.Mocks;
+namespace Hexecs.Tests.Mocks.ActorComponents;
 
 internal sealed class DefenceBuilder : IActorBuilder<UnitAsset>
 {

@@ -1,4 +1,5 @@
 ﻿using Hexecs.Tests.Mocks;
+using Hexecs.Tests.Mocks.ActorComponents;
 using Hexecs.Utils;
 
 namespace Hexecs.Tests.Actors;

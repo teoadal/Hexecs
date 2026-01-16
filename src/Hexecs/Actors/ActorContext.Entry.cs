@@ -5,36 +5,15 @@ namespace Hexecs.Actors;
 
 public sealed partial class ActorContext
 {
-    private struct Entry
-    {
-        public uint Key;
-        public int Next;
-        public ComponentBucket Components;
-
-        public readonly void Serialize(Utf8JsonWriter writer)
-        {
-            writer.WriteStartObject();
-
-            writer.WriteProperty("Key", Key);
-            writer.WritePropertyName("Components");
-
-            writer.WriteStartArray();
-            foreach (var component in Components)
-            {
-                writer.WriteNumberValue(component);
-            }
-
-            writer.WriteStartArray();
-
-            writer.WriteEndObject();
-        }
-    }
-
     [DebuggerDisplay("Length = {Length}")]
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal struct ComponentBucket()
+    private struct Entry()
     {
         private const int InlineArraySize = 6;
+
+        private InlineItemArray _inlineArray;
+        private int _length = 0;
+        private ushort[]? _array;
 
         public int Length
         {
@@ -42,39 +21,36 @@ public sealed partial class ActorContext
             get => _length;
         }
 
-        private InlineItemArray _inlineArray;
-        private int _length = 0;
-        private ushort[] _array = [];
-
         public void Add(ushort item)
         {
             if (_length < InlineArraySize) _inlineArray[_length] = item;
-            else ArrayUtils.Insert(ref _array, ArrayPool<ushort>.Shared, _length - InlineArraySize, item);
+            else
+            {
+                if (_array == null) _array = ArrayPool<ushort>.Shared.Rent(InlineArraySize);
+                else ArrayUtils.Insert(ref _array, ArrayPool<ushort>.Shared, _length - InlineArraySize, item);
+            }
 
             _length++;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool Contains(ushort item) => IndexOf(item) > -1;
-
         public void Dispose()
         {
             if (_array is { Length: > 0 }) ArrayPool<ushort>.Shared.Return(_array);
-            _array = [];
+            _array = null;
             _length = 0;
         }
 
-        public ComponentBucketEnumerator GetEnumerator()
+        public readonly EntryComponentEnumerator GetEnumerator()
         {
-            ref var reference = ref Unsafe.As<InlineItemArray, ushort>(ref _inlineArray);
+            ref var inlineRef = ref Unsafe.AsRef(in _inlineArray);
+            ref var reference = ref Unsafe.As<InlineItemArray, ushort>(ref inlineRef);
             var span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
-            return new ComponentBucketEnumerator(span, _array, _length);
+            return new EntryComponentEnumerator(span, _array ?? [], _length);
         }
 
         public readonly int IndexOf(ushort item)
         {
             if (_length == 0) return -1;
-
 
             var inlineLength = Math.Min(_length, InlineArraySize);
             for (var i = 0; i < inlineLength; i++)
@@ -116,7 +92,7 @@ public sealed partial class ActorContext
                 if (arraySize > 0)
                 {
                     const int lastInlineIndex = InlineArraySize - 1;
-                    _inlineArray[lastInlineIndex] = _array[0];
+                    _inlineArray[lastInlineIndex] = _array![0];
                     ArrayUtils.Cut(_array, 0, arraySize);
                 }
 
@@ -124,7 +100,7 @@ public sealed partial class ActorContext
                 return true;
             }
 
-            if (_array.Length == 0 || arraySize <= 0) return false;
+            if (_array == null || _array.Length == 0 || arraySize <= 0) return false;
 
             var span = _array.AsSpan(0, arraySize);
             for (var i = 0; i < span.Length; i++)
@@ -139,15 +115,30 @@ public sealed partial class ActorContext
             return false;
         }
 
-        public ushort this[int index]
+        public readonly void Serialize(uint actorId, Utf8JsonWriter writer)
+        {
+            writer.WriteStartObject();
+
+            writer.WriteProperty("Key", actorId);
+            writer.WritePropertyName("Components");
+
+            writer.WriteStartArray();
+            foreach (var component in this)
+            {
+                writer.WriteNumberValue(component);
+            }
+
+            writer.WriteStartArray();
+
+            writer.WriteEndObject();
+        }
+
+        public readonly ushort this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            readonly get => index < InlineArraySize ? _inlineArray[index] : _array[index - InlineArraySize];
-            set
-            {
-                if (index < InlineArraySize) _inlineArray[index] = value;
-                else _array[index - InlineArraySize] = value;
-            }
+            get => index < InlineArraySize
+                ? _inlineArray[index]
+                : _array![index - InlineArraySize];
         }
 
         public readonly ushort[] ToArray()
@@ -165,14 +156,14 @@ public sealed partial class ActorContext
 
         public bool TryAdd(ushort item)
         {
-            var has = Contains(item);
+            var has = IndexOf(item) > -1;
             if (has) return false;
 
             Add(item);
             return true;
         }
 
-        public ref struct ComponentBucketEnumerator
+        public ref struct EntryComponentEnumerator
         {
             public readonly ref ushort Current
             {
@@ -188,7 +179,7 @@ public sealed partial class ActorContext
             private int _index;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal ComponentBucketEnumerator(Span<ushort> inlineArray, ushort[] array, int length)
+            internal EntryComponentEnumerator(Span<ushort> inlineArray, ushort[] array, int length)
             {
                 _inlineArray = inlineArray;
                 _array = array;

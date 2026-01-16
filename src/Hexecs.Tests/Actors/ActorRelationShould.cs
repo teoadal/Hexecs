@@ -1,4 +1,5 @@
 using Hexecs.Tests.Mocks;
+using Hexecs.Tests.Mocks.ActorComponents;
 
 namespace Hexecs.Tests.Actors;
 
@@ -23,7 +24,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
             .Should()
             .BeTrue();
 
-        actor2.HasRelation<RelationMock>(actor1)
+        actor2
+            .HasRelation<RelationMock>(actor1)
             .Should()
             .BeTrue();
     }

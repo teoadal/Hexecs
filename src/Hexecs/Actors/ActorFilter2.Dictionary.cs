@@ -1,5 +1,6 @@
 ﻿namespace Hexecs.Actors;
 
+[SuppressMessage("ReSharper", "InvertIf")]
 public sealed partial class ActorFilter<T1, T2>
 {
     private const int PageBits = 12;

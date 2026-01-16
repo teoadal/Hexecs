@@ -1,4 +1,4 @@
-﻿namespace Hexecs.Benchmarks.Mocks;
+﻿namespace Hexecs.Tests.Mocks.ActorComponents;
 
 public struct Speed: IActorComponent
 {

@@ -1,6 +1,7 @@
 ﻿using Hexecs.Assets;
 using Hexecs.Tests.Actors;
 using Hexecs.Tests.Mocks;
+using Hexecs.Tests.Mocks.Assets;
 
 namespace Hexecs.Tests.Assets;
 

@@ -2,7 +2,6 @@
 using Hexecs.Benchmarks.Map.Common.Positions;
 using Hexecs.Benchmarks.Map.Terrains;
 using Hexecs.Benchmarks.Map.Utils;
-using Hexecs.Benchmarks.Map.Utils.Sprites;
 using Hexecs.Threading;
 using Hexecs.Worlds;
 

@@ -1,6 +1,6 @@
 ﻿using Hexecs.Assets;
 
-namespace Hexecs.Tests.Mocks;
+namespace Hexecs.Tests.Mocks.Assets;
 
 public readonly struct CarAsset(int price, int speed) : IAssetComponent
 {

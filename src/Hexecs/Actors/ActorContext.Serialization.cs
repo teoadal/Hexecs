@@ -26,32 +26,32 @@ public sealed partial class ActorContext
     private void SerializeComponents(Utf8JsonWriter writer)
     {
         writer.WriteStartArray();
-        
+
         foreach (var pool in _componentPools)
         {
             pool?.Serialize(writer);
         }
-        
+
         writer.WriteEndArray();
     }
-    
+
     private void SerializeComponentTypes(Utf8JsonWriter writer)
     {
         writer.WriteStartArray();
-        
+
         foreach (var pool in _componentPools)
         {
             if (pool == null) continue;
-            
+
             writer.WriteStartObject();
 
             writer
                 .WriteProperty(nameof(IActorComponentPool.Id), pool.Id)
                 .WriteProperty(nameof(IActorComponentPool.Type), pool.Type);
-            
+
             writer.WriteEndObject();
         }
-        
+
         writer.WriteEndArray();
     }
 
@@ -59,18 +59,18 @@ public sealed partial class ActorContext
     {
         writer.WriteStartArray();
 
-        var index = 0;
-        var length = _length;
-        var entries = _entries;
-        while ((uint)index < (uint)length)
-        {
-            ref readonly var entry = ref entries[index];
-            if (entry.Next >= -1)
-            {
-                entry.Serialize(writer);
-            }
+        var count = _count;
+        var dense = _dense;
+        var values = _values;
 
-            index++;
+        for (var i = 0; i < count; i++)
+        {
+            // Извлекаем ID из плотного массива ключей
+            var actorId = dense[i];
+            // Получаем ссылку на данные по тому же индексу
+            ref readonly var entry = ref values[i];
+                
+            entry.Serialize(actorId, writer);
         }
 
         writer.WriteEndArray();
@@ -79,32 +79,32 @@ public sealed partial class ActorContext
     private void SerializeRelations(Utf8JsonWriter writer)
     {
         writer.WriteStartArray();
-        
+
         foreach (var pool in _relationPools)
         {
             pool?.Serialize(writer);
         }
-        
+
         writer.WriteEndArray();
     }
-    
+
     private void SerializeRelationTypes(Utf8JsonWriter writer)
     {
         writer.WriteStartArray();
-        
+
         foreach (var pool in _relationPools)
         {
             if (pool == null) continue;
-            
+
             writer.WriteStartObject();
 
             writer
                 .WriteProperty(nameof(IActorRelationPool.Id), pool.Id)
                 .WriteProperty(nameof(IActorRelationPool.Type), pool.Type);
-            
+
             writer.WriteEndObject();
         }
-        
+
         writer.WriteEndArray();
     }
 }

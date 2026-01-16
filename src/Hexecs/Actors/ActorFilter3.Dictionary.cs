@@ -1,5 +1,6 @@
 namespace Hexecs.Actors;
 
+[SuppressMessage("ReSharper", "InvertIf")]
 public sealed partial class ActorFilter<T1, T2, T3>
 {
     private const int PageBits = 12;
@@ -41,9 +42,9 @@ public sealed partial class ActorFilter<T1, T2, T3>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool ContainsEntry(uint key)
+    private bool ContainsEntry(uint actorId)
     {
-        var pageIndex = (int)(key >> PageBits);
+        var pageIndex = (int)(actorId >> PageBits);
         var pages = _sparsePages;
 
         if ((uint)pageIndex < (uint)pages.Length)
@@ -51,8 +52,8 @@ public sealed partial class ActorFilter<T1, T2, T3>
             var page = pages[pageIndex];
             if (page != null)
             {
-                var denseIndexPlusOne = page[key & PageMask];
-                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == key;
+                var denseIndexPlusOne = page[actorId & PageMask];
+                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == actorId;
             }
         }
 
@@ -105,7 +106,6 @@ public sealed partial class ActorFilter<T1, T2, T3>
     private bool RemoveEntry(uint actorId)
     {
         var pageIndex = (int)(actorId >> PageBits);
-        // Используем вашу оригинальную "плоскую" логику из коммита
         if ((uint)pageIndex >= (uint)_sparsePages.Length) return false;
 
         var page = _sparsePages[pageIndex];

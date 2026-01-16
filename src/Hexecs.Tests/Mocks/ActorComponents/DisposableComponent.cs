@@ -1,4 +1,4 @@
-﻿namespace Hexecs.Tests.Mocks;
+﻿namespace Hexecs.Tests.Mocks.ActorComponents;
 
 public readonly struct DisposableComponent(IDisposable monitor) : IActorComponent, IDisposable
 {

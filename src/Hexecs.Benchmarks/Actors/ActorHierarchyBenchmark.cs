@@ -21,6 +21,21 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // ------------------------------------------------------------------------------------
 //
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
+//     .NET SDK 10.0.101
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//
+// Job=.NET 10.0  Runtime=.NET 10.0  
+//
+//     | Method           | Count | Mean         | Ratio | Gen0     | Gen1     | Allocated | Alloc Ratio |
+//     |----------------- |------ |-------------:|------:|---------:|---------:|----------:|------------:|
+//     | Hexecs_Hierarchy | 100   |     301.8 us |  1.00 |        - |        - |         - |          NA |
+//     | Friflo_Hierarchy | 100   |     312.4 us |  1.04 |        - |        - |         - |          NA |
+//     |                  |       |              |       |          |          |           |             |
+//     | Friflo_Hierarchy | 1000  |  86,781.6 us |  0.64 |        - |        - |         - |        0.00 |
+//     | Hexecs_Hierarchy | 1000  | 135,306.8 us |  1.00 | 400.0000 | 200.0000 | 4001192 B |        1.00 |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

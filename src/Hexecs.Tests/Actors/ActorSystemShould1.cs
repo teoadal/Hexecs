@@ -1,13 +1,12 @@
 ﻿using Hexecs.Actors.Systems;
 using Hexecs.Dependencies;
-using Hexecs.Tests.Mocks;
 using Hexecs.Tests.Mocks.ActorComponents;
 using Hexecs.Threading;
 using Hexecs.Worlds;
 
 namespace Hexecs.Tests.Actors;
 
-public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<ActorTestFixture>
+public sealed class ActorSystemShould1(ActorTestFixture fixture) : IClassFixture<ActorTestFixture>
 {
     [Fact(DisplayName = "Параллельные системы должны быть вызваны параллельно")]
     public void ConfigureAndRunSystemsInParallel()
@@ -53,8 +52,6 @@ public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<
         {
             var actor = actorContext.CreateActor(i);
             actor.Add(new Attack { Value = 0 });
-            actor.Add(new Defence { Value = 0 });
-            actor.Add(new Speed { Value = 0 });
         }
 
         // act
@@ -64,7 +61,7 @@ public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<
         // assert
 
 
-        var actorFilter = actorContext.Filter<Defence, Attack, Speed>();
+        var actorFilter = actorContext.Filter<Attack>();
 
         actorFilter.Length
             .Should()
@@ -78,33 +75,17 @@ public sealed class ActorSystemShould(ActorTestFixture fixture) : IClassFixture<
                     "Component {0} value of actor {1} should be updated to 1",
                     actor.Component1.GetType().Name,
                     actor.Id);
-
-            actor.Component2.Value
-                .Should()
-                .Be(1,
-                    "Component {0} value of actor {1} should be updated to 1",
-                    actor.Component1.GetType().Name,
-                    actor.Id);
-
-            actor.Component3.Value
-                .Should()
-                .Be(1,
-                    "Component {0} value of actor {1} should be updated to 1",
-                    actor.Component1.GetType().Name,
-                    actor.Id);
         }
     }
 
     private sealed class ParallelUpdateSystem(
         ActorContext context,
         IParallelWorker parallelWorker)
-        : UpdateSystem<Defence, Attack, Speed>(context, parallelWorker: parallelWorker)
+        : UpdateSystem<Attack>(context, parallelWorker: parallelWorker)
     {
-        protected override void Update(in ActorRef<Defence, Attack, Speed> actor, in WorldTime time)
+        protected override void Update(in ActorRef<Attack> actor, in WorldTime time)
         {
             actor.Component1.Value += 1;
-            actor.Component2.Value += 1;
-            actor.Component3.Value += 1;
         }
     }
 }

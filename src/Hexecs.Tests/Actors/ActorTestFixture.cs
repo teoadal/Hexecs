@@ -1,6 +1,5 @@
 using Hexecs.Assets;
 using Hexecs.Assets.Sources;
-using Hexecs.Tests.Mocks;
 using Hexecs.Tests.Mocks.ActorComponents;
 using Hexecs.Tests.Mocks.Assets;
 using Hexecs.Worlds;

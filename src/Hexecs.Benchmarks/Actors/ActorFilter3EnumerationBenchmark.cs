@@ -35,13 +35,18 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method     | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |----------- |------- |----------:|------:|----------:|------------:|
-//     | DefaultEcs | 10000  |  13.52 us |  0.95 |         - |          NA |
-//     | Hexecs     | 10000  |  14.28 us |  1.00 |         - |          NA |
-//     |            |        |           |       |           |             |
-//     | DefaultEcs | 100000 | 125.76 us |  0.90 |         - |          NA |
-//     | Hexecs     | 100000 | 139.85 us |  1.00 |         - |          NA |
+//     | Method        | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
+//     |-------------- |------- |-----------:|------:|----------:|------------:|
+//     | FriFlo        | 10000  |   9.524 us |  0.68 |      88 B |          NA |
+//     | FriFlo_Chunks | 10000  |   9.533 us |  0.69 |         - |          NA |
+//     | DefaultEcs    | 10000  |  13.482 us |  0.97 |         - |          NA |
+//     | Hexecs        | 10000  |  13.910 us |  1.00 |         - |          NA |
+//     |               |        |            |       |           |             |
+//     | FriFlo        | 100000 |  91.928 us |  0.66 |      88 B |          NA |
+//     | FriFlo_Chunks | 100000 |  95.014 us |  0.68 |         - |          NA |
+//     | DefaultEcs    | 100000 | 133.300 us |  0.95 |         - |          NA |
+//     | Hexecs        | 100000 | 139.751 us |  1.00 |         - |          NA |
+
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

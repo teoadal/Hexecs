@@ -38,16 +38,19 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method                      | Count  | Mean         | Ratio | Gen0      | Gen1     | Allocated  | Alloc Ratio |
-//     |---------------------------- |------- |-------------:|------:|----------:|---------:|-----------:|------------:|
-//     | Hexecs_CreateAddDestroy     | 1000   |     176.0 us |  1.00 |         - |        - |          - |          NA |
-//     | DefaultEcs_CreateAddDestroy | 1000   |     207.3 us |  1.18 |    3.6621 |        - |    32000 B |          NA |
-//     |                             |        |              |       |           |          |            |             |
-//     | Hexecs_CreateAddDestroy     | 100000 |  19,069.0 us |  1.00 |         - |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 100000 |  22,847.4 us |  1.20 |  375.0000 | 156.2500 |  3200040 B |   80,001.00 |
-//     |                             |        |              |       |           |          |            |             |
-//     | Hexecs_CreateAddDestroy     | 500000 | 113,318.9 us |  1.00 |         - |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 500000 | 121,507.3 us |  1.07 | 1800.0000 | 800.0000 | 16000040 B |  400,001.00 |
+//     | Method                      | Count  | Mean          | Ratio | Gen0      | Gen1     | Allocated  | Alloc Ratio |
+//     |---------------------------- |------- |--------------:|------:|----------:|---------:|-----------:|------------:|
+//     | FriFlo_CreateAddDestroy     | 1000   |      69.44 us |  0.40 |         - |        - |          - |          NA |
+//     | Hexecs_CreateAddDestroy     | 1000   |     175.53 us |  1.00 |         - |        - |          - |          NA |
+//     | DefaultEcs_CreateAddDestroy | 1000   |     203.30 us |  1.16 |    3.6621 |        - |    32000 B |          NA |
+//     |                             |        |               |       |           |          |            |             |
+//     | FriFlo_CreateAddDestroy     | 100000 |   6,885.36 us |  0.37 |         - |        - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 100000 |  18,738.19 us |  1.00 |         - |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 100000 |  22,333.14 us |  1.19 |  375.0000 | 156.2500 |  3200040 B |   80,001.00 |
+//     |                             |        |               |       |           |          |            |             |
+//     | FriFlo_CreateAddDestroy     | 500000 |  34,790.72 us |  0.32 |         - |        - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 500000 | 109,461.94 us |  1.00 |         - |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 500000 | 124,819.00 us |  1.14 | 1800.0000 | 800.0000 | 16000040 B |  400,001.00 |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

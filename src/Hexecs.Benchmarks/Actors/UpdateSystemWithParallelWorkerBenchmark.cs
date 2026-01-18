@@ -37,11 +37,14 @@ namespace Hexecs.Benchmarks.Actors;
 //
 //     | Method              | Count   | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |-------------------- |-------- |----------:|------:|----------:|------------:|
-//     | Hexecs_Parallel     | 100000  |  51.38 us |  1.00 |         - |          NA |
-//     | DefaultEcs_Parallel | 100000  |  77.63 us |  1.51 |         - |          NA |
+//     | FriFlo_Parallel     | 100000  |  30.03 us |  0.60 |         - |          NA |
+//     | Hexecs_Parallel     | 100000  |  50.01 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 100000  |  78.34 us |  1.57 |         - |          NA |
 //     |                     |         |           |       |           |             |
-//     | Hexecs_Parallel     | 1000000 | 390.26 us |  1.00 |         - |          NA |
-//     | DefaultEcs_Parallel | 1000000 | 804.39 us |  2.06 |         - |          NA |
+//     | FriFlo_Parallel     | 1000000 | 294.39 us |  0.76 |         - |          NA |
+//     | Hexecs_Parallel     | 1000000 | 387.52 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 1000000 | 800.26 us |  2.07 |         - |          NA |
+
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

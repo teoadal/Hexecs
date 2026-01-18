@@ -26,18 +26,24 @@ namespace Hexecs.Benchmarks.Actors;
 // ------------------------------------------------------------------------------------
 //
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
-// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores                                                                                                 
-//     .NET SDK 10.0.101                                                                                                                                     
-//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a                                                                            
-//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a                                                                            
-//                                                                                                                                                       
+// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
+//     .NET SDK 10.0.101
+//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method | Count | Mean           | Allocated |
-//     |------- |------ |---------------:|----------:|
-//     | Do     | 100   |       798.9 us |         - |                                                                                                       
-//     | Do     | 1000  |   261,046.6 us |         - |
-//     | Do     | 2000  | 2,049,070.5 us |         - |
+//     | Method | Count | Mean           | Ratio | Allocated | Alloc Ratio |
+//     |------- |------ |---------------:|------:|----------:|------------:|
+//     | Hexecs | 10    |       5.410 us |  1.00 |         - |          NA |
+//     | FriFlo | 10    |       5.775 us |  1.07 |         - |          NA |
+//     |        |       |                |       |           |             |
+//     | Hexecs | 100   |     833.950 us |  1.00 |         - |          NA |
+//     | FriFlo | 100   |     972.892 us |  1.17 |         - |          NA |
+//     |        |       |                |       |           |             |
+//     | Hexecs | 1000  | 246,183.128 us |  1.00 |         - |          NA |
+//     | FriFlo | 1000  | 438,706.845 us |  1.78 |         - |          NA |
+
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

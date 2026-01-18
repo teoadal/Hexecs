@@ -38,17 +38,20 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method           | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |----------------- |----------:|------:|----------:|------------:|
-//     | Hexecs_Is        |  12.76 us |  0.93 |         - |          NA |
-//     | Hexecs_Has       |  13.79 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference |  15.44 us |  1.12 |         - |          NA |
-//     | DefaultEcs_Has   |  25.32 us |  1.84 |         - |          NA |
-//     |                  |           |       |           |             |
-//     | Hexecs_Is        | 127.64 us |  0.92 |         - |          NA |
-//     | Hexecs_Has       | 139.17 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 155.12 us |  1.11 |         - |          NA |
-//     | DefaultEcs_Has   | 255.36 us |  1.83 |         - |          NA |
+//     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |----------------- |------- |----------:|------:|----------:|------------:|
+//     | Hexecs_Is        | 10000  |  12.17 us |  0.94 |         - |          NA |
+//     | Hexecs_Has       | 10000  |  12.97 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 10000  |  14.71 us |  1.13 |         - |          NA |
+//     | FriFlo_Has       | 10000  |  16.38 us |  1.26 |         - |          NA |
+//     | DefaultEcs_Has   | 10000  |  25.72 us |  1.98 |         - |          NA |
+//     |                  |        |           |       |           |             |
+//     | Hexecs_Is        | 100000 | 126.14 us |  0.94 |         - |          NA |
+//     | Hexecs_Has       | 100000 | 134.68 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 100000 | 153.34 us |  1.14 |         - |          NA |
+//     | FriFlo_Has       | 100000 | 159.75 us |  1.19 |         - |          NA |
+//     | DefaultEcs_Has   | 100000 | 254.83 us |  1.89 |         - |          NA |
+
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

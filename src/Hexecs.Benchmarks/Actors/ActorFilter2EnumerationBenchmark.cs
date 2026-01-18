@@ -28,11 +28,12 @@ namespace Hexecs.Benchmarks.Actors;
 //
 //     | Method     | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
 //     |----------- |------- |-----------:|------:|----------:|------------:|
-//     | DefaultEcs | 10000  |   9.140 us |  0.88 |         - |          NA |
-//     | Hexecs     | 10000  |  10.444 us |  1.00 |         - |          NA |
+//     | DefaultEcs | 10000  |   9.473 us |  0.91 |         - |          NA |
+//     | Hexecs     | 10000  |  10.361 us |  1.00 |         - |          NA |
 //     |            |        |            |       |           |             |
-//     | DefaultEcs | 100000 |  89.176 us |  0.88 |         - |          NA |
-//     | Hexecs     | 100000 | 101.793 us |  1.00 |         - |          NA |
+//     | DefaultEcs | 100000 |  88.719 us |  0.88 |         - |          NA |
+//     | Hexecs     | 100000 | 101.257 us |  1.00 |         - |          NA |
+
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

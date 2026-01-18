@@ -1,4 +1,3 @@
-using System.Buffers;
 using Friflo.Engine.ECS;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
@@ -23,6 +22,8 @@ namespace Hexecs.Benchmarks.Actors;
 //     |        |       |               |       |           |             |
 //     | Hexecs | 1000  | 604,757.61 us |  1.00 |         - |          NA |
 //     | FriFlo | 1000  | 807,112.05 us |  1.33 |         - |          NA |
+//
+// ------------------------------------------------------------------------------------
 //
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores                                                                                                 

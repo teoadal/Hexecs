@@ -1,5 +1,3 @@
-using Hexecs.Actors.Components;
-
 namespace Hexecs.Actors;
 
 public sealed partial class ActorFilter<T1>
@@ -23,7 +21,7 @@ public sealed partial class ActorFilter<T1>
     {
         private readonly ActorContext _context;
         private readonly ActorFilter<T1> _filter;
-        private readonly ActorComponentPool<T1> _pool1;
+        private readonly ComponentsAccess<T1> _pool1;
 
         private readonly ReadOnlySpan<uint> _ids;
         private int _index;
@@ -38,7 +36,7 @@ public sealed partial class ActorFilter<T1>
                 return new ActorRef<T1>(
                     _context,
                     id,
-                    ref _pool1.Get(id));
+                    ref _pool1[id]);
             }
         }
 
@@ -53,7 +51,7 @@ public sealed partial class ActorFilter<T1>
         {
             _context = filter.Context;
             _filter = filter;
-            _pool1 = filter._pool1;
+            _pool1 = filter._pool1.GetComponentAccess();
 
             var count = filter._count;
             _ids = filter._dense.AsSpan(0, count);

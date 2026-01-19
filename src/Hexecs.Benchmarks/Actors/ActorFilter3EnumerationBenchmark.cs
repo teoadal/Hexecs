@@ -13,17 +13,19 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method        | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |-------------- |------- |----------:|------:|----------:|------------:|
-//     | FriFlo_Chunks | 10000  |  16.28 us |  0.63 |         - |          NA |
-//     | Hexecs        | 10000  |  25.99 us |  1.00 |         - |          NA |
-//     | FriFlo        | 10000  |  26.76 us |  1.03 |      88 B |          NA |
-//     | DefaultEcs    | 10000  |  29.78 us |  1.15 |         - |          NA |
-//     |               |        |           |       |           |             |
-//     | FriFlo_Chunks | 100000 | 156.83 us |  0.58 |         - |          NA |
-//     | FriFlo        | 100000 | 263.76 us |  0.98 |      88 B |          NA |
-//     | Hexecs        | 100000 | 268.25 us |  1.00 |         - |          NA |
-//     | DefaultEcs    | 100000 | 289.78 us |  1.08 |         - |          NA |
+//     | Method                 | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |----------------------- |------- |----------:|------:|----------:|------------:|
+//     | FriFlo_Chunks          | 10000  |  16.16 us |  0.55 |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  25.85 us |  0.89 |         - |          NA |
+//     | FriFlo                 | 10000  |  26.17 us |  0.90 |      88 B |          NA |
+//     | Hexecs                 | 10000  |  29.12 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 10000  |  29.48 us |  1.01 |         - |          NA |
+//     |                        |        |           |       |           |             |
+//     | FriFlo_Chunks          | 100000 | 159.17 us |  0.49 |         - |          NA |
+//     | FriFlo                 | 100000 | 259.75 us |  0.80 |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 295.89 us |  0.92 |         - |          NA |
+//     | DefaultEcs             | 100000 | 308.48 us |  0.95 |         - |          NA |
+//     | Hexecs                 | 100000 | 323.35 us |  1.00 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //
@@ -56,7 +58,7 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class ActorFilter3EnumerationBenchmark
 {
-    [Params(100_000)] public int Count;
+    [Params(10_000, 100_000)] public int Count;
 
     private ActorContext _context = null!;
     private ActorFilter<Attack, Defence, Speed> _filter = null!;
@@ -119,42 +121,42 @@ public class ActorFilter3EnumerationBenchmark
         return result;
     }
 
-    // [Benchmark]
-    // public int FriFlo()
-    // {
-    //     var result = 0;
-    //
-    //     _frifloQuery.ForEachEntity((ref attack, ref defence, ref speed, _) =>
-    //     {
-    //         result += attack.Value +
-    //                   defence.Value +
-    //                   speed.Value;
-    //     });
-    //
-    //     return result;
-    // }
-    //
-    // [Benchmark]
-    // public int FriFlo_Chunks()
-    // {
-    //     var result = 0;
-    //
-    //     foreach (var queryChunk in _frifloQuery.Chunks)
-    //     {
-    //         var attacks = queryChunk.Chunk1;
-    //         var defences = queryChunk.Chunk2;
-    //         var speeds = queryChunk.Chunk3;
-    //
-    //         for (var i = 0; i < queryChunk.Length; i++)
-    //         {
-    //             result += attacks[i].Value +
-    //                       defences[i].Value +
-    //                       speeds[i].Value;
-    //         }
-    //     }
-    //
-    //     return result;
-    // }
+    [Benchmark]
+    public int FriFlo()
+    {
+        var result = 0;
+
+        _frifloQuery.ForEachEntity((ref attack, ref defence, ref speed, _) =>
+        {
+            result += attack.Value +
+                      defence.Value +
+                      speed.Value;
+        });
+
+        return result;
+    }
+
+    [Benchmark]
+    public int FriFlo_Chunks()
+    {
+        var result = 0;
+
+        foreach (var queryChunk in _frifloQuery.Chunks)
+        {
+            var attacks = queryChunk.Chunk1;
+            var defences = queryChunk.Chunk2;
+            var speeds = queryChunk.Chunk3;
+
+            for (var i = 0; i < queryChunk.Length; i++)
+            {
+                result += attacks[i].Value +
+                          defences[i].Value +
+                          speeds[i].Value;
+            }
+        }
+
+        return result;
+    }
 
     [GlobalCleanup]
     public void Cleanup()

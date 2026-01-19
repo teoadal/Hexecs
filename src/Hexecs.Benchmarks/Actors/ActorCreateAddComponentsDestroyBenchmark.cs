@@ -8,49 +8,28 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.100
-//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.102
+//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method                      | Count  | Mean         | Ratio | Gen0   | Allocated  | Alloc Ratio |
-//     |---------------------------- |------- |-------------:|------:|-------:|-----------:|------------:|
-//     | FriFlo_CreateAddDestroy     | 1000   |     153.5 us |  0.29 |      - |          - |          NA |
-//     | DefaultEcs_CreateAddDestroy | 1000   |     401.1 us |  0.77 | 1.4648 |    32000 B |          NA |
-//     | Hexecs_CreateAddDestroy     | 1000   |     523.6 us |  1.00 |      - |          - |          NA |
-//     |                             |        |              |       |        |            |             |
-//     | FriFlo_CreateAddDestroy     | 100000 |  16,519.0 us |  0.25 |      - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 100000 |  65,924.0 us |  1.00 |      - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 100000 | 105,603.9 us |  1.60 |      - |  3200040 B |   80,001.00 |
-//     |                             |        |              |       |        |            |             |
-//     | FriFlo_CreateAddDestroy     | 500000 |  85,496.9 us |  0.18 |      - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 500000 | 474,476.8 us |  1.00 |      - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 500000 | 539,368.3 us |  1.14 |      - | 16000040 B |  400,001.00 |
+//     | Method                      | Count  | Mean         | Ratio | Gen0     | Allocated  | Alloc Ratio |
+//     |---------------------------- |------- |-------------:|------:|---------:|-----------:|------------:|
+//     | FriFlo_CreateAddDestroy     | 1000   |     157.5 us |  0.32 |        - |          - |          NA |
+//     | DefaultEcs_CreateAddDestroy | 1000   |     400.8 us |  0.83 |   1.4648 |    32000 B |          NA |
+//     | Hexecs_CreateAddDestroy     | 1000   |     485.5 us |  1.00 |        - |          - |          NA |
+//     |                             |        |              |       |          |            |             |
+//     | FriFlo_CreateAddDestroy     | 100000 |  16,503.2 us |  0.26 |        - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 100000 |  62,708.1 us |  1.00 |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 100000 |  89,760.2 us |  1.43 | 166.6667 |  3200040 B |   80,001.00 |
+//     |                             |        |              |       |          |            |             |
+//     | FriFlo_CreateAddDestroy     | 500000 |  84,276.5 us |  0.15 |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 500000 | 457,366.0 us |  0.83 |        - | 16000040 B |  400,001.00 |
+//     | Hexecs_CreateAddDestroy     | 500000 | 551,567.4 us |  1.00 |        - |       40 B |        1.00 |
 //
-// ------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 //
-// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
-// Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.101
-//     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//
-// Job=.NET 10.0  Runtime=.NET 10.0  
-//
-//     | Method                      | Count  | Mean          | Ratio | Gen0      | Gen1     | Allocated  | Alloc Ratio |
-//     |---------------------------- |------- |--------------:|------:|----------:|---------:|-----------:|------------:|
-//     | FriFlo_CreateAddDestroy     | 1000   |      69.44 us |  0.40 |         - |        - |          - |          NA |
-//     | Hexecs_CreateAddDestroy     | 1000   |     175.53 us |  1.00 |         - |        - |          - |          NA |
-//     | DefaultEcs_CreateAddDestroy | 1000   |     203.30 us |  1.16 |    3.6621 |        - |    32000 B |          NA |
-//     |                             |        |               |       |           |          |            |             |
-//     | FriFlo_CreateAddDestroy     | 100000 |   6,885.36 us |  0.37 |         - |        - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 100000 |  18,738.19 us |  1.00 |         - |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 100000 |  22,333.14 us |  1.19 |  375.0000 | 156.2500 |  3200040 B |   80,001.00 |
-//     |                             |        |               |       |           |          |            |             |
-//     | FriFlo_CreateAddDestroy     | 500000 |  34,790.72 us |  0.32 |         - |        - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 500000 | 109,461.94 us |  1.00 |         - |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 500000 | 124,819.00 us |  1.14 | 1800.0000 | 800.0000 | 16000040 B |  400,001.00 |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

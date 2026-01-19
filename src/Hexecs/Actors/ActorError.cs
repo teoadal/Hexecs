@@ -106,7 +106,8 @@ internal static class ActorError
     /// <typeparam name="T">Тип компонента</typeparam>
     /// <param name="actorId">Идентификатор актёра</param>
     [DoesNotReturn]
-    public static void ComponentNotFound<T>(uint actorId)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static ref T ComponentNotFound<T>(uint actorId)
     {
         throw new Exception($"Actor {actorId} don't have component {TypeOf<T>.GetTypeName()}");
     }

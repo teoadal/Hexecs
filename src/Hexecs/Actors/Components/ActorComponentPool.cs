@@ -130,11 +130,17 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
         return ActorRef<T>.Empty;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(uint ownerId)
     {
         ref var entry = ref GetEntryRef(ownerId);
-        if (Unsafe.IsNullRef(ref entry)) ActorError.ComponentNotFound<T>(ownerId);
-        return ref entry;
+        if (!Unsafe.IsNullRef(ref entry))
+        {
+            return ref entry;
+            
+        }
+        
+        return ref ActorError.ComponentNotFound<T>(ownerId);
     }
 
     public ref T GetOrCreate(uint ownerId, out bool added, Func<uint, T>? factory = null)

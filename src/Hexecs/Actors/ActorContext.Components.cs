@@ -90,9 +90,9 @@ public sealed partial class ActorContext
     /// </summary>
     /// <typeparam name="T">Тип компонента. Должен быть структурой и реализовывать <see cref="IActorComponent"/>.</typeparam>
     /// <param name="actorId">Идентификатор актёра.</param>
-    /// <param name="factory">Фабричный метод для создания компонента, если он отсутствует.</param>
+    /// <param name="factory">Фабричный метод для создания компонента</param>
     /// <returns>Ссылка на существующий или вновь созданный компонент.</returns>
-    public ref T GetOrAddComponent<T>(uint actorId, Func<uint, T> factory)
+    public ref T GetOrAddComponent<T>(uint actorId, Func<uint, T>? factory = null)
         where T : struct, IActorComponent
     {
         var pool = GetOrCreateComponentPool<T>();

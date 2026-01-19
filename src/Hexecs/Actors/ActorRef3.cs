@@ -110,6 +110,9 @@ public readonly ref struct ActorRef<T1, T2, T3>
     public bool Has<T>() where T : struct, IActorComponent => Context.HasComponent<T>(Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasChild(in Actor child) => Context.HasChild(Id, child.Id);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

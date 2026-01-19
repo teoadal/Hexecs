@@ -1,4 +1,5 @@
-﻿using Hexecs.Actors.Relations;
+﻿using Hexecs.Actors.Nodes;
+using Hexecs.Actors.Relations;
 
 namespace Hexecs.Actors;
 
@@ -35,6 +36,12 @@ public sealed partial class ActorContext
 
     private void ClearEntry(uint actorId, ref Entry entry)
     {
+        ref var node = ref TryGetComponentRef<ActorNodeComponent>(actorId);
+        if (!Unsafe.IsNullRef(ref node))
+        {
+            OnNodeRemoving(ref node);
+        }
+        
         ref var relationsComponent = ref TryGetComponentRef<ActorRelationComponent>(actorId);
         if (!Unsafe.IsNullRef(ref relationsComponent))
         {

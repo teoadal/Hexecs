@@ -13,11 +13,11 @@ namespace Hexecs.Benchmarks.Actors;
 //
 //     | Method           | Count | Mean         | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------ |-------------:|------:|----------:|------------:|
-//     | Hexecs_Hierarchy | 100   |     777.3 us |  1.00 |         - |          NA |
-//     | Friflo_Hierarchy | 100   |     691.9 us |  0.89 |         - |          NA |
+//     | Hexecs_Hierarchy | 100   |     356.6 us |  1.00 |         - |          NA |
+//     | Friflo_Hierarchy | 100   |     690.1 us |  1.94 |         - |          NA |
 //     |                  |       |              |       |           |             |
-//     | Hexecs_Hierarchy | 1000  | 228,839.9 us |  1.00 |         - |          NA |
-//     | Friflo_Hierarchy | 1000  | 132,837.5 us |  0.58 |         - |          NA |
+//     | Hexecs_Hierarchy | 1000  |  38,223.2 us |  1.00 |         - |          NA |
+//     | Friflo_Hierarchy | 1000  | 130,824.8 us |  3.42 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //

@@ -26,30 +26,28 @@ public sealed partial class ActorFilter<T1, T2>
         private readonly ActorComponentPool<T1> _pool1;
         private readonly ActorComponentPool<T2> _pool2;
 
-        private readonly ReadOnlySpan<uint> _keys;
-        private readonly ReadOnlySpan<Entry> _entries;
-
+        private readonly ReadOnlySpan<uint> _ids;
         private int _index;
-        
+
         public readonly ActorRef<T1, T2> Current
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var index = _index;
-                ref readonly var entry = ref _entries[index];
+                var id = _ids[_index];
 
                 return new ActorRef<T1, T2>(
                     _context,
-                    _keys[index],
-                    ref _pool1.GetByIndex(entry.Index1),
-                    ref _pool2.GetByIndex(entry.Index2));
+                    id,
+                    ref _pool1.Get(id),
+                    ref _pool2.Get(id));
             }
         }
 
         public readonly int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _keys.Length;
+            get => _ids.Length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -61,8 +59,7 @@ public sealed partial class ActorFilter<T1, T2>
             _pool2 = filter._pool2;
 
             var count = filter._count;
-            _keys = filter._dense.AsSpan(0, count);
-            _entries = filter._values.AsSpan(0, count);
+            _ids = filter._dense.AsSpan(0, count);
 
             _index = -1;
         }
@@ -71,7 +68,7 @@ public sealed partial class ActorFilter<T1, T2>
         public void Dispose() => _filter.ProcessPostponedUpdates();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _keys.Length;
+        public bool MoveNext() => ++_index < _ids.Length;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator() => this;

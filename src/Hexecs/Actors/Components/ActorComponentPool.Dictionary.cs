@@ -16,7 +16,7 @@ internal sealed partial class ActorComponentPool<T>
     private uint[] _dense;
     private T[] _values;
     private int _count;
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool ContainsEntry(uint ownerId)
     {
@@ -191,32 +191,6 @@ internal sealed partial class ActorComponentPool<T>
         _count++;
 
         return result;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int TryGetEntryIndex(uint ownerId)
-    {
-        var pageIndex = (int)(ownerId >> PageBits);
-        var pages = _sparsePages;
-        
-        if ((uint)pageIndex < (uint)pages.Length)
-        {
-            var page = pages[pageIndex];
-            if (page != null)
-            {
-                var slot = page[ownerId & PageMask];
-                if (slot != 0)
-                {
-                    var denseIndex = (int)slot - 1;
-                    if (_dense[denseIndex] == ownerId)
-                    {
-                        return denseIndex;
-                    }
-                }
-            }
-        }
-
-        return -1;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

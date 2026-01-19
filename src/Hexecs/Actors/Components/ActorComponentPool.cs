@@ -58,7 +58,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
             componentRef = component;
 
             Added?.Invoke(ownerId);
-            ComponentAdded?.Invoke(ownerId, result.Index, ref componentRef);
+            ComponentAdded?.Invoke(ownerId, ref componentRef);
 
             return ref componentRef;
         }
@@ -152,14 +152,11 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
         componentRef = factory?.Invoke(ownerId) ?? new T();
 
         Added?.Invoke(ownerId);
-        ComponentAdded?.Invoke(ownerId, result.Index, ref componentRef);
+        ComponentAdded?.Invoke(ownerId, ref componentRef);
 
         added = true;
         return ref componentRef;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetByIndex(int index) => ref _values[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> GetValues() => _values.AsSpan(0, _count);
@@ -183,16 +180,13 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
         componentRef = component;
 
         Added?.Invoke(ownerId);
-        ComponentAdded?.Invoke(ownerId, result.Index, ref componentRef);
+        ComponentAdded?.Invoke(ownerId, ref componentRef);
 
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T TryGet(uint ownerId) => ref GetEntryRef(ownerId);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int TryGetIndex(uint ownerId) => TryGetEntryIndex(ownerId);
 
     public bool Update(uint ownerId, in T component)
     {

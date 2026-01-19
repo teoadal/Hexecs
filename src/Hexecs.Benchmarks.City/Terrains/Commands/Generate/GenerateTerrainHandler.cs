@@ -1,8 +1,6 @@
 using Hexecs.Actors.Pipelines;
-using Hexecs.Benchmarks.Map.Common.Positions;
 using Hexecs.Benchmarks.Map.Terrains.Assets;
 using Hexecs.Benchmarks.Map.Terrains.ValueTypes;
-using Hexecs.Benchmarks.Map.Utils;
 using Hexecs.Pipelines;
 
 namespace Hexecs.Benchmarks.Map.Terrains.Commands.Generate;

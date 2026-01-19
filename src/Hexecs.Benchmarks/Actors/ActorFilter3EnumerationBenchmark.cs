@@ -57,7 +57,7 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class ActorFilter3EnumerationBenchmark
 {
-    [Params(10_000, 100_000)] public int Count;
+    [Params(100_000)] public int Count;
 
     private ActorFilter<Attack, Defence, Speed> _filter = null!;
     private World _world = null!;
@@ -100,42 +100,42 @@ public class ActorFilter3EnumerationBenchmark
         return result;
     }
 
-    [Benchmark]
-    public int FriFlo()
-    {
-        var result = 0;
-
-        _frifloQuery.ForEachEntity((ref attack, ref defence, ref speed, _) =>
-        {
-            result += attack.Value +
-                      defence.Value +
-                      speed.Value;
-        });
-
-        return result;
-    }
-
-    [Benchmark]
-    public int FriFlo_Chunks()
-    {
-        var result = 0;
-
-        foreach (var queryChunk in _frifloQuery.Chunks)
-        {
-            var attacks = queryChunk.Chunk1;
-            var defences = queryChunk.Chunk2;
-            var speeds = queryChunk.Chunk3;
-
-            for (var i = 0; i < queryChunk.Length; i++)
-            {
-                result += attacks[i].Value +
-                          defences[i].Value +
-                          speeds[i].Value;
-            }
-        }
-
-        return result;
-    }
+    // [Benchmark]
+    // public int FriFlo()
+    // {
+    //     var result = 0;
+    //
+    //     _frifloQuery.ForEachEntity((ref attack, ref defence, ref speed, _) =>
+    //     {
+    //         result += attack.Value +
+    //                   defence.Value +
+    //                   speed.Value;
+    //     });
+    //
+    //     return result;
+    // }
+    //
+    // [Benchmark]
+    // public int FriFlo_Chunks()
+    // {
+    //     var result = 0;
+    //
+    //     foreach (var queryChunk in _frifloQuery.Chunks)
+    //     {
+    //         var attacks = queryChunk.Chunk1;
+    //         var defences = queryChunk.Chunk2;
+    //         var speeds = queryChunk.Chunk3;
+    //
+    //         for (var i = 0; i < queryChunk.Length; i++)
+    //         {
+    //             result += attacks[i].Value +
+    //                       defences[i].Value +
+    //                       speeds[i].Value;
+    //         }
+    //     }
+    //
+    //     return result;
+    // }
 
     [GlobalCleanup]
     public void Cleanup()

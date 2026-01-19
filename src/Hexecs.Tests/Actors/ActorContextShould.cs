@@ -134,15 +134,16 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
     public void TryGetActorWithComponent(int attackValue, int defenceValue)
     {
         // arrange
-        var actor = fixture.Actors.CreateActor();
+        var actors = fixture.Actors;
+
+        var actor = actors.CreateActor();
         actor.Add(new Attack { Value = attackValue });
         actor.Add(new Defence { Value = defenceValue });
 
         // act
-        var hasAttack = fixture.Actors.TryGetActor<Attack>(actor.Id, out var actorWithAttack);
-        var hasDefence = fixture.Actors.TryGetActor<Defence>(actor.Id, out var actorWithDefence);
-        var hasNonExistentComponent =
-            fixture.Actors.TryGetActor<NonExistentComponent>(actor.Id, out var actorWithNonExistent);
+        var hasAttack = actors.TryGetActor<Attack>(actor.Id, out var actorWithAttack);
+        var hasDefence = actors.TryGetActor<Defence>(actor.Id, out var actorWithDefence);
+        var hasNonExistentComponent = actors.TryGetActor<NonExistentComponent>(actor.Id, out _);
 
         // assert
         hasAttack.Should().BeTrue();
@@ -327,7 +328,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         uint? addedActorId = null;
         Attack? addedComponent = null;
 
-        fixture.Actors.OnComponentAdded((uint id, int _, ref Attack component) =>
+        fixture.Actors.OnComponentAdded((uint id, ref Attack component) =>
         {
             addedActorId = id;
             addedComponent = component;
@@ -616,7 +617,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         actor3.Add(new Attack { Value = 15 });
 
         // act
-        var actorWithAttack10 = fixture.Actors.GetActor<Attack>((in ActorRef<Attack> actor) => actor.Get<Attack>().Value == 10);
+        var actorWithAttack10 = fixture.Actors.GetActor((in ActorRef<Attack> actor) => actor.Get<Attack>().Value == 10);
 
         // assert
         actorWithAttack10.Id.Should().Be(actor2.Id);

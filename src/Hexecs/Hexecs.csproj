@@ -65,9 +65,6 @@
         <Compile Update="Actors\ActorFilter2.Enumerator.cs">
             <DependentUpon>ActorFilter2.cs</DependentUpon>
         </Compile>
-        <Compile Update="Actors\ActorFilter2.Entry.cs">
-            <DependentUpon>ActorFilter2.cs</DependentUpon>
-        </Compile>
         <Compile Update="Actors\ActorFilter2.Operation.cs">
             <DependentUpon>ActorFilter2.cs</DependentUpon>
         </Compile>
@@ -117,9 +114,6 @@
             <DependentUpon>ActorFilter3.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorFilter3.Dictionary.cs">
-            <DependentUpon>ActorFilter3.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Actors\ActorFilter3.Entry.cs">
             <DependentUpon>ActorFilter3.cs</DependentUpon>
         </Compile>
         <Compile Update="Actors\ActorFilter3.Enumerator.cs">

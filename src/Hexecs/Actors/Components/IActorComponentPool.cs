@@ -76,11 +76,4 @@ internal interface IActorComponentPool
     /// </summary>
     /// <param name="writer">JSON-писатель для записи данных.</param>
     void Serialize(Utf8JsonWriter writer);
-
-    /// <summary>
-    /// Пытается получить индекс компонента для актёра с указанным идентификатором.
-    /// </summary>
-    /// <param name="ownerId">Идентификатор актёра.</param>
-    /// <returns>Индекс компонента или отрицательное значение, если компонент не найден.</returns>
-    int TryGetIndex(uint ownerId);
 }

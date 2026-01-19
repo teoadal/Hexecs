@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Hexecs.Actors.Components;
 using Hexecs.Actors.Delegates;
 
@@ -15,7 +16,7 @@ public sealed partial class ActorFilter<T1> : IActorFilter
     public readonly ActorConstraint? Constraint;
     public readonly ActorContext Context;
 
-    private readonly Queue<Operation> _postponedUpdates;
+    private readonly ConcurrentQueue<Operation> _postponedUpdates;
     private int _postponedReadersCount;
 #if NET9_0_OR_GREATER
     private readonly Lock _postponedSyncLock = new();
@@ -34,9 +35,8 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
         _sparsePages = new uint[16][];
         _dense = new uint[capacity];
-        _values = new int[capacity];
 
-        _postponedUpdates = new Queue<Operation>(capacity);
+        _postponedUpdates = new ConcurrentQueue<Operation>();
         _postponedReadersCount = 0;
 
         if (constraint != null)
@@ -99,15 +99,15 @@ public sealed partial class ActorFilter<T1> : IActorFilter
         Context.Cleared -= OnCleared;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActorRef<T1> GetRef(uint actorId)
     {
-        ref var entry = ref GetEntryRef(actorId);
-        if (Unsafe.IsNullRef(ref entry)) ActorError.NotFound(actorId);
+        if (!ContainsEntry(actorId)) ActorError.NotFound(actorId);
 
         return new ActorRef<T1>(
             Context,
             actorId,
-            ref _pool1.GetByIndex(entry));
+            ref _pool1.Get(actorId));
     }
 
     public ActorRef<T1> GetRef(ActorPredicate<T1> predicate)
@@ -156,29 +156,41 @@ public sealed partial class ActorFilter<T1> : IActorFilter
 
     private void OnAdded(uint actorId)
     {
-        var index1 = _pool1.TryGetIndex(actorId);
-        if (index1 == -1) return;
-
-        Add(actorId, index1);
+        if (_pool1.Has(actorId))
+        {
+            Add(actorId);
+        }
     }
 
-    private void OnAddedComponent1(uint actorId, int index1, ref T1 component)
-    {
-        Add(actorId, index1);
-    }
+    private void OnAddedComponent1(uint actorId, ref T1 component) => Add(actorId);
 
     private void OnCleared()
     {
-        ClearEntries();
-        Cleared?.Invoke();
+        if (Volatile.Read(ref _postponedReadersCount) == 0)
+        {
+#if NET9_0_OR_GREATER
+            using (_postponedSyncLock.EnterScope())
+#else
+            lock (_postponedSyncLock)
+#endif
+            {
+                if (_postponedReadersCount == 0)
+                {
+                    ClearEntries();
+                    Cleared?.Invoke();
+                    return;
+                }
+            }
+        }
+
+        _postponedUpdates.Enqueue(Operation.Clear());
     }
 
     private void OnRemoving(uint actorId) => Remove(actorId);
 
     private void OnRemovingComponent1(uint actorId, ref T1 component) => Remove(actorId);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Add(uint actorId, int index1)
+    private void Add(uint actorId)
     {
         if (Constraint != null && !Constraint.Applicable(actorId)) return;
 
@@ -192,13 +204,13 @@ public sealed partial class ActorFilter<T1> : IActorFilter
             {
                 if (Volatile.Read(ref _postponedReadersCount) == 0)
                 {
-                    AddEntry(actorId, index1);
+                    AddEntry(actorId);
                 }
             }
         }
         else
         {
-            _postponedUpdates.Enqueue(Operation.Add(actorId, index1));
+            _postponedUpdates.Enqueue(Operation.Add(actorId));
         }
     }
 
@@ -225,7 +237,7 @@ public sealed partial class ActorFilter<T1> : IActorFilter
                 }
                 else if (operation.IsAdd)
                 {
-                    AddEntry(operation.Id, operation.Index1);
+                    AddEntry(operation.Id);
                 }
                 else
                 {
@@ -238,7 +250,6 @@ public sealed partial class ActorFilter<T1> : IActorFilter
         if (isClear) Cleared?.Invoke();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Remove(uint actorId)
     {
         if (Volatile.Read(ref _postponedReadersCount) == 0)

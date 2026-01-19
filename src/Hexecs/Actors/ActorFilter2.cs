@@ -37,7 +37,6 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
         _sparsePages = new uint[16][];
         _dense = new uint[capacity];
-        _values = new Entry[capacity];
 
         _postponedUpdates = new ConcurrentQueue<Operation>();
         _postponedReadersCount = 0;
@@ -116,14 +115,13 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActorRef<T1, T2> GetRef(uint actorId)
     {
-        ref var entry = ref GetEntryRef(actorId);
-        if (Unsafe.IsNullRef(ref entry)) ActorError.NotFound(actorId);
+        if (!ContainsEntry(actorId)) ActorError.NotFound(actorId);
 
         return new ActorRef<T1, T2>(
             Context,
             actorId,
-            ref _pool1.GetByIndex(entry.Index1),
-            ref _pool2.GetByIndex(entry.Index2));
+            ref _pool1.Get(actorId),
+            ref _pool2.Get(actorId));
     }
 
     public ActorRef<T1, T2> GetRef(ActorPredicate<T1, T2> predicate)
@@ -172,29 +170,26 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
     private void OnAdded(uint actorId)
     {
-        var index1 = _pool1.TryGetIndex(actorId);
-        if (index1 == -1) return;
-
-        var index2 = _pool2.TryGetIndex(actorId);
-        if (index2 == -1) return;
-
-        Add(actorId, index1, index2);
+        if (_pool1.Has(actorId) && _pool2.Has(actorId))
+        {
+            Add(actorId);
+        }
     }
 
-    private void OnAddedComponent1(uint actorId, int index1, ref T1 component)
+    private void OnAddedComponent1(uint actorId, ref T1 component)
     {
-        var index2 = _pool2.TryGetIndex(actorId);
-        if (index2 == -1) return;
-
-        Add(actorId, index1, index2);
+        if (_pool2.Has(actorId))
+        {
+            Add(actorId);
+        }
     }
 
-    private void OnAddedComponent2(uint actorId, int index2, ref T2 component)
+    private void OnAddedComponent2(uint actorId, ref T2 component)
     {
-        var index1 = _pool1.TryGetIndex(actorId);
-        if (index1 == -1) return;
-
-        Add(actorId, index1, index2);
+        if (_pool1.Has(actorId))
+        {
+            Add(actorId);
+        }
     }
 
     private void OnCleared()
@@ -225,7 +220,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
     private void OnRemovingComponent2(uint actorId, ref T2 component) => Remove(actorId);
 
-    private void Add(uint actorId, int index1, int index2)
+    private void Add(uint actorId)
     {
         if (Constraint != null && !Constraint.Applicable(actorId)) return;
 
@@ -239,13 +234,13 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
             {
                 if (Volatile.Read(ref _postponedReadersCount) == 0)
                 {
-                    AddEntry(actorId, index1, index2);
+                    AddEntry(actorId);
                 }
             }
         }
         else
         {
-            _postponedUpdates.Enqueue(Operation.Add(actorId, index1, index2));
+            _postponedUpdates.Enqueue(Operation.Add(actorId));
         }
     }
 
@@ -272,7 +267,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
                 }
                 else if (operation.IsAdd)
                 {
-                    AddEntry(operation.Id, operation.Index1, operation.Index2);
+                    AddEntry(operation.Id);
                 }
                 else
                 {

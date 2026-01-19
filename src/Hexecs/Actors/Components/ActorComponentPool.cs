@@ -38,9 +38,9 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     {
         Context = context;
 
-        var capacity = HashHelper.GetPrime(configuration.Capacity ?? 16);
+        var capacity = HashHelper.GetPrime(configuration.Capacity ?? Math.Max(context.Length, 16));
 
-        _sparsePages = new uint[16][];
+        _sparse = new uint[capacity];
         _dense = new uint[capacity];
         _values = new T[capacity];
 
@@ -70,7 +70,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     public void Clear()
     {
         var dense = _dense;
-        var sparsePages = _sparsePages;
+        var sparse = _sparse;
 
         if (_disposeHandler != null)
         {
@@ -80,11 +80,11 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
             }
         }
 
+        // Очищаем только те индексы в sparse, которые реально используются
         for (var i = 0; i < _count; i++)
         {
             var key = dense[i];
-            var pageIndex = (int)(key >> PageBits);
-            sparsePages[pageIndex]![key & PageMask] = 0;
+            sparse[key] = 0;
         }
 
         _count = 0;
@@ -137,11 +137,13 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
         if (!Unsafe.IsNullRef(ref entry))
         {
             return ref entry;
-            
         }
-        
+
         return ref ActorError.ComponentNotFound<T>(ownerId);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ComponentsAccess<T> GetComponentAccess() => new(_sparse, _values);
 
     public ref T GetOrCreate(uint ownerId, out bool added, Func<uint, T>? factory = null)
     {
@@ -166,7 +168,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> GetValues() => _values.AsSpan(0, _count);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(uint ownerId) => ContainsEntry(ownerId);
 

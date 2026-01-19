@@ -33,7 +33,7 @@ public sealed partial class ActorFilter<T1> : IActorFilter
         Constraint = constraint;
         Context = context;
 
-        _sparsePages = new uint[16][];
+        _sparse = new uint[Math.Max(capacity, context.Length)];
         _dense = new uint[capacity];
 
         _postponedUpdates = new ConcurrentQueue<Operation>();

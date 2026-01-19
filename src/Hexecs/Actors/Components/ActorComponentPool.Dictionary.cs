@@ -2,9 +2,10 @@ namespace Hexecs.Actors.Components;
 
 internal sealed partial class ActorComponentPool<T>
 {
-    private const int PageBits = 12;
-    private const int PageSize = 1 << PageBits; // 4096
-    private const int PageMask = PageSize - 1;
+    private uint[] _sparse; 
+    private uint[] _dense;
+    private T[] _values;
+    private int _count;
 
     public int Length
     {
@@ -12,66 +13,50 @@ internal sealed partial class ActorComponentPool<T>
         get => _count;
     }
 
-    private uint[]?[] _sparsePages;
-    private uint[] _dense;
-    private T[] _values;
-    private int _count;
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool ContainsEntry(uint ownerId)
     {
-        var pageIndex = (int)(ownerId >> PageBits);
-        var pages = _sparsePages;
-
-        if ((uint)pageIndex < (uint)pages.Length)
+        var sparse = _sparse;
+        if (ownerId < (uint)sparse.Length)
         {
-            var page = pages[pageIndex];
-            if (page != null)
-            {
-                var denseIndexPlusOne = page[ownerId & PageMask];
-                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == ownerId;
-            }
+            var denseIndexPlusOne = sparse[ownerId];
+            return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == ownerId;
         }
 
         return false;
     }
 
-    private void EnsureDenseCapacity()
+    private void EnsureCapacity(uint ownerId)
     {
+        // Проверка емкости плотных массивов (количество элементов)
         if (_count >= _dense.Length)
         {
             var newSize = _dense.Length * 2;
             Array.Resize(ref _dense, newSize);
             Array.Resize(ref _values, newSize);
         }
-    }
 
-    private void EnsurePageArraySize(int pageIndex)
-    {
-        if (pageIndex >= _sparsePages.Length)
+        // Проверка емкости разреженного массива (максимальный ID)
+        if (ownerId >= (uint)_sparse.Length)
         {
-            var newSize = Math.Max(_sparsePages.Length * 2, pageIndex + 1);
-            Array.Resize(ref _sparsePages, newSize);
+            var newSize = Math.Max((uint)_sparse.Length * 2, ownerId + 1);
+            Array.Resize(ref _sparse, (int)newSize);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref T GetEntryRef(uint actorId)
     {
-        var pageIndex = (int)(actorId >> PageBits);
-        if ((uint)pageIndex < (uint)_sparsePages.Length)
+        var sparse = _sparse;
+        if (actorId < (uint)sparse.Length)
         {
-            var page = _sparsePages[pageIndex];
-            if (page != null)
+            var denseIndexPlusOne = sparse[actorId];
+            if (denseIndexPlusOne != 0)
             {
-                var denseIndexPlusOne = page[actorId & PageMask];
-                if (denseIndexPlusOne != 0)
+                var index = (int)denseIndexPlusOne - 1;
+                if (_dense[index] == actorId)
                 {
-                    var index = (int)denseIndexPlusOne - 1;
-                    if (_dense[index] == actorId)
-                    {
-                        return ref _values[index];
-                    }
+                    return ref _values[index];
                 }
             }
         }
@@ -81,43 +66,36 @@ internal sealed partial class ActorComponentPool<T>
 
     private bool RemoveEntry(uint ownerId, out T value)
     {
-        var pageIndex = (int)(ownerId >> PageBits);
-        var pages = _sparsePages;
-
-        if ((uint)pageIndex < (uint)pages.Length)
+        var sparse = _sparse;
+        if (ownerId < (uint)sparse.Length)
         {
-            var page = pages[pageIndex];
-            if (page != null)
+            var slot = sparse[ownerId];
+            if (slot != 0)
             {
-                var offset = (int)(ownerId & PageMask);
-                var slot = page[offset];
-                if (slot != 0)
+                var denseIndex = (int)slot - 1;
+                if (_dense[denseIndex] == ownerId)
                 {
-                    var denseIndex = (int)slot - 1;
-                    if (_dense[denseIndex] == ownerId)
+                    ref var componentRef = ref _values[denseIndex];
+                    value = componentRef;
+
+                    Removing?.Invoke(ownerId);
+                    ComponentRemoving?.Invoke(ownerId, ref componentRef);
+                    _disposeHandler?.Invoke(ref componentRef);
+
+                    var lastIndex = _count - 1;
+                    if (denseIndex != lastIndex)
                     {
-                        ref var componentRef = ref _values[denseIndex];
-                        value = componentRef;
+                        var lastKey = _dense[lastIndex];
+                        _dense[denseIndex] = lastKey;
+                        _values[denseIndex] = _values[lastIndex];
 
-                        Removing?.Invoke(ownerId);
-                        ComponentRemoving?.Invoke(ownerId, ref componentRef);
-                        _disposeHandler?.Invoke(ref componentRef);
-
-                        var lastIndex = _count - 1;
-                        if (denseIndex != lastIndex)
-                        {
-                            var lastKey = _dense[lastIndex];
-                            _dense[denseIndex] = lastKey;
-                            _values[denseIndex] = _values[lastIndex];
-
-                            var lastKeyPageIndex = (int)(lastKey >> PageBits);
-                            pages[lastKeyPageIndex]![lastKey & PageMask] = slot;
-                        }
-
-                        page[offset] = 0;
-                        _count = lastIndex;
-                        return true;
+                        // Обновляем указатель в sparse для переехавшего элемента
+                        _sparse[lastKey] = slot;
                     }
+
+                    _sparse[ownerId] = 0;
+                    _count = lastIndex;
+                    return true;
                 }
             }
         }
@@ -129,33 +107,23 @@ internal sealed partial class ActorComponentPool<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private AddResult TryAddEntry(uint ownerId)
     {
-        var pageIndex = (int)(ownerId >> PageBits);
-        var pages = _sparsePages;
-
-        // Максимально компактная проверка на готовность страницы и места
-        if ((uint)pageIndex < (uint)pages.Length)
+        // Fast Path: если ID влезает в массив и есть место в dense
+        if (ownerId < (uint)_sparse.Length && (uint)_count < (uint)_dense.Length)
         {
-            var page = pages[pageIndex];
-            if (page != null && (uint)_count < (uint)_dense.Length)
+            ref var slot = ref _sparse[ownerId];
+            if (slot == 0)
             {
-                ref var slot = ref page[ownerId & PageMask];
-                if (slot == 0) // Чистая вставка (самый частый случай в ECS)
-                {
-                    var idx = (uint)_count;
-                    slot = idx + 1;
-                    _dense[idx] = ownerId;
+                var idx = (uint)_count;
+                slot = idx + 1;
+                _dense[idx] = ownerId;
 
-                    ref var internalRef = ref _values[idx];
-                    var result = AddResult.Success(_count, ref internalRef);
-
-                    _count++;
-
-                    return result;
-                }
-
-                // Если не 0, проверяем на дубликат (чуть медленнее)
-                if (_dense[slot - 1] == ownerId) return AddResult.Failure();
+                ref var internalRef = ref _values[idx];
+                var result = AddResult.Success(_count, ref internalRef);
+                _count++;
+                return result;
             }
+
+            if (_dense[slot - 1] == ownerId) return AddResult.Failure();
         }
 
         return TryAddEntrySlow(ownerId);
@@ -164,18 +132,9 @@ internal sealed partial class ActorComponentPool<T>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private AddResult TryAddEntrySlow(uint ownerId)
     {
-        EnsureDenseCapacity();
-        var pageIndex = (int)(ownerId >> PageBits);
-        EnsurePageArraySize(pageIndex);
+        EnsureCapacity(ownerId);
 
-        ref var page = ref _sparsePages[pageIndex];
-        if (page == null)
-        {
-            page = ArrayUtils.Create<uint>(PageSize);
-            Array.Clear(page, 0, page.Length);
-        }
-
-        ref var denseIndexPlusOne = ref page[ownerId & PageMask];
+        ref var denseIndexPlusOne = ref _sparse[ownerId];
         if (denseIndexPlusOne != 0)
         {
             if (_dense[denseIndexPlusOne - 1] == ownerId) return AddResult.Failure();
@@ -187,49 +146,38 @@ internal sealed partial class ActorComponentPool<T>
 
         ref var internalRef = ref _values[denseIndex];
         var result = AddResult.Success(_count, ref internalRef);
-
         _count++;
 
         return result;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private AddResult UpsertEntry(uint ownerId, out bool exists)
     {
-        var pageIndex = (int)(ownerId >> PageBits);
-        var pages = _sparsePages;
-
-        // 1. Пытаемся найти существующий (Fast Path)
-        if ((uint)pageIndex < (uint)pages.Length)
+        if (ownerId < (uint)_sparse.Length)
         {
-            var page = pages[pageIndex];
-            if (page != null)
+            ref var slot = ref _sparse[ownerId];
+            if (slot != 0)
             {
-                ref var slot = ref page[ownerId & PageMask];
-                if (slot != 0)
+                var denseIndex = (int)slot - 1;
+                if (_dense[denseIndex] == ownerId)
                 {
-                    var denseIndex = (int)slot - 1;
-                    if (_dense[denseIndex] == ownerId)
-                    {
-                        exists = true;
-                        return AddResult.Success(denseIndex, ref _values[denseIndex]);
-                    }
+                    exists = true;
+                    return AddResult.Success(denseIndex, ref _values[denseIndex]);
                 }
-                    
-                // 2. Если страница есть, но ключа нет, и есть место - добавляем сразу (Fast Add)
-                if ((uint)_count < (uint)_dense.Length)
-                {
-                    var idx = _count;
-                    slot = (uint)idx + 1;
-                    _dense[idx] = ownerId;
-                    _count = idx + 1;
-                    exists = false;
-                    return AddResult.Success(idx, ref _values[idx]);
-                }
+            }
+
+            if ((uint)_count < (uint)_dense.Length)
+            {
+                var idx = _count;
+                slot = (uint)idx + 1;
+                _dense[idx] = ownerId;
+                _count = idx + 1;
+                exists = false;
+                return AddResult.Success(idx, ref _values[idx]);
             }
         }
 
-        // 3. Если всё сложно (нужен ресайз или новая страница) - идем в Slow Path
         exists = false;
         return TryAddEntrySlow(ownerId);
     }

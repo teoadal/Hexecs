@@ -47,7 +47,6 @@ namespace Hexecs.Benchmarks.Actors;
 //     | DefaultEcs    | 100000 | 133.300 us |  0.95 |         - |          NA |
 //     | Hexecs        | 100000 | 139.751 us |  1.00 |         - |          NA |
 
-
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [MeanColumn, MemoryDiagnoser]
@@ -59,6 +58,7 @@ public class ActorFilter3EnumerationBenchmark
 {
     [Params(100_000)] public int Count;
 
+    private ActorContext _context = null!;
     private ActorFilter<Attack, Defence, Speed> _filter = null!;
     private World _world = null!;
 
@@ -77,6 +77,25 @@ public class ActorFilter3EnumerationBenchmark
             result += actor.Component1.Value +
                       actor.Component2.Value +
                       actor.Component3.Value;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Hexecs_ComponentAccess()
+    {
+        var result = 0;
+
+        var attacks = _context.GetComponents<Attack>();
+        var defences = _context.GetComponents<Defence>();
+        var speeds = _context.GetComponents<Speed>();
+
+        foreach (var actorId in _filter.Keys)
+        {
+            result += attacks[actorId].Value +
+                      defences[actorId].Value +
+                      speeds[actorId].Value;
         }
 
         return result;
@@ -153,6 +172,7 @@ public class ActorFilter3EnumerationBenchmark
         _defaultWorld = new DefaultEcs.World();
         _frifloWorld = new EntityStore();
         _world = new WorldBuilder().Build();
+        _context = _world.Actors;
 
         _defaultEntitySet = _defaultWorld.GetEntities().With<Attack>().With<Defence>().With<Speed>().AsSet();
         _filter = _world.Actors.Filter<Attack, Defence, Speed>();

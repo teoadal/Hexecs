@@ -188,6 +188,34 @@ public sealed class SparsePageDictionary<TValue>
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private bool TryAddSlow(uint key, TValue value)
+    {
+        EnsureDenseCapacity();
+        var pageIndex = (int)(key >> PageBits);
+        EnsurePageArraySize(pageIndex);
+
+        ref var page = ref _sparsePages[pageIndex];
+        if (page == null)
+        {
+            page = ArrayUtils.Create<uint>(PageSize);
+            Array.Clear(page, 0, page.Length);
+        }
+
+        ref var denseIndexPlusOne = ref page[key & PageMask];
+        if (denseIndexPlusOne != 0)
+        {
+            if (_dense[denseIndexPlusOne - 1] == key) return false;
+        }
+
+        var denseIndex = (uint)_count;
+        denseIndexPlusOne = denseIndex + 1;
+        _dense[denseIndex] = key;
+        _values[denseIndex] = value;
+        _count++;
+        return true;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator()
     {
@@ -219,33 +247,5 @@ public sealed class SparsePageDictionary<TValue>
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => ++_index < _keys.Length;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private bool TryAddSlow(uint key, TValue value)
-    {
-        EnsureDenseCapacity();
-        var pageIndex = (int)(key >> PageBits);
-        EnsurePageArraySize(pageIndex);
-
-        ref var page = ref _sparsePages[pageIndex];
-        if (page == null)
-        {
-            page = ArrayUtils.Create<uint>(PageSize);
-            Array.Clear(page, 0, page.Length);
-        }
-
-        ref var denseIndexPlusOne = ref page[key & PageMask];
-        if (denseIndexPlusOne != 0)
-        {
-            if (_dense[denseIndexPlusOne - 1] == key) return false;
-        }
-
-        var denseIndex = (uint)_count;
-        denseIndexPlusOne = denseIndex + 1;
-        _dense[denseIndex] = key;
-        _values[denseIndex] = value;
-        _count++;
-        return true;
     }
 }

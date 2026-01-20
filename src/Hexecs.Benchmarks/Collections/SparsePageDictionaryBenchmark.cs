@@ -30,16 +30,20 @@
 [BenchmarkCategory("Collections")]
 public class SparsePageDictionaryBenchmark
 {
-    private SparsePageDictionary<int> _sparse = null!;
-    private SparsePageDictionary<int> _sparseCycle = null!;
+    private SparsePageDictionary<int> _sparsePage = null!;
+    private SparsePageDictionary<int> _sparsePageCycle = null!;
+
+    private SparseDictionary<int> _sparse = null!;
+    private SparseDictionary<int> _sparseCycle = null!;
+
     private Dictionary<uint, int> _dict = null!;
     private Dictionary<uint, int> _dictCycle = null!;
+
     private uint[] _keys = null!;
     private uint[] _lookupKeys = null!;
     private uint[] _missingKeys = null!;
 
-    [Params(500)] 
-    public int N;
+    [Params(500)] public int N;
 
     [GlobalSetup]
     public void Setup()
@@ -62,19 +66,29 @@ public class SparsePageDictionaryBenchmark
             .Select(_ => (uint)Random.Shared.Next(2_000_000, 3_000_000))
             .ToArray();
 
-        _sparse = new SparsePageDictionary<int>(denseCapacity: N);
-        _sparseCycle = new SparsePageDictionary<int>(denseCapacity: N);
-        _dict = new Dictionary<uint, int>(N);
-        _dictCycle = new Dictionary<uint, int>(N);
+        _sparsePage = new SparsePageDictionary<int>(denseCapacity: N);
+        _sparsePageCycle = new SparsePageDictionary<int>(denseCapacity: N);
 
+        _sparse = new SparseDictionary<int>(capacity: N);
+        _sparseCycle = new SparseDictionary<int>(capacity: N);
+
+        _dict = new Dictionary<uint, int>(capacity: N);
+        _dictCycle = new Dictionary<uint, int>(capacity: N);
+
+        const int value = 42;
         foreach (var key in _keys)
         {
-            _sparse.Add(key, 42);
-            _sparseCycle.Add(key, 42);
-            _dict[key] = 42;
-            _dictCycle[key] = 42;
+            _sparsePage.Add(key, value);
+            _sparsePageCycle.Add(key, value);
+
+            _sparse.Add(key, value);
+            _sparseCycle.Add(key, value);
+
+            _dict.Add(key, value);
+            _dictCycle.Add(key, value);
         }
 
+        _sparsePageCycle.Clear();
         _sparseCycle.Clear();
         _dictCycle.Clear();
     }
@@ -86,6 +100,18 @@ public class SparsePageDictionaryBenchmark
     {
         var sum = 0;
         foreach (var entry in _sparse)
+        {
+            sum += entry;
+        }
+
+        return sum;
+    }
+    
+    [Benchmark]
+    public int Iterate_SparsePage()
+    {
+        var sum = 0;
+        foreach (var entry in _sparsePage)
         {
             sum += entry;
         }
@@ -105,19 +131,6 @@ public class SparsePageDictionaryBenchmark
         return sum;
     }
 
-    [Benchmark]
-    public int Iterate_Sparse_Span()
-    {
-        var sum = 0;
-        var values = _sparse.Values;
-        for (var i = 0; i < values.Length; i++)
-        {
-            sum += values[i];
-        }
-
-        return sum;
-    }
-
     // ===== CONTAINS (HIT) =====
 
     [Benchmark]
@@ -127,6 +140,18 @@ public class SparsePageDictionaryBenchmark
         foreach (var key in _lookupKeys)
         {
             found = _sparse.Contains(key);
+        }
+
+        return found;
+    }
+    
+    [Benchmark]
+    public bool Contains_SparsePage_Hit()
+    {
+        var found = false;
+        foreach (var key in _lookupKeys)
+        {
+            found = _sparsePage.Contains(key);
         }
 
         return found;
@@ -153,6 +178,18 @@ public class SparsePageDictionaryBenchmark
         foreach (var key in _missingKeys)
         {
             found = _sparse.Contains(key);
+        }
+
+        return found;
+    }
+    
+    [Benchmark]
+    public bool Contains_SparsePage_Miss()
+    {
+        var found = false;
+        foreach (var key in _missingKeys)
+        {
+            found = _sparsePage.Contains(key);
         }
 
         return found;
@@ -186,6 +223,21 @@ public class SparsePageDictionaryBenchmark
 
         return sum;
     }
+    
+    [Benchmark]
+    public int TryGetValue_SparsePage()
+    {
+        var sum = 0;
+        foreach (var key in _lookupKeys)
+        {
+            if (_sparsePage.TryGetValue(key, out var value))
+            {
+                sum += value;
+            }
+        }
+
+        return sum;
+    }
 
     [Benchmark]
     public int TryGetValue_Dict()
@@ -208,6 +260,31 @@ public class SparsePageDictionaryBenchmark
     public int AddRemoveCycle_Sparse()
     {
         var dict = _sparseCycle;
+        var count = 0;
+
+        // Симуляция ECS: добавляем/удаляем entity из фильтра
+        for (var i = 0; i < 10; i++)
+        {
+            foreach (var key in _lookupKeys)
+            {
+                dict.Add(key, 42);
+            }
+
+            count += dict.Count;
+
+            foreach (var key in _lookupKeys)
+            {
+                dict.Remove(key);
+            }
+        }
+
+        return count;
+    }
+    
+    [Benchmark]
+    public int AddRemoveCycle_SparsePage()
+    {
+        var dict = _sparsePageCycle;
         var count = 0;
 
         // Симуляция ECS: добавляем/удаляем entity из фильтра

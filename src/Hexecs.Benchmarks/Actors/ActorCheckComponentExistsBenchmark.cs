@@ -8,25 +8,25 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.100
-//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.102
+//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
 //     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------- |----------:|------:|----------:|------------:|
-//     | Hexecs_Is        | 10000  |  20.42 us |  0.96 |         - |          NA |
-//     | Hexecs_Has       | 10000  |  21.19 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 10000  |  24.30 us |  1.15 |         - |          NA |
-//     | FriFlo_Has       | 10000  |  40.28 us |  1.90 |         - |          NA |
-//     | DefaultEcs_Has   | 10000  |  73.24 us |  3.46 |         - |          NA |
+//     | Hexecs_Is        | 10000  |  14.55 us |  0.88 |         - |          NA |
+//     | Hexecs_Reference | 10000  |  15.92 us |  0.96 |         - |          NA |
+//     | Hexecs_Has       | 10000  |  16.58 us |  1.00 |         - |          NA |
+//     | FriFlo_Has       | 10000  |  40.36 us |  2.43 |         - |          NA |
+//     | DefaultEcs_Has   | 10000  |  72.01 us |  4.34 |         - |          NA |
 //     |                  |        |           |       |           |             |
-//     | Hexecs_Is        | 100000 | 204.98 us |  0.94 |         - |          NA |
-//     | Hexecs_Has       | 100000 | 219.12 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 100000 | 251.83 us |  1.15 |         - |          NA |
-//     | FriFlo_Has       | 100000 | 409.48 us |  1.87 |         - |          NA |
-//     | DefaultEcs_Has   | 100000 | 712.00 us |  3.25 |         - |          NA |
+//     | Hexecs_Is        | 100000 | 149.57 us |  0.93 |         - |          NA |
+//     | Hexecs_Has       | 100000 | 161.46 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 100000 | 163.02 us |  1.01 |         - |          NA |
+//     | FriFlo_Has       | 100000 | 409.32 us |  2.54 |         - |          NA |
+//     | DefaultEcs_Has   | 100000 | 730.64 us |  4.53 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //

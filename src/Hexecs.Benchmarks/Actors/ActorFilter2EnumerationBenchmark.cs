@@ -30,20 +30,25 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.101
+//     .NET SDK 10.0.102
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method     | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
-//     |----------- |------- |-----------:|------:|----------:|------------:|
-//     | DefaultEcs | 10000  |   9.473 us |  0.91 |         - |          NA |
-//     | Hexecs     | 10000  |  10.361 us |  1.00 |         - |          NA |
-//     |            |        |            |       |           |             |
-//     | DefaultEcs | 100000 |  88.719 us |  0.88 |         - |          NA |
-//     | Hexecs     | 100000 | 101.257 us |  1.00 |         - |          NA |
-
+//     | Method                 | Count  | Mean      | Ratio | Gen0   | Allocated | Alloc Ratio |
+//     |----------------------- |------- |----------:|------:|-------:|----------:|------------:|
+//     | FriFlo                 | 10000  |  6.614 us |  0.66 | 0.0076 |      88 B |          NA |
+//     | FriFlo_Chunks          | 10000  |  6.716 us |  0.67 |      - |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  8.878 us |  0.88 |      - |         - |          NA |
+//     | DefaultEcs             | 10000  |  9.770 us |  0.97 |      - |         - |          NA |
+//     | Hexecs                 | 10000  | 10.078 us |  1.00 |      - |         - |          NA |
+//     |                        |        |           |       |        |           |             |
+//     | FriFlo                 | 100000 | 65.792 us |  0.70 |      - |      88 B |          NA |
+//     | FriFlo_Chunks          | 100000 | 67.258 us |  0.72 |      - |         - |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 84.009 us |  0.90 |      - |         - |          NA |
+//     | DefaultEcs             | 100000 | 92.408 us |  0.98 |      - |         - |          NA |
+//     | Hexecs                 | 100000 | 93.853 us |  1.00 |      - |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -62,7 +67,7 @@ public class ActorFilter2EnumerationBenchmark
 
     private DefaultEcs.World _defaultWorld = null!;
     private DefaultEcs.EntitySet _defaultEntitySet = null!;
-    
+
     private EntityStore _frifloWorld = null!;
     private ArchetypeQuery<Attack, Defence> _frifloQuery = null!;
 
@@ -78,7 +83,7 @@ public class ActorFilter2EnumerationBenchmark
 
         return result;
     }
-    
+
     [Benchmark]
     public int Hexecs_ComponentAccess()
     {
@@ -145,7 +150,7 @@ public class ActorFilter2EnumerationBenchmark
 
         return result;
     }
-    
+
     [GlobalCleanup]
     public void Cleanup()
     {
@@ -163,7 +168,7 @@ public class ActorFilter2EnumerationBenchmark
         _frifloWorld = new EntityStore();
         _world = new WorldBuilder().Build();
         _context = _world.Actors;
-        
+
         _defaultEntitySet = _defaultWorld.GetEntities().With<Attack>().With<Defence>().AsSet();
         _filter = _world.Actors.Filter<Attack, Defence>();
         _frifloQuery = _frifloWorld.Query<Attack, Defence>();
@@ -172,7 +177,7 @@ public class ActorFilter2EnumerationBenchmark
         for (var i = 0; i < Count; i++)
         {
             var attack = new Attack { Value = i };
-            
+
             var actor = context.CreateActor();
             actor.Add(in attack);
             actor.Add(new Defence());
@@ -180,7 +185,7 @@ public class ActorFilter2EnumerationBenchmark
             var defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set(in attack);
             defaultEntity.Set<Defence>();
-            
+
             _frifloWorld.CreateEntity(attack, new Defence(), new Speed());
         }
     }

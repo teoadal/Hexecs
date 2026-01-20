@@ -32,26 +32,25 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.101
+//     .NET SDK 10.0.102
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |----------------- |------- |----------:|------:|----------:|------------:|
-//     | Hexecs_Is        | 10000  |  12.17 us |  0.94 |         - |          NA |
-//     | Hexecs_Has       | 10000  |  12.97 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 10000  |  14.71 us |  1.13 |         - |          NA |
-//     | FriFlo_Has       | 10000  |  16.38 us |  1.26 |         - |          NA |
-//     | DefaultEcs_Has   | 10000  |  25.72 us |  1.98 |         - |          NA |
-//     |                  |        |           |       |           |             |
-//     | Hexecs_Is        | 100000 | 126.14 us |  0.94 |         - |          NA |
-//     | Hexecs_Has       | 100000 | 134.68 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 100000 | 153.34 us |  1.14 |         - |          NA |
-//     | FriFlo_Has       | 100000 | 159.75 us |  1.19 |         - |          NA |
-//     | DefaultEcs_Has   | 100000 | 254.83 us |  1.89 |         - |          NA |
-
+//     | Method           | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
+//     |----------------- |------- |-----------:|------:|----------:|------------:|
+//     | Hexecs_Is        | 10000  |   9.916 us |  0.90 |         - |          NA |
+//     | Hexecs_Has       | 10000  |  10.960 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 10000  |  11.301 us |  1.03 |         - |          NA |
+//     | FriFlo_Has       | 10000  |  16.540 us |  1.51 |         - |          NA |
+//     | DefaultEcs_Has   | 10000  |  25.877 us |  2.36 |         - |          NA |
+//     |                  |        |            |       |           |             |
+//     | Hexecs_Is        | 100000 |  98.966 us |  0.90 |         - |          NA |
+//     | Hexecs_Has       | 100000 | 110.039 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 100000 | 112.981 us |  1.03 |         - |          NA |
+//     | FriFlo_Has       | 100000 | 159.346 us |  1.45 |         - |          NA |
+//     | DefaultEcs_Has   | 100000 | 256.135 us |  2.33 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

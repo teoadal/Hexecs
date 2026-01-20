@@ -5,19 +5,19 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.100
-//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.102
+//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
 //     | Method           | Count | Mean         | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------ |-------------:|------:|----------:|------------:|
-//     | Hexecs_Hierarchy | 100   |     356.6 us |  1.00 |         - |          NA |
-//     | Friflo_Hierarchy | 100   |     690.1 us |  1.94 |         - |          NA |
+//     | Hexecs_Hierarchy | 100   |     333.4 us |  1.00 |         - |          NA |
+//     | Friflo_Hierarchy | 100   |     709.2 us |  2.13 |         - |          NA |
 //     |                  |       |              |       |           |             |
-//     | Hexecs_Hierarchy | 1000  |  38,223.2 us |  1.00 |         - |          NA |
-//     | Friflo_Hierarchy | 1000  | 130,824.8 us |  3.42 |         - |          NA |
+//     | Hexecs_Hierarchy | 1000  |  34,104.9 us |  1.00 |         - |          NA |
+//     | Friflo_Hierarchy | 1000  | 129,978.8 us |  3.81 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //

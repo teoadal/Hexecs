@@ -6,22 +6,22 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.100
-//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.102
+//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
 //     | Method | Count | Mean          | Ratio | Allocated | Alloc Ratio |
 //     |------- |------ |--------------:|------:|----------:|------------:|
-//     | Hexecs | 10    |      13.32 us |  1.00 |         - |          NA |
-//     | FriFlo | 10    |      15.66 us |  1.18 |         - |          NA |
+//     | Hexecs | 10    |      12.17 us |  1.00 |         - |          NA |
+//     | FriFlo | 10    |      14.94 us |  1.23 |         - |          NA |
 //     |        |       |               |       |           |             |
-//     | Hexecs | 100   |   1,929.54 us |  1.00 |         - |          NA |
-//     | FriFlo | 100   |   2,301.57 us |  1.19 |         - |          NA |
+//     | Hexecs | 100   |   2,125.12 us |  1.00 |         - |          NA |
+//     | FriFlo | 100   |   2,167.52 us |  1.02 |         - |          NA |
 //     |        |       |               |       |           |             |
-//     | Hexecs | 1000  | 604,757.61 us |  1.00 |         - |          NA |
-//     | FriFlo | 1000  | 807,112.05 us |  1.33 |         - |          NA |
+//     | Hexecs | 1000  | 596,797.48 us |  1.00 |         - |          NA |
+//     | FriFlo | 1000  | 827,027.70 us |  1.39 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //

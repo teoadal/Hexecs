@@ -85,14 +85,23 @@ public sealed partial class ActorContext
         return ref pool.Get(actorId);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ComponentsAccess<T> GetComponents<T>() where T: struct, IActorComponent
+    {
+        var pool = GetComponentPool<T>();
+        return pool != null 
+            ? pool.GetComponentAccess() 
+            : new ComponentsAccess<T>();
+    }
+    
     /// <summary>
     /// Получает компонент указанного типа для заданного актёра или добавляет его, используя фабричный метод, если компонент отсутствует.
     /// </summary>
     /// <typeparam name="T">Тип компонента. Должен быть структурой и реализовывать <see cref="IActorComponent"/>.</typeparam>
     /// <param name="actorId">Идентификатор актёра.</param>
-    /// <param name="factory">Фабричный метод для создания компонента, если он отсутствует.</param>
+    /// <param name="factory">Фабричный метод для создания компонента</param>
     /// <returns>Ссылка на существующий или вновь созданный компонент.</returns>
-    public ref T GetOrAddComponent<T>(uint actorId, Func<uint, T> factory)
+    public ref T GetOrAddComponent<T>(uint actorId, Func<uint, T>? factory = null)
         where T : struct, IActorComponent
     {
         var pool = GetOrCreateComponentPool<T>();

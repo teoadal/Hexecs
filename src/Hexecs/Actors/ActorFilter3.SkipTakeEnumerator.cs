@@ -26,25 +26,23 @@ public sealed partial class ActorFilter<T1, T2, T3>
         private readonly ActorComponentPool<T1> _pool1;
         private readonly ActorComponentPool<T2> _pool2;
         private readonly ActorComponentPool<T3> _pool3;
-
-        private readonly ReadOnlySpan<uint> _keys;
-        private readonly ReadOnlySpan<Entry> _entries;
-
+        
+        private readonly ReadOnlySpan<uint> _ids;
         private int _index;
         
         public readonly ActorRef<T1, T2, T3> Current
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var index = _index;
-                ref readonly var entry = ref _entries[index];
+                var id = _ids[_index];
 
                 return new ActorRef<T1, T2, T3>(
                     _context,
-                    _keys[index],
-                    ref _pool1.GetByIndex(entry.Index1),
-                    ref _pool2.GetByIndex(entry.Index2),
-                    ref _pool3.GetByIndex(entry.Index3));
+                    id,
+                    ref _pool1.Get(id),
+                    ref _pool2.Get(id),
+                    ref _pool3.Get(id));
             }
         }
 
@@ -67,9 +65,7 @@ public sealed partial class ActorFilter<T1, T2, T3>
             var actualSkip = Math.Min(skip, count);
             var actualTake = Math.Min(take, count - actualSkip);
 
-            _keys = filter._dense.AsSpan(actualSkip, actualTake);
-            _entries = filter._values.AsSpan(actualSkip, actualTake);
-
+            _ids = filter._dense.AsSpan(actualSkip, actualTake);
             _index = -1;
         }
 
@@ -77,7 +73,7 @@ public sealed partial class ActorFilter<T1, T2, T3>
         public void Dispose() => _filter.ProcessPostponedUpdates();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _keys.Length;
+        public bool MoveNext() => ++_index < _ids.Length;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly SkipTakeEnumerator GetEnumerator() => this;

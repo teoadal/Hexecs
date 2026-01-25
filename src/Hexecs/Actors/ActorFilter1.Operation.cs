@@ -2,46 +2,33 @@ namespace Hexecs.Actors;
 
 public sealed partial class ActorFilter<T1>
 {
+    [StructLayout(LayoutKind.Sequential)]
     private readonly struct Operation
     {
-        private const int ClearFlag = -1;
-        private const int RemoveFlag = -2;
+        private const byte TypeAdd = 1;
+        private const byte TypeRemove = 2;
+        private const byte TypeClear = 3;
 
         public readonly uint Id;
-        public readonly int Index1;
+        public readonly byte Type;
 
-        public bool IsAdd
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Index1 >= 0;
-        }
-
-        public bool IsClear
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Index1 == ClearFlag;
-        }
-
-        public bool IsRemove
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Index1 == RemoveFlag;
-        }
+        public bool IsAdd => Type == TypeAdd;
+        public bool IsClear => Type == TypeClear;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Add(uint id, int index1) => new(id, index1);
+        public static Operation Add(uint id) => new(id, TypeAdd);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Clear() => new(0, ClearFlag);
+        public static Operation Remove(uint id) => new(id, TypeRemove);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Remove(uint id) => new(id, RemoveFlag);
+        public static Operation Clear() => new(0, TypeClear);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Operation(uint id, int index1)
+        private Operation(uint id, byte type)
         {
             Id = id;
-            Index1 = index1;
+            Type = type;
         }
     }
 }

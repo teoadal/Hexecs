@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Hexecs.Actors.Components;
-using Hexecs.Tests.Mocks;
+﻿using Hexecs.Actors.Components;
 using Hexecs.Tests.Mocks.ActorComponents;
 
 namespace Hexecs.Tests.Actors;
@@ -41,59 +39,6 @@ public sealed class ActorMarshalShould(ActorTestFixture fixture) : IClassFixture
         actualType
             .Should()
             .Be(typeof(Attack));
-    }
-
-    [Fact]
-    public void GetComponentIndex()
-    {
-        // arrange
-
-        var component = fixture.CreateComponent<Attack>();
-        var actor = fixture.CreateActor<Attack>(component1: component);
-        var expectedIndex = fixture.Actors
-            .GetOrCreateComponentPool<Attack>()
-            .TryGetIndex(actor.Id);
-
-        // act
-
-        var actualIndex = ActorMarshal.GetComponentIndex<Attack>(fixture.Actors, actor.Id);
-
-        // assert
-
-        actualIndex
-            .Should()
-            .BeGreaterThanOrEqualTo(0);
-
-        actualIndex
-            .Should()
-            .Be(expectedIndex);
-    }
-
-    [Fact]
-    public void GetComponentByIndex()
-    {
-        // arrange
-
-        var component = fixture.CreateComponent<Attack>();
-        var actor = fixture.CreateActor<Attack>(component1: component);
-        var index = fixture.Actors
-            .GetOrCreateComponentPool<Attack>()
-            .TryGetIndex(actor.Id);
-
-        // act
-
-        ref var actualComponent = ref ActorMarshal.GetComponentByIndex<Attack>(fixture.Actors, index);
-
-        // assert
-
-        Unsafe
-            .IsNullRef(ref actualComponent)
-            .Should()
-            .BeFalse();
-
-        actualComponent
-            .Should()
-            .Be(component);
     }
 
     [Fact]

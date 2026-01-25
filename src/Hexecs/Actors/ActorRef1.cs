@@ -187,6 +187,9 @@ public readonly ref struct ActorRef<T1>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has<T>() where T : struct, IActorComponent => Context.HasComponent<T>(Id);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasChild(in Actor child) => Context.HasChild(Id, child.Id);
+    
     /// <summary>
     /// Проверяет, существует ли отношение между текущим актёром и указанным родственным актёром.
     /// </summary>

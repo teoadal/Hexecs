@@ -15,7 +15,7 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
         get => _actors.Count;
     }
 
-    private readonly Dictionary<TKey, Entry> _actors;
+    private readonly Dictionary<TKey, uint> _actors;
     private readonly Func<T1, TKey> _keyExtractor;
     private readonly ActorComponentPool<T1> _pool;
 
@@ -30,8 +30,8 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
         Context = context;
 
         _actors = comparer == null
-            ? new Dictionary<TKey, Entry>(capacity)
-            : new Dictionary<TKey, Entry>(capacity, comparer);
+            ? new Dictionary<TKey, uint>(capacity)
+            : new Dictionary<TKey, uint>(capacity, comparer);
 
         _keyExtractor = keyExtractor;
         _pool = context.GetOrCreateComponentPool<T1>();
@@ -45,11 +45,7 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
     public void Add(Actor<T1> actor)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
-        var actorId = actor.Id;
-        var index = _pool.TryGetIndex(actorId);
-
-        _actors.Add(_keyExtractor(actor.Component1), new Entry(actorId, index));
+        _actors.Add(_keyExtractor(actor.Component1), actor.Id);
     }
 
     public bool ContainsKey(TKey key) => !_disposed && _actors.ContainsKey(key);
@@ -70,22 +66,22 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
     public void Fill(bool clearBefore = true)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
+
         if (clearBefore) OnCleared();
 
         var poolEnumerator = _pool.GetEnumerator();
         while (poolEnumerator.MoveNext())
         {
             var actor = poolEnumerator.Current;
-            _actors.Add(_keyExtractor(actor.Component1), new Entry(actor.Id, poolEnumerator.Index));
+            _actors.Add(_keyExtractor(actor.Component1), actor.Id);
         }
     }
-    
+
     public ActorRef<T1> GetActorRef(TKey key)
     {
         if (!_disposed && _actors.TryGetValue(key, out var entry))
         {
-            return new ActorRef<T1>(Context, entry.Id, ref _pool.GetByIndex(entry.Index));
+            return new ActorRef<T1>(Context, entry, ref _pool.Get(entry));
         }
 
         ActorError.KeyNotFound();
@@ -96,7 +92,7 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
     {
         if (!_disposed && _actors.TryGetValue(key, out var entry))
         {
-            actor = new ActorRef<T1>(Context, entry.Id, ref _pool.GetByIndex(entry.Index));
+            actor = new ActorRef<T1>(Context, entry, ref _pool.Get(entry));
             return true;
         }
 
@@ -122,14 +118,7 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
 
     private void OnComponentUpdating(uint actorId, ref T1 exists, in T1 expected)
     {
-        _actors.Remove(_keyExtractor(exists), out var entry);
-        _actors.Add(_keyExtractor(expected), new Entry(actorId, entry.Index));
-    }
-
-    [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private readonly struct Entry(uint id, int index)
-    {
-        public readonly uint Id = id;
-        public readonly int Index = index;
+        _actors.Remove(_keyExtractor(exists), out _);
+        _actors.Add(_keyExtractor(expected), actorId);
     }
 }

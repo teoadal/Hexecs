@@ -7,41 +7,49 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.100
-//     [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.102
+//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method        | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |-------------- |------- |----------:|------:|----------:|------------:|
-//     | FriFlo_Chunks | 10000  |  16.28 us |  0.63 |         - |          NA |
-//     | Hexecs        | 10000  |  25.99 us |  1.00 |         - |          NA |
-//     | FriFlo        | 10000  |  26.76 us |  1.03 |      88 B |          NA |
-//     | DefaultEcs    | 10000  |  29.78 us |  1.15 |         - |          NA |
-//     |               |        |           |       |           |             |
-//     | FriFlo_Chunks | 100000 | 156.83 us |  0.58 |         - |          NA |
-//     | FriFlo        | 100000 | 263.76 us |  0.98 |      88 B |          NA |
-//     | Hexecs        | 100000 | 268.25 us |  1.00 |         - |          NA |
-//     | DefaultEcs    | 100000 | 289.78 us |  1.08 |         - |          NA |
+//     | Method                 | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |----------------------- |------- |----------:|------:|----------:|------------:|
+//     | FriFlo_Chunks          | 10000  |  16.10 us |  0.55 |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  25.10 us |  0.86 |         - |          NA |
+//     | FriFlo                 | 10000  |  25.66 us |  0.87 |      88 B |          NA |
+//     | Hexecs                 | 10000  |  29.33 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 10000  |  29.34 us |  1.00 |         - |          NA |
+//     |                        |        |           |       |           |             |
+//     | FriFlo_Chunks          | 100000 | 158.62 us |  0.50 |         - |          NA |
+//     | FriFlo                 | 100000 | 253.14 us |  0.79 |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 285.76 us |  0.89 |         - |          NA |
+//     | DefaultEcs             | 100000 | 287.17 us |  0.90 |         - |          NA |
+//     | Hexecs                 | 100000 | 320.26 us |  1.00 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.101
+//     .NET SDK 10.0.102
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
-//     | Method     | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |----------- |------- |----------:|------:|----------:|------------:|
-//     | DefaultEcs | 10000  |  13.52 us |  0.95 |         - |          NA |
-//     | Hexecs     | 10000  |  14.28 us |  1.00 |         - |          NA |
-//     |            |        |           |       |           |             |
-//     | DefaultEcs | 100000 | 125.76 us |  0.90 |         - |          NA |
-//     | Hexecs     | 100000 | 139.85 us |  1.00 |         - |          NA |
+//     | Method                 | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
+//     |----------------------- |------- |-----------:|------:|----------:|------------:|
+//     | FriFlo                 | 10000  |   9.383 us |  0.69 |      88 B |          NA |
+//     | FriFlo_Chunks          | 10000  |   9.538 us |  0.70 |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  12.621 us |  0.93 |         - |          NA |
+//     | DefaultEcs             | 10000  |  13.351 us |  0.99 |         - |          NA |
+//     | Hexecs                 | 10000  |  13.534 us |  1.00 |         - |          NA |
+//     |                        |        |            |       |           |             |
+//     | FriFlo                 | 100000 |  91.925 us |  0.65 |      88 B |          NA |
+//     | FriFlo_Chunks          | 100000 |  94.962 us |  0.67 |         - |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 131.812 us |  0.93 |         - |          NA |
+//     | Hexecs                 | 100000 | 142.264 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 100000 | 158.585 us |  1.11 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -54,6 +62,7 @@ public class ActorFilter3EnumerationBenchmark
 {
     [Params(10_000, 100_000)] public int Count;
 
+    private ActorContext _context = null!;
     private ActorFilter<Attack, Defence, Speed> _filter = null!;
     private World _world = null!;
 
@@ -72,6 +81,25 @@ public class ActorFilter3EnumerationBenchmark
             result += actor.Component1.Value +
                       actor.Component2.Value +
                       actor.Component3.Value;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Hexecs_ComponentAccess()
+    {
+        var result = 0;
+
+        var attacks = _context.GetComponents<Attack>();
+        var defences = _context.GetComponents<Defence>();
+        var speeds = _context.GetComponents<Speed>();
+
+        foreach (var actorId in _filter.Keys)
+        {
+            result += attacks[actorId].Value +
+                      defences[actorId].Value +
+                      speeds[actorId].Value;
         }
 
         return result;
@@ -148,6 +176,7 @@ public class ActorFilter3EnumerationBenchmark
         _defaultWorld = new DefaultEcs.World();
         _frifloWorld = new EntityStore();
         _world = new WorldBuilder().Build();
+        _context = _world.Actors;
 
         _defaultEntitySet = _defaultWorld.GetEntities().With<Attack>().With<Defence>().With<Speed>().AsSet();
         _filter = _world.Actors.Filter<Attack, Defence, Speed>();

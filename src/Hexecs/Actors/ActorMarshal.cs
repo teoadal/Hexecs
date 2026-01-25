@@ -51,37 +51,6 @@ public static class ActorMarshal
     public static Type GetComponentType(ushort componentId) => ActorComponentType.GetType(componentId);
 
     /// <summary>
-    /// Получает ссылку на компонент по его индексу в пуле.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <param name="context">Контекст актёра.</param>
-    /// <param name="index">Индекс компонента в пуле.</param>
-    /// <returns>Ссылка на компонент или нулевая ссылка, если компонент не найден.</returns>
-    /// <exception cref="IndexOutOfRangeException">Выбрасывается, если индекс выходит за границы пула.</exception>
-    public static ref T GetComponentByIndex<T>(ActorContext context, int index)
-        where T : struct, IActorComponent
-    {
-        var pool = context.GetComponentPool<T>();
-        if (pool == null) return ref Unsafe.NullRef<T>();
-
-        return ref pool.GetByIndex(index);
-    }
-
-    /// <summary>
-    /// Получает индекс компонента в пуле по идентификатору владельца.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <param name="context">Контекст актёра.</param>
-    /// <param name="ownerId">Идентификатор актёра-владельца.</param>
-    /// <returns>Индекс компонента или -1, если компонент не найден.</returns>
-    public static int GetComponentIndex<T>(ActorContext context, uint ownerId)
-        where T : struct, IActorComponent
-    {
-        var pool = context.GetComponentPool<T>();
-        return pool?.TryGetIndex(ownerId) ?? -1;
-    }
-
-    /// <summary>
     /// Получает владельца компонента.
     /// </summary>
     /// <typeparam name="T">Тип компонента.</typeparam>

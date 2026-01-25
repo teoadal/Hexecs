@@ -15,55 +15,57 @@ public sealed partial class ActorContext
         public readonly Actor Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, _children[_index].Id);
+            get => new(_context, _currentId);
         }
 
         public readonly int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _children.Length;
+            get => (int)_count;
         }
 
-        private int _index;
-        private readonly Span<ActorNode> _children;
         private readonly ActorContext _context;
+        private uint _currentId;
+        private uint _nextId;
+        private readonly uint _count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ChildrenEnumerator()
+        internal ChildrenEnumerator(ActorContext context, uint firstChildId, uint count)
         {
-            _index = -1;
-            _children = Span<ActorNode>.Empty;
-            _context = null!;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ChildrenEnumerator(ActorContext context, Span<ActorNode> children)
-        {
-            _index = -1;
-            _children = children;
             _context = context;
+            _currentId = 0;
+            _nextId = firstChildId;
+            _count = count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly int Count() => _children.Length;
+        public bool MoveNext()
+        {
+            if (_nextId == 0) return false;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _children.Length;
+            _currentId = _nextId;
+            ref var node = ref _context.GetComponent<ActorNodeComponent>(_currentId);
+            _nextId = node.NextSiblingId;
+
+            return true;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ChildrenEnumerator GetEnumerator() => this;
 
         public Actor[] ToArray()
         {
-            var count = 0;
-            var children = ArrayUtils.Create<Actor>(_children.Length);
+            if (_count == 0) return [];
+
+            var result = new Actor[_count];
+            var index = 0;
+
             foreach (var actor in this)
             {
-                children[count++] = actor;
+                result[index++] = actor;
             }
 
-            _index = 0; // reset enumerator
-            return children;
+            return result;
         }
     }
 }

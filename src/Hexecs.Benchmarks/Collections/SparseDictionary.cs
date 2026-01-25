@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Hexecs.Benchmarks.Collections;
 
@@ -40,8 +40,7 @@ public sealed class SparseDictionary<TValue> where TValue : struct
         var sparse = _sparse;
         if ((uint)key < (uint)sparse.Length)
         {
-            var denseIndexPlusOne = sparse[key];
-            return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == key;
+            return sparse[key] != 0;
         }
         return false;
     }
@@ -55,12 +54,8 @@ public sealed class SparseDictionary<TValue> where TValue : struct
             var denseIndexPlusOne = sparse[key];
             if (denseIndexPlusOne != 0)
             {
-                var index = (int)denseIndexPlusOne - 1;
-                if (_dense[index] == key)
-                {
-                    value = _values[index];
-                    return true;
-                }
+                value = _values[denseIndexPlusOne - 1];
+                return true;
             }
         }
         value = default;
@@ -71,7 +66,7 @@ public sealed class SparseDictionary<TValue> where TValue : struct
     public void Add(uint key, TValue value)
     {
         if (TryAdd(key, value)) return;
-        // Здесь можно добавить ваш ActorError.AlreadyExists(key)
+        Throw("Key already exists");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -167,35 +162,44 @@ public sealed class SparseDictionary<TValue> where TValue : struct
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator()
-    {
-        var count = _count;
-        return new Enumerator(
-            _dense.AsSpan(0, count),
-            _values.AsSpan(0, count));
-    }
+    public Enumerator GetEnumerator() => new(_values.AsSpan(0, _count));
 
     public ref struct Enumerator
     {
-        private readonly ReadOnlySpan<uint> _keys;
-        private readonly Span<TValue> _values;
-        private int _index;
+        private ref TValue _current;
+        private int _remaining;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal Enumerator(ReadOnlySpan<uint> keys, Span<TValue> values)
+        internal Enumerator(Span<TValue> values)
         {
-            _keys = keys;
-            _values = values;
-            _index = -1;
+            _remaining = values.Length;
+
+            if (_remaining == 0)
+            {
+                _current = ref Unsafe.NullRef<TValue>();
+                return;
+            }
+
+            ref var first = ref MemoryMarshal.GetReference(values);
+            _current = ref Unsafe.Subtract(ref first, 1);
         }
 
         public ref TValue Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _values[_index];
+            get => ref _current;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _keys.Length;
+        public bool MoveNext()
+        {
+            if (--_remaining < 0) return false;
+            _current = ref Unsafe.Add(ref _current, 1);
+            return true;
+        }
     }
+    
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void Throw(string message) => throw new InvalidOperationException(message);
 }

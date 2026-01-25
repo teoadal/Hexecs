@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 using World = Hexecs.Worlds.World;

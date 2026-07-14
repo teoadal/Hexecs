@@ -3,6 +3,7 @@ using Hexecs.Worlds;
 
 namespace Hexecs.Actors.Systems;
 
+[SuppressMessage("ReSharper", "InvertIf")]
 public abstract class UpdateSystem<T1> : UpdateSystem, IParallelJob
     where T1 : struct, IActorComponent
 {

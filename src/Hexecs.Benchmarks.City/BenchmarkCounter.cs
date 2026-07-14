@@ -28,7 +28,9 @@ internal sealed class BenchmarkCounter
     private readonly Vector2 _textPos = new(10, 10);
     private readonly Vector2 _shadowPos = new(11, 11);
 
-    public BenchmarkCounter(Func<int> countResolver, ContentManager contentManager, GraphicsDevice graphicsDevice)
+    public BenchmarkCounter(Func<int> countResolver, 
+        ContentManager contentManager, 
+        GraphicsDevice graphicsDevice)
     {
         _countResolver = countResolver;
         _fpsHistory = new int[60];
@@ -54,36 +56,39 @@ internal sealed class BenchmarkCounter
         _frameTime = gameTime.ElapsedGameTime.TotalMilliseconds;
         _fpsTimer += elapsedSeconds;
 
-        if (_fpsTimer >= 1.0)
+        if (_fpsTimer < 1.0)
         {
-            _fps = _frameCount;
-
-            _historySum -= _fpsHistory[_historyIndex];
-            _fpsHistory[_historyIndex] = _fps;
-            _historySum += _fps;
-
-            _historyIndex = (_historyIndex + 1) % 60;
-            if (_historyIndex == 0) _historyFull = true;
-
-            var historyCount = _historyFull ? 60 : _historyIndex;
-            _avgFps = (double)_historySum / historyCount;
-
-            var alloc = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
-            var count = _countResolver();
-
-            // Очищаем буфер и записываем новые данные без создания строк
-            var culture = CultureInfo.InvariantCulture;
-
-            _stringBuilder.Clear();
-            _stringBuilder
-                .Append($"{_fps} FPS")
-                .Append(culture, $" | Avg:{_avgFps:F1} fps")
-                .Append(culture, $" | Entities:{count:N0}")
-                .Append(culture, $" | Frame time:{_frameTime:F1}ms")
-                .Append(culture, $" | Alloc:{alloc:F3}mb");
-
-            _frameCount = 0;
-            _fpsTimer = 0;
+            return;
         }
+
+        _fps = _frameCount;
+
+        ref var historySum = ref _fpsHistory[_historyIndex];
+        _historySum -= historySum;
+        historySum = _fps;
+        _historySum += _fps;
+
+        _historyIndex = (_historyIndex + 1) % 60;
+        if (_historyIndex == 0) _historyFull = true;
+
+        var historyCount = _historyFull ? 60 : _historyIndex;
+        _avgFps = (double)_historySum / historyCount;
+
+        var alloc = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
+        var count = _countResolver();
+
+        // Очищаем буфер и записываем новые данные без создания строк
+        var culture = CultureInfo.InvariantCulture;
+
+        _stringBuilder.Clear();
+        _stringBuilder
+            .Append($"{_fps} FPS")
+            .Append(culture, $" | Avg:{_avgFps:F1} fps")
+            .Append(culture, $" | Entities:{count:N0}")
+            .Append(culture, $" | Frame time:{_frameTime:F1}ms")
+            .Append(culture, $" | Alloc:{alloc:F3}mb");
+
+        _frameCount = 0;
+        _fpsTimer = 0;
     }
 }

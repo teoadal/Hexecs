@@ -28,15 +28,26 @@ internal sealed class BenchmarkCounter
     private readonly Vector2 _textPos = new(10, 10);
     private readonly Vector2 _shadowPos = new(11, 11);
 
-    public BenchmarkCounter(Func<int> countResolver, 
-        ContentManager contentManager, 
-        GraphicsDevice graphicsDevice)
+    #region Constructors
+
+    public BenchmarkCounter(Func<int> countResolver,
+        ContentManager contentManager,
+        GraphicsDevice graphicsDevice) 
+        : this(countResolver, contentManager, new SpriteBatch(graphicsDevice))
+    {
+    }
+
+    public BenchmarkCounter(Func<int> countResolver,
+        ContentManager contentManager,
+        SpriteBatch spriteBatch)
     {
         _countResolver = countResolver;
         _fpsHistory = new int[60];
         _font = contentManager.Load<SpriteFont>("DebugFont");
-        _spriteBatch = new SpriteBatch(graphicsDevice);
+        _spriteBatch = spriteBatch;
     }
+
+    #endregion
 
     public void Draw(GameTime gameTime)
     {

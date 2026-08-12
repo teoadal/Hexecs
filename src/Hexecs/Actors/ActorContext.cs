@@ -181,6 +181,14 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     {
         if (RemoveEntry(actorId))
         {
+            foreach (var (key, singleId) in _singles)
+            {
+                if (singleId == actorId)
+                {
+                    _singles.Remove(key);
+                }
+            }
+            
             _freeIds.Push(actorId);
             return true;
         }
@@ -352,6 +360,8 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
             builder.Append('\'');
             builder.Append(StringUtils.EmptyValue);
             builder.Append('\'');
+            
+            return;
         }
 
         builder.Append("Id = ");

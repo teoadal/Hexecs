@@ -86,14 +86,14 @@ public sealed partial class ActorContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ComponentsAccess<T> GetComponents<T>() where T: struct, IActorComponent
+    public ComponentsAccess<T> GetComponents<T>() where T : struct, IActorComponent
     {
         var pool = GetComponentPool<T>();
-        return pool != null 
-            ? pool.GetComponentAccess() 
+        return pool != null
+            ? pool.GetComponentAccess()
             : new ComponentsAccess<T>();
     }
-    
+
     /// <summary>
     /// Получает компонент указанного типа для заданного актёра или добавляет его, используя фабричный метод, если компонент отсутствует.
     /// </summary>
@@ -202,9 +202,17 @@ public sealed partial class ActorContext
         var pool = GetComponentPool<T>();
         if (pool != null && pool.Remove(actorId))
         {
+            var componentId = ActorComponentType<T>.Id;
             ref var entry = ref GetEntryRefExact(actorId);
-            entry.Remove(ActorComponentType<T>.Id);
-            return true;
+            if (entry.Remove(componentId))
+            {
+                if (_singles.TryGetValue(componentId, out var singleId) && actorId == singleId)
+                {
+                    _singles.Remove(componentId);
+                }
+
+                return true;
+            }
         }
 
         return false;
@@ -221,16 +229,23 @@ public sealed partial class ActorContext
         where T : struct, IActorComponent
     {
         var pool = GetComponentPool<T>();
-        if (pool == null || !pool.Remove(actorId, out component))
+        if (pool != null && pool.Remove(actorId, out component))
         {
-            component = default;
-            return false;
+            var componentId = ActorComponentType<T>.Id;
+            ref var entry = ref GetEntryRefExact(actorId);
+            if (entry.Remove(componentId))
+            {
+                if (_singles.TryGetValue(componentId, out var singleId) && actorId == singleId)
+                {
+                    _singles.Remove(componentId);
+                }
+
+                return true;
+            }
         }
 
-        ref var entry = ref GetEntryRefExact(actorId);
-        entry.Remove(ActorComponentType<T>.Id);
-
-        return true;
+        component = default;
+        return false;
     }
 
     /// <summary>

@@ -7,4 +7,43 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Compile Update="Archetypes\Archetype3.Entry.cs">
+        <DependentUpon>Archetype3.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\Archetype2.Entry.cs">
+        <DependentUpon>Archetype2.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\Archetype3.Accessor.cs">
+        <DependentUpon>Archetype3.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\Archetype2.Accessor.cs">
+        <DependentUpon>Archetype2.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\Archetype1.Accessor.cs">
+        <DependentUpon>Archetype1.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\Archetype1.Entry.cs">
+        <DependentUpon>Archetype1.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\ArchetypeBase.Dictionary.cs">
+        <DependentUpon>ArchetypeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\ArchetypeBase.Dictionary.cs">
+        <DependentUpon>ArchetypeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\ArchetypeBase.Enumerator.cs">
+        <DependentUpon>ArchetypeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\ArchetypeBase.AccessEnumerator1.cs">
+        <DependentUpon>ArchetypeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\ArchetypeBase.AccessEnumerator2.cs">
+        <DependentUpon>ArchetypeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Archetypes\ArchetypeBase.AccessEnumerator3.cs">
+        <DependentUpon>ArchetypeBase.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

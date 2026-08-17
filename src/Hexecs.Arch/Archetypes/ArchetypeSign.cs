@@ -9,6 +9,23 @@ public readonly struct ArchetypeSign
         ComponentIds = [];
     }
 
+    public ArchetypeSign(ushort component1)
+    {
+        ComponentIds = [component1];
+    }
+
+    public ArchetypeSign(ushort component1, ushort component2)
+    {
+        ComponentIds = [component1, component2];
+        Array.Sort(ComponentIds);
+    }
+
+    public ArchetypeSign(ushort component1, ushort component2, ushort component3)
+    {
+        ComponentIds = [component1, component2, component3];
+        Array.Sort(ComponentIds);
+    }
+
     internal ArchetypeSign(ushort[] sign)
     {
         ComponentIds = [.. sign];
@@ -25,9 +42,20 @@ public readonly struct ArchetypeSign
         }
     }
 
-    public bool Contains(ushort componentType)
+    public bool Contains(ushort componentType1)
     {
-        return Array.BinarySearch(ComponentIds, componentType) >= 0;
+        return Array.BinarySearch(ComponentIds, componentType1) >= 0;
+    }
+
+    public bool Contains(ushort componentType1, ushort otherComponentType2)
+    {
+        if (componentType1 == otherComponentType2)
+        {
+            return Contains(componentType1);
+        }
+
+        return Array.BinarySearch(ComponentIds, componentType1) >= 0 &&
+               Array.BinarySearch(ComponentIds, otherComponentType2) >= 0;
     }
 
     public bool IsAddTransitionFrom(in ArchetypeSign other, ushort componentType)

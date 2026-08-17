@@ -1,11 +1,16 @@
 ﻿namespace Hexecs.Arch;
 
-[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-public readonly struct ActorId(uint value, uint version, byte worldId)
+public readonly struct ActorId
 {
-    private readonly ulong _packed = value |
-                                     ((ulong)(version & 0x00FF_FFFF) << 32) |
-                                     ((ulong)worldId << 56);
+    private readonly ulong _packed;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ActorId(uint value, uint version, byte worldId)
+    {
+        _packed = value |
+                  ((ulong)(version & 0x00FF_FFFF) << 32) |
+                  ((ulong)worldId << 56);
+    }
 
     public uint Value
     {

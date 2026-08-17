@@ -5,6 +5,24 @@ namespace Hexecs.Arch;
 
 internal sealed class World
 {
+    private static byte _id = 1;
+    private static Dictionary<byte, World> _worlds = new();
+
+    public static World Create()
+    {
+        var id = _id++;
+        var world = new World(id);
+
+        _worlds.Add(id, world);
+
+        return world;
+    }
+
+    public static World Get(byte id)
+    {
+        return _worlds[id];
+    }
+
     public const byte DeletedWorldId = 0;
 
     public readonly byte Id;
@@ -18,7 +36,7 @@ internal sealed class World
     private uint _nextActorId;
     private readonly Queue<uint> _freeActorIds;
 
-    public World(byte id)
+    private World(byte id)
     {
         if (id == DeletedWorldId)
         {
@@ -58,7 +76,7 @@ internal sealed class World
         }
 
         if (!_archetypes.TryGetValue(entry.ArchetypeId, out var currentArchetype) ||
-            !currentArchetype.Contains(actorIdValue))
+            currentArchetype.Contains<T>(actorIdValue))
         {
             return false;
         }
@@ -94,7 +112,7 @@ internal sealed class World
         return true;
     }
 
-    public ActorId Create()
+    public ActorId CreateActor()
     {
         uint actorId;
         uint version;
@@ -119,7 +137,7 @@ internal sealed class World
         return new ActorId(actorId, version, Id);
     }
 
-    public bool Destroy(ref ActorId actorId)
+    public bool DestroyActor(ref ActorId actorId)
     {
         if (actorId.WorldId != Id)
         {
@@ -149,6 +167,31 @@ internal sealed class World
         return true;
     }
 
+    public IEnumerable<Actor<T1, T2>> Filter<T1, T2>()
+        where T1 : struct, IActorComponent
+        where T2 : struct, IActorComponent
+    {
+        var componentType1Id = ActorComponentType<T1>.Id;
+        var componentType2Id = ActorComponentType<T2>.Id;
+
+        foreach (var archetype in _archetypes.Values)
+        {
+            if (!archetype.Sign.Contains(componentType1Id, componentType2Id))
+            {
+                continue;
+            }
+
+            foreach (var accessor in archetype.Filter<T1, T2>())
+            {
+                var actorId = accessor.ActorId;
+                yield return new Actor<T1, T2>(
+                    new ActorId(actorId, _actors[actorId].Version, Id),
+                    ref accessor.Component1,
+                    ref accessor.Component2);
+            }
+        }
+    }
+
     public bool HasComponent<T>(in ActorId actorId)
         where T : struct, IActorComponent
     {
@@ -160,22 +203,10 @@ internal sealed class World
         var actorIdValue = actorId.Value;
 
         ref var entry = ref CollectionsMarshal.GetValueRefOrNullRef(_actors, actorIdValue);
-        if (Unsafe.IsNullRef(ref entry))
-        {
-            return false;
-        }
 
-        if (!_archetypes.TryGetValue(entry.ArchetypeId, out var archetype))
-        {
-            return false;
-        }
-
-        if (!archetype.Contains(actorId.Value))
-        {
-            return false;
-        }
-
-        return archetype.Sign.Contains(ActorComponentType<T>.Id);
+        return !Unsafe.IsNullRef(ref entry) &&
+               _archetypes.TryGetValue(entry.ArchetypeId, out var archetype) &&
+               archetype.Contains<T>(actorIdValue);
     }
 
     public bool RemoveComponent<T>(ref ActorId actorId)
@@ -189,13 +220,13 @@ internal sealed class World
         var actorIdValue = actorId.Value;
 
         ref var entry = ref CollectionsMarshal.GetValueRefOrNullRef(_actors, actorIdValue);
-        if (Unsafe.IsNullRef(ref entry))
+        if (Unsafe.IsNullRef(ref entry) && entry.Version != actorId.Version)
         {
             return false;
         }
 
         if (!_archetypes.TryGetValue(entry.ArchetypeId, out var currentArchetype) ||
-            !currentArchetype.Contains(actorIdValue))
+            !currentArchetype.Contains<T>(actorIdValue))
         {
             return false;
         }
@@ -243,7 +274,7 @@ internal sealed class World
             component = default;
             return false;
         }
-        
+
         if (!_archetypes.TryGetValue(entry.ArchetypeId, out var archetype))
         {
             component = default;
@@ -267,7 +298,7 @@ internal sealed class World
         {
             return ref Unsafe.NullRef<T>();
         }
-        
+
         if (!_archetypes.TryGetValue(entry.ArchetypeId, out var archetype))
         {
             return ref Unsafe.NullRef<T>();

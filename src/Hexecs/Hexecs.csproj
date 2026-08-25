@@ -14,8 +14,8 @@
     <PropertyGroup>
         <Title>Hexecs</Title>
         <Description>Simple Entity Component System framework</Description>
-        <Version>0.4.3</Version>
-        <PackageVersion>0.4.3</PackageVersion>
+        <Version>0.4.4</Version>
+        <PackageVersion>0.4.4</PackageVersion>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>git://github.com/teoadal/Hexecs</RepositoryUrl>
         <PackageId>Hexecs</PackageId>

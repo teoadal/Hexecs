@@ -19,7 +19,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     {
         World = world;
 
-        _aliases = new Dictionary<string, uint>(ReferenceComparer<string>.Instance);
+        _aliases = new Dictionary<string, uint>();
         _entries = new Dictionary<uint, Entry>(HashHelper.GetPrime(capacity));
 
         _componentPools = new IAssetComponentPool?[16];
@@ -177,6 +177,8 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
             builder.Append('\'');
             builder.Append(StringUtils.EmptyValue);
             builder.Append('\'');
+            
+            return;
         }
 
         builder.Append("Id = ");

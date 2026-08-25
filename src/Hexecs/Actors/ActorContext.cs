@@ -384,7 +384,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
             );
         }
 
-        Array.Sort(buffer, 0, componentsLength);
+        Array.Sort(buffer, 0, index);
 
         var first = true;
         foreach (var componentName in buffer.AsSpan(0, index))
@@ -397,6 +397,8 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
 
         if (printMore) builder.Append(", ...");
         builder.Append(')');
+        
+        pool.Return(buffer);
     }
 
     /// <summary>

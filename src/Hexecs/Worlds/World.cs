@@ -147,20 +147,25 @@ public sealed class World : IDependencyProvider, IDisposable
 
         var worldTime = time ?? new WorldTime(_cycle, now - _previousDraw, now - _startTime);
 
-        foreach (var actorContext in _actorContexts)
+        try
         {
-            actorContext?.Draw(worldTime);
+            foreach (var actorContext in _actorContexts)
+            {
+                actorContext?.Draw(worldTime);
+            }
         }
-
-        _previousDraw = now;
+        finally
+        {
+            _previousDraw = now;
 
 #if NET9_0_OR_GREATER
         Interlocked.Exchange(ref _state, WorldState.None);
 #else
-        Interlocked.Exchange(
-            ref Unsafe.As<WorldState, int>(ref _state),
-            (int)WorldState.None);
+            Interlocked.Exchange(
+                ref Unsafe.As<WorldState, int>(ref _state),
+                (int)WorldState.None);
 #endif
+        }
     }
 
     /// <summary>
@@ -268,20 +273,25 @@ public sealed class World : IDependencyProvider, IDisposable
 
         var worldTime = time ?? new WorldTime(_cycle, now - _previousUpdate, now - _startTime);
 
-        foreach (var actorContext in _actorContexts)
+        try
         {
-            actorContext?.Update(worldTime);
+            foreach (var actorContext in _actorContexts)
+            {
+                actorContext?.Update(worldTime);
+            }
         }
-
-        _previousUpdate = now;
+        finally
+        {
+            _previousUpdate = now;
 
 #if NET9_0_OR_GREATER
         Interlocked.Exchange(ref _state, WorldState.None);
 #else
-        Interlocked.Exchange(
-            ref Unsafe.As<WorldState, int>(ref _state),
-            (int)WorldState.None);
+            Interlocked.Exchange(
+                ref Unsafe.As<WorldState, int>(ref _state),
+                (int)WorldState.None);
 #endif
+        }
     }
 
     private ActorContext CreateActorContextImpl(bool isDefault, Action<ActorContextBuilder> context)

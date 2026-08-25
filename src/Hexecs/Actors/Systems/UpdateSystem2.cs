@@ -50,7 +50,7 @@ public abstract class UpdateSystem<T1, T2> : UpdateSystem, IParallelJob
             var length = Filter.Length;
             if (length > 0)
             {
-                BeforeUpdate(in time);
+                if (!BeforeUpdate(in time)) return;
 
                 if (_parallelWorker == null)
                 {

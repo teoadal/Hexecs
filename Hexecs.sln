@@ -1,15 +1,24 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs", "src\Hexecs\Hexecs.csproj", "{90188DF9-5A78-4303-BF3F-EF4E648C4BC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Tests", "src\Hexecs.Tests\Hexecs.Tests.csproj", "{2F69C623-5FAC-4696-B849-B42B7F6CE540}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Tests", "tests\Hexecs.Tests\Hexecs.Tests.csproj", "{2F69C623-5FAC-4696-B849-B42B7F6CE540}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Benchmarks", "src\Hexecs.Benchmarks\Hexecs.Benchmarks.csproj", "{6B3B5C57-80EF-4CC7-A0CE-5533B7628FDB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Benchmarks", "benchmarks\Hexecs.Benchmarks\Hexecs.Benchmarks.csproj", "{6B3B5C57-80EF-4CC7-A0CE-5533B7628FDB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Benchmarks.Noise", "src\Hexecs.Benchmarks.Noise\Hexecs.Benchmarks.Noise.csproj", "{0CA9A4D9-359D-4F10-8A45-DC3D1A3940AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Benchmarks.Noise", "benchmarks\Hexecs.Benchmarks.Noise\Hexecs.Benchmarks.Noise.csproj", "{0CA9A4D9-359D-4F10-8A45-DC3D1A3940AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Benchmarks.City", "src\Hexecs.Benchmarks.City\Hexecs.Benchmarks.City.csproj", "{B95D5C8E-90D4-4719-A6B4-81120C3BAD39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hexecs.Benchmarks.City", "benchmarks\Hexecs.Benchmarks.City\Hexecs.Benchmarks.City.csproj", "{B95D5C8E-90D4-4719-A6B4-81120C3BAD39}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{9BB142FC-044B-48F4-A183-5B2BA50E4658}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Items", "Items", "{34993851-8931-4990-A9BA-15109F96B3E0}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		CLAUDE.md = CLAUDE.md
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

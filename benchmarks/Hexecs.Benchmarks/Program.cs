@@ -1,5 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
 using Hexecs.Benchmarks.Actors;
 
-BenchmarkRunner.Run<UpdateSystemWithParallelWorkerBenchmark>();
+BenchmarkRunner.Run<ActorCheckComponentExistsBenchmark>();
 //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);

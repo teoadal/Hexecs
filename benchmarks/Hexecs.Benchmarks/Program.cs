@@ -2,5 +2,5 @@
 using Hexecs.Benchmarks.Actors;
 using Hexecs.Benchmarks.Collections;
 
-BenchmarkRunner.Run<ActorFilter2EnumerationBenchmark>();
+BenchmarkRunner.Run<UpdateSystemWithParallelWorkerBenchmark>();
 //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);

@@ -15,7 +15,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue!))
             .Returns(true);
 
-        IConfigurationSource[] sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -35,7 +35,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue!))
             .Returns(true);
 
-        IConfigurationSource[] sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -58,7 +58,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.IsAny<string>(), out outValue))
             .Returns(false);
 
-        IConfigurationSource[] sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -85,7 +85,7 @@ public sealed class ConfigurationServiceShould
             .Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue2!))
             .Returns(true);
 
-        IConfigurationSource[] sources = new[] { mockSource1.Object, mockSource2.Object };
+        IConfigurationSource[] sources = [mockSource1.Object, mockSource2.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -107,7 +107,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue))
             .Returns(true);
 
-        IConfigurationSource[] sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -127,7 +127,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.IsAny<string>(), out outValue))
             .Returns(false);
 
-        IConfigurationSource[] sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 

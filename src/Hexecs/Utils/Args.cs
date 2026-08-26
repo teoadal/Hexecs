@@ -7,12 +7,16 @@ namespace Hexecs.Utils;
 /// </summary>
 public sealed class Args : IEnumerable<KeyValuePair<string, object>>
 {
-    [ThreadStatic] private static Args? _instance;
+    [ThreadStatic]
+    private static Args? Instance;
 
     /// <summary>
     /// Получает экземпляр Args из пула или создает новый, если пул пуст.
     /// </summary>
-    public static Args Rent() => Interlocked.Exchange(ref _instance, null) ?? new Args();
+    public static Args Rent()
+    {
+        return Interlocked.Exchange(ref Instance, null) ?? new Args();
+    }
 
     /// <summary>
     /// Получает экземпляр Args из пула и устанавливает одно значение.
@@ -20,7 +24,10 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// <typeparam name="TValue">Тип значения.</typeparam>
     /// <param name="name">Имя аргумента.</param>
     /// <param name="value">Значение аргумента.</param>
-    public static Args Rent<TValue>(string name, TValue value) => Rent().Set(name, value);
+    public static Args Rent<TValue>(string name, TValue value)
+    {
+        return Rent().Set(name, value);
+    }
 
     private readonly Dictionary<Type, IValueStorage> _values;
 
@@ -37,7 +44,7 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// <param name="name">Имя аргумента.</param>
     public TValue Get<TValue>(string name)
     {
-        if (!TryGet<TValue>(name, out var value))
+        if (!TryGet(name, out TValue value))
         {
             ActorError.ValueNotFound(name, typeof(TValue));
         }
@@ -53,7 +60,7 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// <param name="name">Имя аргумента.</param>
     public TValue GetOrDefault<TValue>(string name)
     {
-        return TryGet<TValue>(name, out var value) ? value : default!;
+        return TryGet(name, out TValue value) ? value : default!;
     }
 
     /// <summary>
@@ -65,7 +72,7 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// <param name="defaultValue">Значение по умолчанию</param>
     public TValue GetOrDefault<TValue>(string name, TValue defaultValue)
     {
-        return TryGet<TValue>(name, out var value) ? value : defaultValue;
+        return TryGet(name, out TValue value) ? value : defaultValue;
     }
 
     /// <summary>
@@ -74,13 +81,13 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// </summary>
     public void Return()
     {
-        foreach (var storage in _values.Values)
+        foreach (IValueStorage storage in _values.Values)
         {
             storage.Return();
         }
 
         _values.Clear();
-        Interlocked.Exchange(ref _instance, this);
+        Interlocked.Exchange(ref Instance, this);
     }
 
     /// <summary>
@@ -92,20 +99,24 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// <returns>Возвращает true, если значение найдено; в противном случае — false.</returns>
     public bool TryGet<TValue>(string name, out TValue value)
     {
-        if (!_values.TryGetValue(typeof(TValue), out var storage))
+        if (!_values.TryGetValue(typeof(TValue), out IValueStorage? storage))
         {
             value = default!;
+
             return false;
         }
 
         var expectedValues = Unsafe.As<ValueStorage<TValue>>(storage);
-        if (expectedValues.TryGetValue(name, out var existsValue))
+
+        if (expectedValues.TryGetValue(name, out TValue? existsValue))
         {
             value = existsValue;
+
             return true;
         }
 
         value = default!;
+
         return false;
     }
 
@@ -117,9 +128,9 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     /// <param name="value">Значение аргумента.</param>
     public Args Set<TValue>(string name, TValue value)
     {
-        var key = typeof(TValue);
+        Type key = typeof(TValue);
 
-        if (!_values.TryGetValue(key, out var storage))
+        if (!_values.TryGetValue(key, out IValueStorage? storage))
         {
             storage = ValueStorage<TValue>.RentStorage();
             _values.Add(key, storage);
@@ -131,11 +142,17 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
         return this;
     }
 
-    public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => _values.Values
-        .SelectMany(static storage => storage.Enumerate())
-        .GetEnumerator();
+    public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+    {
+        return _values.Values
+            .SelectMany(static storage => storage.Enumerate())
+            .GetEnumerator();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     /// <summary>
     /// Интерфейс для хранилища значений определенного типа.
@@ -150,11 +167,12 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
     [DebuggerDisplay("Type {typeof(TValue).Name}, Count = {Count}")]
     private sealed class ValueStorage<TValue> : Dictionary<string, TValue>, IValueStorage
     {
-        [ThreadStatic] private static ValueStorage<TValue>? _storageInstance;
+        [ThreadStatic]
+        private static ValueStorage<TValue>? StorageInstance;
 
         public static ValueStorage<TValue> RentStorage()
         {
-            return Interlocked.Exchange(ref _storageInstance, null) ?? new ValueStorage<TValue>();
+            return Interlocked.Exchange(ref StorageInstance, null) ?? new ValueStorage<TValue>();
         }
 
         public IEnumerable<KeyValuePair<string, object>> Enumerate()
@@ -165,7 +183,7 @@ public sealed class Args : IEnumerable<KeyValuePair<string, object>>
         public void Return()
         {
             Clear();
-            Interlocked.Exchange(ref _storageInstance, this);
+            Interlocked.Exchange(ref StorageInstance, this);
         }
     }
 }

@@ -14,7 +14,8 @@ public static class StringUtils
 
     private const string Choices = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?_@#$%";
 
-    [ThreadStatic] private static StringBuilder? _stringBuilder;
+    [ThreadStatic]
+    private static StringBuilder? _stringBuilder;
 
     /// <summary>
     /// Преобразует StringBuilder в строку и возвращает его в пул.
@@ -42,11 +43,12 @@ public static class StringUtils
         {
             Span<char> stackBuffer = stackalloc char[length];
             Random.Shared.GetItems(Choices, stackBuffer);
+
             return new string(stackBuffer);
         }
 
-        var array = ArrayPool<char>.Shared.Rent(length);
-        var arrayBuffer = array.AsSpan(0, length);
+        char[] array = ArrayPool<char>.Shared.Rent(length);
+        Span<char> arrayBuffer = array.AsSpan(0, length);
         Random.Shared.GetItems(Choices, arrayBuffer);
 
         var result = new string(arrayBuffer);
@@ -55,7 +57,10 @@ public static class StringUtils
         return result;
     }
 
-    public static void GetRandom(Span<char> buffer) => Random.Shared.GetItems(Choices, buffer);
+    public static void GetRandom(Span<char> buffer)
+    {
+        Random.Shared.GetItems(Choices, buffer);
+    }
 
     /// <summary>
     /// Получает экземпляр StringBuilder из пула или создает новый.
@@ -65,7 +70,7 @@ public static class StringUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static StringBuilder Rent(int capacity = 2048)
     {
-        var builder = _stringBuilder ?? new StringBuilder(capacity);
+        StringBuilder builder = _stringBuilder ?? new StringBuilder(capacity);
         builder.EnsureCapacity(capacity);
 
         return builder;
@@ -79,7 +84,10 @@ public static class StringUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Return(StringBuilder builder, bool clear = true)
     {
-        if (clear) builder.Clear();
+        if (clear)
+        {
+            builder.Clear();
+        }
 
         _stringBuilder = builder;
     }

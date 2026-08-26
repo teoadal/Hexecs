@@ -24,13 +24,16 @@ public static class ArrayUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Create<T>(int length)
     {
-        if (length == 0) return [];
+        if (length == 0)
+        {
+            return [];
+        }
 
         // ReSharper disable once InvertIf
         if (Environment.Is64BitProcess && typeof(T).IsPrimitive && length > 100)
         {
             // На 64-битной платформе для примитивных типов выравниваем размер по 16 байт
-            var alignedLength = (length + 1) & ~1; // Выравнивание по границе 16 байт
+            int alignedLength = (length + 1) & ~1; // Выравнивание по границе 16 байт
             return GC.AllocateUninitializedArray<T>(alignedLength);
         }
 
@@ -47,7 +50,11 @@ public static class ArrayUtils
     /// </remarks>
     public static void Clear<T>(T[] array)
     {
-        if (array.Length == 0) return;
+        if (array.Length == 0)
+        {
+            return;
+        }
+
         Array.Clear(array);
     }
 
@@ -62,7 +69,11 @@ public static class ArrayUtils
     /// </remarks>
     public static void Clear<T>(T[] array, int length)
     {
-        if (array.Length == 0 || length == 0) return;
+        if (array.Length == 0 || length == 0)
+        {
+            return;
+        }
+
         Array.Clear(array, 0, length);
     }
 
@@ -78,7 +89,7 @@ public static class ArrayUtils
     /// </remarks>
     public static void Cut<T>(T[] array, int index)
     {
-        var length = array.Length - 1;
+        int length = array.Length - 1;
 
         if (index < length)
         {
@@ -122,7 +133,10 @@ public static class ArrayUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureCapacity<T>(ref T[] array, int capacity, bool clear = false)
     {
-        if (array.Length < capacity) Resize(ref array, capacity, clear);
+        if (array.Length < capacity)
+        {
+            Resize(ref array, capacity, clear);
+        }
     }
 
     /// <summary>
@@ -139,7 +153,10 @@ public static class ArrayUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureCapacity<T>(ref T[] array, ArrayPool<T> pool, int capacity, bool clear = false)
     {
-        if (array.Length < capacity) Resize(ref array, pool, capacity, clear);
+        if (array.Length < capacity)
+        {
+            Resize(ref array, pool, capacity, clear);
+        }
     }
 
     /// <summary>
@@ -155,8 +172,12 @@ public static class ArrayUtils
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Insert<T>(ref T[] array, int index, in T element)
     {
-        var arrayLength = array.Length;
-        if (index >= arrayLength) Resize(ref array, arrayLength * 2);
+        int arrayLength = array.Length;
+        if (index >= arrayLength)
+        {
+            Resize(ref array, arrayLength * 2);
+        }
+
         array[index] = element;
     }
 
@@ -175,8 +196,12 @@ public static class ArrayUtils
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Insert<T>(ref T[] array, ArrayPool<T> pool, int index, in T element)
     {
-        var arrayLength = array.Length;
-        if (index >= arrayLength) Resize(ref array, pool, arrayLength * 2);
+        int arrayLength = array.Length;
+        if (index >= arrayLength)
+        {
+            Resize(ref array, pool, arrayLength * 2);
+        }
+
         array[index] = element;
     }
 
@@ -230,10 +255,16 @@ public static class ArrayUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Remove<T>(T[]? array, T item)
     {
-        if (array == null) return false;
+        if (array == null)
+        {
+            return false;
+        }
 
-        var index = Array.IndexOf(array, item);
-        if (index == -1) return false;
+        int index = Array.IndexOf(array, item);
+        if (index == -1)
+        {
+            return false;
+        }
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
@@ -241,7 +272,7 @@ public static class ArrayUtils
         }
         else
         {
-            var lastElementIndex = array.Length - 1;
+            int lastElementIndex = array.Length - 1;
             Buffer.BlockCopy(array, (index + 1) * Unsafe.SizeOf<T>(),
                 array, index * Unsafe.SizeOf<T>(),
                 (lastElementIndex - index) * Unsafe.SizeOf<T>());
@@ -265,14 +296,20 @@ public static class ArrayUtils
     /// </remarks>
     public static void Resize<T>(ref T[] array, int newLength, bool clear = false)
     {
-        if (newLength == 0) newLength = 2;
+        if (newLength == 0)
+        {
+            newLength = 2;
+        }
 
-        var newArray = Create<T>(newLength);
+        T[] newArray = Create<T>(newLength);
 
         if (array.Length > 0)
         {
             Array.Copy(array, newArray, array.Length);
-            if (clear) Array.Clear(array, 0, array.Length);
+            if (clear)
+            {
+                Array.Clear(array, 0, array.Length);
+            }
         }
 
         array = newArray;
@@ -292,9 +329,12 @@ public static class ArrayUtils
     /// </remarks>
     public static void Resize<T>(ref T[] array, ArrayPool<T> pool, int newLength, bool clear = false)
     {
-        if (newLength == 0) newLength = 2;
+        if (newLength == 0)
+        {
+            newLength = 2;
+        }
 
-        var newArray = pool.Rent(newLength);
+        T[] newArray = pool.Rent(newLength);
 
         if (array.Length > 0)
         {

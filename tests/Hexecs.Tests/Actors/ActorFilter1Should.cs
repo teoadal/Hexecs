@@ -132,6 +132,4 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
             .Should()
             .BeFalse();
     }
-
-
 }

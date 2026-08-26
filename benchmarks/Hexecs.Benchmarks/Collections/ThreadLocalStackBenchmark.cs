@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using Hexecs.Collections;
 
 namespace Hexecs.Benchmarks.Collections;
@@ -9,7 +10,7 @@ namespace Hexecs.Benchmarks.Collections;
 //    [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
 //    .NET 10.0 : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //    | Method                    | Mean     | Ratio | Gen0     | Allocated | Alloc Ratio |
 //    |-------------------------- |---------:|------:|---------:|----------:|------------:|
@@ -19,14 +20,15 @@ namespace Hexecs.Benchmarks.Collections;
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Collections")]
 public class ThreadLocalStackBenchmark
 {
-    [Params(10_000)] 
+    [Params(10_000)]
     public int Count = 10_000;
 
     private const int ThreadCount = 4;
@@ -34,62 +36,74 @@ public class ThreadLocalStackBenchmark
     private ConcurrentStack<uint> _concurrentStack = null!;
     private Stack<uint> _lockedStack = null!;
     private ThreadLocalStack<uint> _threadLocalStack = null!;
-    private readonly Lock _stackLock = new();
+    private readonly Lock _stackLock = new Lock();
 
     [Benchmark(Baseline = true)]
     public int ThreadLocalStack_Parallel()
     {
-        var opsPerThread = Count / ThreadCount;
+        int opsPerThread = Count / ThreadCount;
         var result = 0;
-        Parallel.For(0, ThreadCount, _ =>
-        {
-            for (var i = 0; i < opsPerThread; i++)
+        Parallel.For(
+            0,
+            ThreadCount,
+            _ =>
             {
-                if (_threadLocalStack.TryPop(out var id))
+                for (var i = 0; i < opsPerThread; i++)
                 {
-                    Interlocked.Increment(ref result);
-                    _threadLocalStack.Push(id);
+                    if (_threadLocalStack.TryPop(out uint id))
+                    {
+                        Interlocked.Increment(ref result);
+                        _threadLocalStack.Push(id);
+                    }
                 }
-            }
-        });
+            });
+
         return result;
     }
 
     [Benchmark]
     public int ConcurrentStack_Parallel()
     {
-        var opsPerThread = Count / ThreadCount;
+        int opsPerThread = Count / ThreadCount;
         var result = 0;
-        Parallel.For(0, ThreadCount, _ =>
-        {
-            for (var i = 0; i < opsPerThread; i++)
+        Parallel.For(
+            0,
+            ThreadCount,
+            _ =>
             {
-                if (_concurrentStack.TryPop(out var id))
+                for (var i = 0; i < opsPerThread; i++)
                 {
-                    Interlocked.Increment(ref result);
-                    _concurrentStack.Push(id);
+                    if (_concurrentStack.TryPop(out uint id))
+                    {
+                        Interlocked.Increment(ref result);
+                        _concurrentStack.Push(id);
+                    }
                 }
-            }
-        });
+            });
+
         return result;
     }
 
     [Benchmark]
     public int LockedStack_Parallel()
     {
-        var opsPerThread = Count / ThreadCount;
+        int opsPerThread = Count / ThreadCount;
         var result = 0;
-        Parallel.For(0, ThreadCount, _ =>
-        {
-            for (var i = 0; i < opsPerThread; i++)
+        Parallel.For(
+            0,
+            ThreadCount,
+            _ =>
             {
-                if (TryPopLocked(out var id))
+                for (var i = 0; i < opsPerThread; i++)
                 {
-                    Interlocked.Increment(ref result);
-                    PushLocked(id);
+                    if (TryPopLocked(out uint id))
+                    {
+                        Interlocked.Increment(ref result);
+                        PushLocked(id);
+                    }
                 }
-            }
-        });
+            });
+
         return result;
     }
 
@@ -119,13 +133,14 @@ public class ThreadLocalStackBenchmark
 
     private bool TryPopLocked(out uint id)
     {
-        using var locker = _stackLock.EnterScope();
+        using Lock.Scope locker = _stackLock.EnterScope();
+
         return _lockedStack.TryPop(out id);
     }
 
     private void PushLocked(uint id)
     {
-        using var locker = _stackLock.EnterScope();
+        using Lock.Scope locker = _stackLock.EnterScope();
         _lockedStack.Push(id);
     }
 }

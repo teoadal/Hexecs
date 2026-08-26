@@ -21,7 +21,7 @@ public readonly struct Actor : IEquatable<Actor>
     public static Actor Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, ActorId.Empty);
+        get => new Actor(null!, ActorId.Empty);
     }
 
     /// <summary>
@@ -386,20 +386,29 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="other">Актёр для сравнения.</param>
     /// <returns>Возвращает true, если актёры равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(Actor other) => Id == other.Id && ReferenceEquals(Context, other.Context);
+    public bool Equals(Actor other)
+    {
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
 
     /// <summary>
     /// Проверяет равенство с другим объектом.
     /// </summary>
     /// <param name="obj">Объект для сравнения.</param>
     /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
-    public override bool Equals(object? obj) => obj is Actor other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        return obj is Actor other && Equals(other);
+    }
 
     /// <summary>
     /// Возвращает хеш-код для актёра.
     /// </summary>
     /// <returns>Хеш-код актёра.</returns>
-    public override int GetHashCode() => HashCode.Combine(Id);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
 
     /// <summary>
     /// Сравнивает двух актёров на равенство.
@@ -408,7 +417,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="right">Правый актёр.</param>
     /// <returns>Возвращает true, если актёры равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in Actor left, in Actor right) => left.Equals(right);
+    public static bool operator ==(in Actor left, in Actor right)
+    {
+        return left.Equals(right);
+    }
 
     /// <summary>
     /// Сравнивает двух актёров на неравенство.
@@ -417,7 +429,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="right">Правый актёр.</param>
     /// <returns>Возвращает true, если актёры не равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in Actor left, in Actor right) => !left.Equals(right);
+    public static bool operator !=(in Actor left, in Actor right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
@@ -429,7 +444,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="actor">Актёр для преобразования.</param>
     /// <returns>Возвращает true, если актёр не пустой; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in Actor actor) => !actor.IsEmpty;
+    public static implicit operator bool(in Actor actor)
+    {
+        return !actor.IsEmpty;
+    }
 
     /// <summary>
     /// Неявное преобразование актёра в ActorId.
@@ -437,7 +455,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="actor">Актёр для преобразования.</param>
     /// <returns>Идентификатор актёра.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId(in Actor actor) => actor.Id;
+    public static implicit operator ActorId(in Actor actor)
+    {
+        return actor.Id;
+    }
 
     #endregion
 }

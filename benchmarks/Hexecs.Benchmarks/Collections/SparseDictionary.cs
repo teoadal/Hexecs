@@ -37,46 +37,59 @@ public sealed class SparseDictionary<TValue> where TValue : struct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(uint key)
     {
-        var sparse = _sparse;
+        uint[] sparse = _sparse;
+
         if ((uint)key < (uint)sparse.Length)
         {
             return sparse[key] != 0;
         }
+
         return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(uint key, out TValue value)
     {
-        var sparse = _sparse;
+        uint[] sparse = _sparse;
+
         if ((uint)key < (uint)sparse.Length)
         {
-            var denseIndexPlusOne = sparse[key];
+            uint denseIndexPlusOne = sparse[key];
+
             if (denseIndexPlusOne != 0)
             {
                 value = _values[denseIndexPlusOne - 1];
+
                 return true;
             }
         }
+
         value = default;
+
         return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(uint key, TValue value)
     {
-        if (TryAdd(key, value)) return;
+        if (TryAdd(key, value))
+        {
+            return;
+        }
+
         Throw("Key already exists");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryAdd(uint key, TValue value)
     {
-        var sparse = _sparse;
+        uint[] sparse = _sparse;
+
         // Проверка на наличие места и ключа в массиве
         if ((uint)key < (uint)sparse.Length && (uint)_count < (uint)_dense.Length)
         {
-            ref var slot = ref sparse[key];
+            ref uint slot = ref sparse[key];
+
             if (slot == 0)
             {
                 var idx = (uint)_count;
@@ -84,10 +97,14 @@ public sealed class SparseDictionary<TValue> where TValue : struct
                 _dense[idx] = key;
                 _values[idx] = value;
                 _count++;
+
                 return true;
             }
 
-            if (_dense[slot - 1] == key) return false;
+            if (_dense[slot - 1] == key)
+            {
+                return false;
+            }
         }
 
         return TryAddSlow(key, value);
@@ -95,19 +112,32 @@ public sealed class SparseDictionary<TValue> where TValue : struct
 
     public bool Remove(uint key)
     {
-        var sparse = _sparse;
-        if ((uint)key >= (uint)sparse.Length) return false;
+        uint[] sparse = _sparse;
 
-        var denseIndexPlusOne = sparse[key];
-        if (denseIndexPlusOne == 0) return false;
+        if ((uint)key >= (uint)sparse.Length)
+        {
+            return false;
+        }
 
-        var denseIndex = (int)denseIndexPlusOne - 1;
-        if (_dense[denseIndex] != key) return false;
+        uint denseIndexPlusOne = sparse[key];
 
-        var lastIndex = _count - 1;
+        if (denseIndexPlusOne == 0)
+        {
+            return false;
+        }
+
+        int denseIndex = (int)denseIndexPlusOne - 1;
+
+        if (_dense[denseIndex] != key)
+        {
+            return false;
+        }
+
+        int lastIndex = _count - 1;
+
         if (denseIndex != lastIndex)
         {
-            var lastKey = _dense[lastIndex];
+            uint lastKey = _dense[lastIndex];
             _dense[denseIndex] = lastKey;
             _values[denseIndex] = _values[lastIndex];
             _sparse[lastKey] = (uint)denseIndex + 1;
@@ -115,13 +145,14 @@ public sealed class SparseDictionary<TValue> where TValue : struct
 
         sparse[key] = 0;
         _count = lastIndex;
+
         return true;
     }
 
     public void Clear()
     {
-        var dense = _dense;
-        var sparse = _sparse;
+        uint[] dense = _dense;
+        uint[] sparse = _sparse;
 
         for (var i = 0; i < _count; i++)
         {
@@ -136,21 +167,25 @@ public sealed class SparseDictionary<TValue> where TValue : struct
     {
         if ((uint)key >= (uint)_sparse.Length)
         {
-            var newSize = Math.Max(_sparse.Length * 2, (int)key + 1);
+            int newSize = Math.Max(_sparse.Length * 2, (int)key + 1);
             Array.Resize(ref _sparse, newSize);
         }
 
         if ((uint)_count >= (uint)_dense.Length)
         {
-            var newSize = _dense.Length * 2;
+            int newSize = _dense.Length * 2;
             Array.Resize(ref _dense, newSize);
             Array.Resize(ref _values, newSize);
         }
 
-        ref var denseIndexPlusOne = ref _sparse[key];
+        ref uint denseIndexPlusOne = ref _sparse[key];
+
         if (denseIndexPlusOne != 0)
         {
-            if (_dense[denseIndexPlusOne - 1] == key) return false;
+            if (_dense[denseIndexPlusOne - 1] == key)
+            {
+                return false;
+            }
         }
 
         var denseIndex = (uint)_count;
@@ -158,11 +193,15 @@ public sealed class SparseDictionary<TValue> where TValue : struct
         _dense[denseIndex] = key;
         _values[denseIndex] = value;
         _count++;
+
         return true;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(_values.AsSpan(0, _count));
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(_values.AsSpan(0, _count));
+    }
 
     public ref struct Enumerator
     {
@@ -177,10 +216,11 @@ public sealed class SparseDictionary<TValue> where TValue : struct
             if (_remaining == 0)
             {
                 _current = ref Unsafe.NullRef<TValue>();
+
                 return;
             }
 
-            ref var first = ref MemoryMarshal.GetReference(values);
+            ref TValue first = ref MemoryMarshal.GetReference(values);
             _current = ref Unsafe.Subtract(ref first, 1);
         }
 
@@ -193,13 +233,21 @@ public sealed class SparseDictionary<TValue> where TValue : struct
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (--_remaining < 0) return false;
+            if (--_remaining < 0)
+            {
+                return false;
+            }
+
             _current = ref Unsafe.Add(ref _current, 1);
+
             return true;
         }
     }
-    
+
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void Throw(string message) => throw new InvalidOperationException(message);
+    private static void Throw(string message)
+    {
+        throw new InvalidOperationException(message);
+    }
 }

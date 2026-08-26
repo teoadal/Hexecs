@@ -8,24 +8,34 @@ internal static class TypeOf
     {
         if (!type.IsGenericType)
         {
-            var simpleName = type.Name;
+            string simpleName = type.Name;
             sb.Append(simpleName);
+
             return;
         }
 
-        var genericArguments = type.GetGenericArguments();
+        Type[] genericArguments = type.GetGenericArguments();
 
-        sb.Append(type
-            .GetGenericTypeDefinition().Name
-            .Replace($"`{genericArguments.Length}", string.Empty));
+        sb.Append(
+            type
+                .GetGenericTypeDefinition()
+                .Name
+                .Replace($"`{genericArguments.Length}", string.Empty));
 
         sb.Append('<');
 
         var first = true;
-        foreach (var genericArgument in genericArguments)
+
+        foreach (Type genericArgument in genericArguments)
         {
-            if (first) first = false;
-            else sb.Append(", ");
+            if (first)
+            {
+                first = false;
+            }
+            else
+            {
+                sb.Append(", ");
+            }
 
             BuildTypeName(genericArgument, ref sb);
         }
@@ -36,10 +46,14 @@ internal static class TypeOf
     [SkipLocalsInit]
     public static string GetTypeName(Type type)
     {
-        if (!type.IsGenericType) return type.Name;
+        if (!type.IsGenericType)
+        {
+            return type.Name;
+        }
 
         var sb = new ValueStringBuilder(stackalloc char[128]);
         BuildTypeName(type, ref sb);
+
         return sb.Flush();
     }
 }
@@ -51,5 +65,8 @@ internal static class TypeOf<T>
     public static readonly int Id = Interlocked.Increment(ref TypeOf.NextId);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string GetTypeName() => TypeOf.GetTypeName(typeof(T));
+    public static string GetTypeName()
+    {
+        return TypeOf.GetTypeName(typeof(T));
+    }
 }

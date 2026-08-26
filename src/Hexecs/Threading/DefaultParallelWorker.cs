@@ -19,10 +19,10 @@ public sealed class DefaultParallelWorker : IParallelWorker
         if (degreeOfParallelism < 2)
         {
             throw new ArgumentOutOfRangeException(
-                paramName: nameof(degreeOfParallelism), 
+                paramName: nameof(degreeOfParallelism),
                 message: "Degree of parallelism must be at least 2.");
         }
-            
+
         DegreeOfParallelism = degreeOfParallelism;
 
         _cts = new CancellationTokenSource();
@@ -38,7 +38,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
         for (var i = 0; i < degreeOfParallelism; i++)
         {
-            var workerIndex = i;
+            int workerIndex = i;
             var thread = new Thread(() => ExecuteWorker(workerIndex, startupLatch))
             {
                 IsBackground = false, // Потоки foreground, удерживают приложение
@@ -80,7 +80,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
     private void ExecuteWorker(int workerIndex, CountdownEvent startupLatch)
     {
-        var lastWorkerIndex = _workers.Length - 1;
+        int lastWorkerIndex = _workers.Length - 1;
 
         // Сигнализируем конструктору, что данный поток готов
         startupLatch.Signal();
@@ -111,7 +111,11 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         // Отменяем токен — это заставит методы SignalAndWait выкинуть OperationCanceledException
@@ -119,7 +123,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
         _cts.Cancel();
 
         // Теперь спокойно дожидаемся завершения потоков
-        foreach (var thread in _workers)
+        foreach (Thread thread in _workers)
         {
             if (thread.IsAlive)
             {

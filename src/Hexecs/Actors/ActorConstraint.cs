@@ -1,7 +1,7 @@
 ﻿namespace Hexecs.Actors;
 
 /// <summary>
-/// Класс, представляющий ограничения для актёров, позволяющий фильтровать актёры 
+/// Класс, представляющий ограничения для актёров, позволяющий фильтровать актёры
 /// на основе наличия или отсутствия определенных компонентов.
 /// </summary>
 public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisposable
@@ -79,7 +79,7 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
 
     private ActorConstraint(int contextId, int hash, Subscription[] subscriptions)
     {
-        foreach (var subscription in subscriptions)
+        foreach (Subscription subscription in subscriptions)
         {
             subscription.Subscribe(this);
         }
@@ -97,22 +97,31 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     public bool Applicable(ActorId actorId)
     {
         // ReSharper disable once LoopCanBeConvertedToQuery
-        foreach (var subscription in _subscriptions)
+        foreach (Subscription subscription in _subscriptions)
         {
-            if (!subscription.Check(actorId)) return false;
+            if (!subscription.Check(actorId))
+            {
+                return false;
+            }
         }
 
         return true;
     }
 
-    private void OnExclude(ActorId actorId) => Removing?.Invoke(actorId);
+    private void OnExclude(ActorId actorId)
+    {
+        Removing?.Invoke(actorId);
+    }
 
     private void OnInclude(ActorId actorId)
     {
         // ReSharper disable once LoopCanBeConvertedToQuery
-        foreach (var subscription in _subscriptions)
+        foreach (Subscription subscription in _subscriptions)
         {
-            if (!subscription.Check(actorId)) return;
+            if (!subscription.Check(actorId))
+            {
+                return;
+            }
         }
 
         Added?.Invoke(actorId);
@@ -127,14 +136,20 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     /// <returns>Возвращает true, если указанный объект равен текущему объекту; иначе false</returns>
     public bool Equals(ActorConstraint? other)
     {
-        if (other == null || _contextId != other._contextId) return false;
+        if (other == null || _contextId != other._contextId)
+        {
+            return false;
+        }
 
-        var otherSubscriptions = other._subscriptions;
+        Subscription[] otherSubscriptions = other._subscriptions;
 
         // ReSharper disable once LoopCanBeConvertedToQuery
         for (var i = 0; i < _subscriptions.Length; i++)
         {
-            if (!_subscriptions[i].Equals(otherSubscriptions[i])) return false;
+            if (!_subscriptions[i].Equals(otherSubscriptions[i]))
+            {
+                return false;
+            }
         }
 
         return true;
@@ -154,7 +169,10 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     /// Возвращает хеш-код для текущего объекта.
     /// </summary>
     /// <returns>Хеш-код для текущего объекта</returns>
-    public override int GetHashCode() => _hash;
+    public override int GetHashCode()
+    {
+        return _hash;
+    }
 
     #endregion
 
@@ -163,7 +181,7 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     /// </summary>
     void IDisposable.Dispose()
     {
-        foreach (var subscription in _subscriptions)
+        foreach (Subscription subscription in _subscriptions)
         {
             subscription.Unsubscribe(this);
         }

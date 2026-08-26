@@ -11,14 +11,14 @@ public sealed class QueryShould(PipelineTestFixture fixture) : IClassFixture<Pip
         // arrange
 
         var result = new PipelineResult(111);
-        var handler = fixture.CreateQueryHandler<QueryMock, PipelineResult>(cmd => result);
+        IQueryHandler<QueryMock, PipelineResult> handler = fixture.CreateQueryHandler<QueryMock, PipelineResult>(cmd => result);
         
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddQueryHandler(handler));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddQueryHandler(handler));
         var query = new QueryMock(25);
 
         // act
 
-        var actualResult = context
+        PipelineResult actualResult = context
             .Invoking(ctx => ctx.Ask<QueryMock, PipelineResult>(query))
             .Should()
             .NotThrow()
@@ -41,7 +41,7 @@ public sealed class QueryShould(PipelineTestFixture fixture) : IClassFixture<Pip
         var handler = new Mock<IQueryHandler<QueryMock, PipelineResult>>();
         handler.Setup(h => h.Handle(It.IsAny<QueryMock>()));
         
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddQueryHandler(handler.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddQueryHandler(handler.Object));
         var query = new QueryMockNotRegistered(25);
 
         // act

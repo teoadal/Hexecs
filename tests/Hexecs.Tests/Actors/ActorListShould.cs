@@ -83,6 +83,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
 
         // Act
         var resultIds = new List<ActorId>();
+
         foreach (ActorRef<Defence> actor in list)
         {
             resultIds.Add(actor.Id);

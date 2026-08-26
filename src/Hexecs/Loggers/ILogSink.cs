@@ -11,7 +11,7 @@ public interface ILogSink : IDisposable
     /// <param name="level">Уровень логирования</param>
     /// <returns>Возвращает true, если доступен;false если нет</returns>
     bool IsEnabled(LogLevel level);
-    
+
     /// <summary>
     /// Записать лог в подсистему вывода.
     /// </summary>
@@ -28,11 +28,20 @@ public interface ILogSink : IDisposable
 
     void Write<T1, T2, T3, T4>(
         LogLevel level,
-        string context, string template,
-        T1 arg1, T2 arg2, T3 arg3, T4 arg4);
+        string context,
+        string template,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4);
 
     void Write<T1, T2, T3, T4, T5>(
         LogLevel level,
-        string context, string template,
-        T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5);
+        string context,
+        string template,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4,
+        T5 arg5);
 }

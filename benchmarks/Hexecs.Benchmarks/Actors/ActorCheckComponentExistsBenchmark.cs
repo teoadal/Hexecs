@@ -1,6 +1,9 @@
 ﻿using Friflo.Engine.ECS;
+
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
+
+using Entity = DefaultEcs.Entity;
 using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
@@ -11,7 +14,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------- |----------:|------:|----------:|------------:|
@@ -35,7 +38,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
 //     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------- |----------:|------:|----------:|------------:|
@@ -53,14 +56,16 @@ namespace Hexecs.Benchmarks.Actors;
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class ActorCheckComponentExistsBenchmark
 {
-    [Params(10_000, 100_000)] public int Count;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorContext _context = null!;
     private DefaultEcs.World _defaultWorld = null!;
@@ -74,9 +79,12 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var actor in _context)
+        foreach (Actor actor in _context)
         {
-            if (actor.Has<Speed>()) result++;
+            if (actor.Has<Speed>())
+            {
+                result++;
+            }
         }
 
         return result;
@@ -88,7 +96,7 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var entity in _defaultWorld)
+        foreach (Entity entity in _defaultWorld)
         {
             if (entity.Has<Speed>())
             {
@@ -105,7 +113,7 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var entity in _frifloAllEntitiesQuery.Entities)
+        foreach (Friflo.Engine.ECS.Entity entity in _frifloAllEntitiesQuery.Entities)
         {
             if (entity.HasComponent<Speed>())
             {
@@ -122,7 +130,7 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var actor in _context)
+        foreach (Actor actor in _context)
         {
             if (actor.IsRef<Speed>(out _))
             {
@@ -139,9 +147,10 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var actor in _context)
+        foreach (Actor actor in _context)
         {
-            ref var reference = ref actor.TryGetRef<Speed>();
+            ref Speed reference = ref actor.TryGetRef<Speed>();
+
             if (!Unsafe.IsNullRef(ref reference))
             {
                 result++;
@@ -174,17 +183,20 @@ public class ActorCheckComponentExistsBenchmark
 
         for (var i = 0; i < Count; i++)
         {
-            var actor = _context.CreateActor();
+            Actor actor = _context.CreateActor();
             actor.Add(new Attack());
             actor.Add(new Defence());
 
-            var defaultEntity = _defaultWorld.CreateEntity();
+            Entity defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set<Attack>();
             defaultEntity.Set<Defence>();
 
-            var frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence());
+            Friflo.Engine.ECS.Entity frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence());
 
-            if (i % 10 != 0) continue;
+            if (i % 10 != 0)
+            {
+                continue;
+            }
 
             actor.Add(new Speed());
 

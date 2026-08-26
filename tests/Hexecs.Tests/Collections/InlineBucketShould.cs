@@ -41,9 +41,11 @@ public sealed class InlineBucketShould
     {
         // Arrange
         var bucket = new InlineBucket<int>();
-        int[] items = Enumerable
-            .Range(0, InlineBucket<int>.InlineArraySize + 1)
-            .ToArray();
+        int[] items =
+        [
+            .. Enumerable
+                .Range(0, InlineBucket<int>.InlineArraySize + 1)
+        ];
 
         // Act
         foreach (int item in items)
@@ -440,7 +442,7 @@ public sealed class InlineBucketShould
         int[] array = bucket.ToArray();
 
         // Assert
-        array.Should().BeEquivalentTo(new[] { 10, 20, 30 });
+        array.Should().BeEquivalentTo([10, 20, 30]);
     }
 
     [Fact(DisplayName = "ToArray должен возвращать пустой массив для пустой коллекции")]

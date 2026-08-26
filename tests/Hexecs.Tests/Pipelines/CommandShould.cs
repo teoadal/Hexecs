@@ -13,7 +13,7 @@ public sealed class CommandShould(PipelineTestFixture fixture) : IClassFixture<P
         var handler = new Mock<ICommandHandler<CommandMock>>();
         handler.Setup(h => h.Handle(It.IsAny<CommandMock>()));
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddCommandHandler(handler.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddCommandHandler(handler.Object));
         var command = new CommandMock(25);
 
         // act
@@ -35,14 +35,14 @@ public sealed class CommandShould(PipelineTestFixture fixture) : IClassFixture<P
         // arrange
 
         var result = new PipelineResult(111);
-        var handler = fixture.CreateCommandHandler<CommandMockWithResult, PipelineResult>(cmd => result);
-        
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddCommandHandler(handler));
+        ICommandHandler<CommandMockWithResult, PipelineResult> handler = fixture.CreateCommandHandler<CommandMockWithResult, PipelineResult>(cmd => result);
+
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddCommandHandler(handler));
         var command = new CommandMockWithResult(25);
 
         // act
 
-        var actualResult = context
+        PipelineResult actualResult = context
             .Invoking(ctx => ctx.Execute<CommandMockWithResult, PipelineResult>(command))
             .Should()
             .NotThrow()
@@ -56,7 +56,7 @@ public sealed class CommandShould(PipelineTestFixture fixture) : IClassFixture<P
 
         fixture.World.RemoveActorContext(context);
     }
-    
+
     [Fact]
     public void NotBeHandled()
     {
@@ -65,7 +65,7 @@ public sealed class CommandShould(PipelineTestFixture fixture) : IClassFixture<P
         var handler = new Mock<ICommandHandler<CommandMockWithResult, PipelineResult>>();
         handler.Setup(h => h.Handle(It.IsAny<CommandMockWithResult>()));
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddCommandHandler(handler.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddCommandHandler(handler.Object));
         var command = new CommandMock(25);
 
         // act

@@ -1,4 +1,6 @@
-﻿using Hexecs.Tests.Mocks.ActorComponents;
+﻿using FluentAssertions.Events;
+
+using Hexecs.Tests.Mocks.ActorComponents;
 
 namespace Hexecs.Tests.Actors;
 
@@ -8,11 +10,11 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Be_Applicable_When_Conditions_Met()
     {
         // Arrange
-        var actor = fixture.CreateActor<Description>(); // Создаем актора с компонентом
-        var constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
+        Actor actor = fixture.CreateActor<Description>(); // Создаем актора с компонентом
+        ActorConstraint constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
 
         // Act
-        var result = constraint.Applicable(actor.Id);
+        bool result = constraint.Applicable(actor.Id);
 
         // Assert
         result.Should().BeTrue();
@@ -22,11 +24,11 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Not_Be_Applicable_When_Excluded_Component_Exists()
     {
         // Arrange
-        var actor = fixture.CreateActor<Description>();
-        var constraint = ActorConstraint.Exclude<Description>(fixture.Actors).Build();
+        Actor actor = fixture.CreateActor<Description>();
+        ActorConstraint constraint = ActorConstraint.Exclude<Description>(fixture.Actors).Build();
 
         // Act
-        var result = constraint.Applicable(actor.Id);
+        bool result = constraint.Applicable(actor.Id);
 
         // Assert
         result.Should().BeFalse();
@@ -36,10 +38,10 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Raise_Added_When_Actor_Becomes_Valid()
     {
         // Arrange
-        var actor = fixture.CreateActor(); // Пустой актор
-        var constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
+        Actor actor = fixture.CreateActor(); // Пустой актор
+        ActorConstraint constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
 
-        using var monitoredSubject = constraint.Monitor();
+        using IMonitor<ActorConstraint> monitoredSubject = constraint.Monitor();
 
         // Act
         actor.Add(new Description()); // Теперь актор соответствует Include<Description>
@@ -55,10 +57,10 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Raise_Removing_When_Actor_Becomes_Invalid()
     {
         // Arrange
-        var actor = fixture.CreateActor<Description>();
-        var constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
+        Actor actor = fixture.CreateActor<Description>();
+        ActorConstraint constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
 
-        using var monitoredSubject = constraint.Monitor();
+        using IMonitor<ActorConstraint> monitoredSubject = constraint.Monitor();
 
         // Act
         actor.Remove<Description>();
@@ -74,10 +76,10 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Builder_Should_Throw_On_Duplicate_Component()
     {
         // Arrange
-        var builder = ActorConstraint.Include<Description>(fixture.Actors);
+        ActorConstraint.Builder builder = ActorConstraint.Include<Description>(fixture.Actors);
 
         // Act
-        var action = () => builder.Include<Description>();
+        Func<ActorConstraint.Builder> action = () => builder.Include<Description>();
 
         // Assert
         action.Should().Throw<Exception>();
@@ -87,11 +89,11 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Implement_Equality_Correctly()
     {
         // Arrange
-        var constraint1 = ActorConstraint.Include<Description>(fixture.Actors)
+        ActorConstraint constraint1 = ActorConstraint.Include<Description>(fixture.Actors)
             .Exclude<Defence>()
             .Build();
 
-        var constraint2 = ActorConstraint.Include<Description>(fixture.Actors)
+        ActorConstraint constraint2 = ActorConstraint.Include<Description>(fixture.Actors)
             .Exclude<Defence>()
             .Build();
 
@@ -109,8 +111,8 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Work_With_Multiple_Includes()
     {
         // Arrange
-        var actor = fixture.CreateActor<Description>();
-        var constraint = ActorConstraint.Include<Description, Defence>(fixture.Actors).Build();
+        Actor actor = fixture.CreateActor<Description>();
+        ActorConstraint constraint = ActorConstraint.Include<Description, Defence>(fixture.Actors).Build();
 
         // Act & Assert
         constraint.Applicable(actor.Id).Should().BeFalse("Нужны оба компонента");
@@ -123,10 +125,10 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
     public void Should_Unsubscribe_On_Dispose()
     {
         // Arrange
-        var actor = fixture.CreateActor();
-        var constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
+        Actor actor = fixture.CreateActor();
+        ActorConstraint constraint = ActorConstraint.Include<Description>(fixture.Actors).Build();
 
-        using var monitoredSubject = constraint.Monitor();
+        using IMonitor<ActorConstraint> monitoredSubject = constraint.Monitor();
 
         // Act
         ((IDisposable)constraint).Dispose();

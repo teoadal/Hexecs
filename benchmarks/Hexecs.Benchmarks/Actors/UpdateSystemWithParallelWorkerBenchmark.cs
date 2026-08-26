@@ -1,9 +1,13 @@
 using DefaultEcs.System;
+
 using Friflo.Engine.ECS;
+
 using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Threading;
 using Hexecs.Worlds;
+
+using Entity = DefaultEcs.Entity;
 
 namespace Hexecs.Benchmarks.Actors;
 
@@ -13,7 +17,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method              | Count   | Mean        | Ratio | Allocated | Alloc Ratio |
 //     |-------------------- |-------- |------------:|------:|----------:|------------:|
@@ -33,7 +37,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
 //     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method              | Count   | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |-------------------- |-------- |----------:|------:|----------:|------------:|
@@ -47,14 +51,16 @@ namespace Hexecs.Benchmarks.Actors;
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class UpdateSystemWithParallelWorkerBenchmark
 {
-    [Params(100_000, 1_000_000)] public int Count;
+    [Params(100_000, 1_000_000)]
+    public int Count;
 
     private DefaultEcs.World _defaultWorld = null!;
     private DefaultEcsParallelSystem _defaultSystem = null!;
@@ -72,6 +78,7 @@ public class UpdateSystemWithParallelWorkerBenchmark
     public int Hexecs_Parallel()
     {
         _hexecsSystem.Update(_state);
+
         return _hexecsSystem.Filter.Length;
     }
 
@@ -79,6 +86,7 @@ public class UpdateSystemWithParallelWorkerBenchmark
     public int DefaultEcs_Parallel()
     {
         _defaultSystem.Update(_state);
+
         return _defaultSystem.Set.Count;
     }
 
@@ -86,6 +94,7 @@ public class UpdateSystemWithParallelWorkerBenchmark
     public int FriFlo_Parallel()
     {
         _frifloJob.RunParallel();
+
         return _frifloQuery.Count;
     }
 
@@ -127,15 +136,16 @@ public class UpdateSystemWithParallelWorkerBenchmark
 
         _state = new WorldTime();
 
-        var context = _hexecsWorld.Actors;
+        ActorContext context = _hexecsWorld.Actors;
+
         for (var i = 0; i < Count; i++)
         {
-            var actor = context.CreateActor();
+            Actor actor = context.CreateActor();
             actor.Add(new Attack());
             actor.Add(new Defence());
             actor.Add(new Speed());
 
-            var defaultEntity = _defaultWorld.CreateEntity();
+            Entity defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set<Attack>();
             defaultEntity.Set<Defence>();
             defaultEntity.Set<Speed>();
@@ -154,9 +164,9 @@ public class UpdateSystemWithParallelWorkerBenchmark
 
         protected override void Update(in ActorRef<Attack, Defence, Speed> actor, in WorldTime time)
         {
-            ref var attack = ref actor.Component1;
-            ref var defence = ref actor.Component2;
-            ref var speed = ref actor.Component3;
+            ref Attack attack = ref actor.Component1;
+            ref Defence defence = ref actor.Component2;
+            ref Speed speed = ref actor.Component3;
 
             attack.Value++;
             defence.Value++;
@@ -175,9 +185,9 @@ public class UpdateSystemWithParallelWorkerBenchmark
 
         protected override void Update(WorldTime state, in DefaultEcs.Entity entity)
         {
-            ref var attack = ref entity.Get<Attack>();
-            ref var defence = ref entity.Get<Defence>();
-            ref var speed = ref entity.Get<Speed>();
+            ref Attack attack = ref entity.Get<Attack>();
+            ref Defence defence = ref entity.Get<Defence>();
+            ref Speed speed = ref entity.Get<Speed>();
 
             attack.Value++;
             defence.Value++;

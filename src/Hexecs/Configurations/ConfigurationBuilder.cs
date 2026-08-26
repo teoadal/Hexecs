@@ -5,7 +5,7 @@ namespace Hexecs.Configurations;
 public sealed class ConfigurationBuilder
 {
     private readonly List<IConfigurationSource> _sources = [];
-    private readonly ConcurrentDictionary<string, object?> _values = new();
+    private readonly ConcurrentDictionary<string, object?> _values = new ConcurrentDictionary<string, object?>();
 
     internal ConfigurationBuilder()
     {
@@ -13,7 +13,7 @@ public sealed class ConfigurationBuilder
 
     internal ConfigurationService Build()
     {
-        foreach (var source in _sources)
+        foreach (IConfigurationSource source in _sources)
         {
             source.Load();
         }
@@ -24,12 +24,14 @@ public sealed class ConfigurationBuilder
     public ConfigurationBuilder UseSource(IConfigurationSource source)
     {
         _sources.Add(source);
+
         return this;
     }
 
     public ConfigurationBuilder UseValue<T>(string key, T? value)
     {
         _values[key] = value;
+
         return this;
     }
 }

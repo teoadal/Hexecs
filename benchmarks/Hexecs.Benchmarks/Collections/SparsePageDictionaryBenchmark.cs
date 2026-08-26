@@ -6,7 +6,7 @@
 //   [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //   .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 // | Method                    | N        | Mean              | Allocated |
 // |-------------------------- |--------- |------------------:|----------:|
@@ -102,7 +102,8 @@
 // | AddRemoveCycle_Dict       | 10000000 |    201,447.264 ns |         - |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD", "Count")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
@@ -128,7 +129,7 @@ public class SparsePageDictionaryBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        var keyRange = Math.Max(N * 10, 1_000);
+        int keyRange = Math.Max(N * 10, 1_000);
         _keys = Enumerable.Range(0, N * 2)
             .Select(_ => (uint)Random.Shared.Next(0, keyRange))
             .Distinct()
@@ -141,8 +142,11 @@ public class SparsePageDictionaryBenchmark
             .ToArray();
 
         var present = new bool[keyRange];
+
         for (var i = 0; i < _keys.Length; i++)
+        {
             present[_keys[i]] = true;
+        }
 
         var missCount = 1000;
         var missing = new uint[missCount];
@@ -150,10 +154,17 @@ public class SparsePageDictionaryBenchmark
 
         for (var k = 0; k < keyRange && written < missCount; k++)
         {
-            if (!present[k]) missing[written++] = (uint)k;
+            if (!present[k])
+            {
+                missing[written++] = (uint)k;
+            }
         }
 
-        if (written < missCount) Array.Resize(ref missing, written);
+        if (written < missCount)
+        {
+            Array.Resize(ref missing, written);
+        }
+
         _missingKeys = missing;
 
         _sparsePage = new SparsePageDictionary<int>(denseCapacity: N);
@@ -166,7 +177,8 @@ public class SparsePageDictionaryBenchmark
         _dictCycle = new Dictionary<uint, int>(capacity: N);
 
         const int value = 42;
-        foreach (var key in _keys)
+
+        foreach (uint key in _keys)
         {
             _sparsePage.Add(key, value);
             _sparsePageCycle.Add(key, value);
@@ -189,7 +201,8 @@ public class SparsePageDictionaryBenchmark
     public int Iterate_Sparse()
     {
         var sum = 0;
-        foreach (var entry in _sparse)
+
+        foreach (int entry in _sparse)
         {
             sum += entry;
         }
@@ -201,7 +214,8 @@ public class SparsePageDictionaryBenchmark
     public int Iterate_SparsePage()
     {
         var sum = 0;
-        foreach (var entry in _sparsePage)
+
+        foreach (int entry in _sparsePage)
         {
             sum += entry;
         }
@@ -213,7 +227,8 @@ public class SparsePageDictionaryBenchmark
     public int Iterate_Dict()
     {
         var sum = 0;
-        foreach (var kv in _dict)
+
+        foreach (KeyValuePair<uint, int> kv in _dict)
         {
             sum += kv.Value;
         }
@@ -227,7 +242,8 @@ public class SparsePageDictionaryBenchmark
     public bool Contains_Sparse_Hit()
     {
         var found = false;
-        foreach (var key in _lookupKeys)
+
+        foreach (uint key in _lookupKeys)
         {
             found = _sparse.Contains(key);
         }
@@ -239,7 +255,8 @@ public class SparsePageDictionaryBenchmark
     public bool Contains_SparsePage_Hit()
     {
         var found = false;
-        foreach (var key in _lookupKeys)
+
+        foreach (uint key in _lookupKeys)
         {
             found = _sparsePage.Contains(key);
         }
@@ -251,7 +268,8 @@ public class SparsePageDictionaryBenchmark
     public bool Contains_Dict_Hit()
     {
         var found = false;
-        foreach (var key in _lookupKeys)
+
+        foreach (uint key in _lookupKeys)
         {
             found = _dict.ContainsKey(key);
         }
@@ -265,7 +283,8 @@ public class SparsePageDictionaryBenchmark
     public bool Contains_Sparse_Miss()
     {
         var found = false;
-        foreach (var key in _missingKeys)
+
+        foreach (uint key in _missingKeys)
         {
             found = _sparse.Contains(key);
         }
@@ -277,7 +296,8 @@ public class SparsePageDictionaryBenchmark
     public bool Contains_SparsePage_Miss()
     {
         var found = false;
-        foreach (var key in _missingKeys)
+
+        foreach (uint key in _missingKeys)
         {
             found = _sparsePage.Contains(key);
         }
@@ -289,7 +309,8 @@ public class SparsePageDictionaryBenchmark
     public bool Contains_Dict_Miss()
     {
         var found = false;
-        foreach (var key in _missingKeys)
+
+        foreach (uint key in _missingKeys)
         {
             found = _dict.ContainsKey(key);
         }
@@ -303,9 +324,10 @@ public class SparsePageDictionaryBenchmark
     public int TryGetValue_Sparse()
     {
         var sum = 0;
-        foreach (var key in _lookupKeys)
+
+        foreach (uint key in _lookupKeys)
         {
-            if (_sparse.TryGetValue(key, out var value))
+            if (_sparse.TryGetValue(key, out int value))
             {
                 sum += value;
             }
@@ -318,9 +340,10 @@ public class SparsePageDictionaryBenchmark
     public int TryGetValue_SparsePage()
     {
         var sum = 0;
-        foreach (var key in _lookupKeys)
+
+        foreach (uint key in _lookupKeys)
         {
-            if (_sparsePage.TryGetValue(key, out var value))
+            if (_sparsePage.TryGetValue(key, out int value))
             {
                 sum += value;
             }
@@ -333,9 +356,10 @@ public class SparsePageDictionaryBenchmark
     public int TryGetValue_Dict()
     {
         var sum = 0;
-        foreach (var key in _lookupKeys)
+
+        foreach (uint key in _lookupKeys)
         {
-            if (_dict.TryGetValue(key, out var value))
+            if (_dict.TryGetValue(key, out int value))
             {
                 sum += value;
             }
@@ -349,20 +373,20 @@ public class SparsePageDictionaryBenchmark
     [Benchmark]
     public int AddRemoveCycle_Sparse()
     {
-        var dict = _sparseCycle;
+        SparseDictionary<int> dict = _sparseCycle;
         var count = 0;
 
         // Симуляция ECS: добавляем/удаляем entity из фильтра
         for (var i = 0; i < 10; i++)
         {
-            foreach (var key in _lookupKeys)
+            foreach (uint key in _lookupKeys)
             {
                 dict.Add(key, 42);
             }
 
             count += dict.Count;
 
-            foreach (var key in _lookupKeys)
+            foreach (uint key in _lookupKeys)
             {
                 dict.Remove(key);
             }
@@ -374,20 +398,20 @@ public class SparsePageDictionaryBenchmark
     [Benchmark]
     public int AddRemoveCycle_SparsePage()
     {
-        var dict = _sparsePageCycle;
+        SparsePageDictionary<int> dict = _sparsePageCycle;
         var count = 0;
 
         // Симуляция ECS: добавляем/удаляем entity из фильтра
         for (var i = 0; i < 10; i++)
         {
-            foreach (var key in _lookupKeys)
+            foreach (uint key in _lookupKeys)
             {
                 dict.Add(key, 42);
             }
 
             count += dict.Count;
 
-            foreach (var key in _lookupKeys)
+            foreach (uint key in _lookupKeys)
             {
                 dict.Remove(key);
             }
@@ -399,19 +423,19 @@ public class SparsePageDictionaryBenchmark
     [Benchmark]
     public int AddRemoveCycle_Dict()
     {
-        var dict = _dictCycle;
+        Dictionary<uint, int> dict = _dictCycle;
         var count = 0;
 
         for (var i = 0; i < 10; i++)
         {
-            foreach (var key in _lookupKeys)
+            foreach (uint key in _lookupKeys)
             {
                 dict[key] = 42;
             }
 
             count += dict.Count;
 
-            foreach (var key in _lookupKeys)
+            foreach (uint key in _lookupKeys)
             {
                 dict.Remove(key);
             }

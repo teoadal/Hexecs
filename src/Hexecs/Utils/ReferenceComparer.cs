@@ -29,12 +29,18 @@ internal sealed class ReferenceComparer<T> : IEqualityComparer<T>
     /// <param name="x">Первый сравниваемый объект.</param>
     /// <param name="y">Второй сравниваемый объект.</param>
     /// <returns>Возвращает true, если объекты ссылаются на один и тот же экземпляр; в противном случае — false.</returns>
-    public bool Equals(T? x, T? y) => ReferenceEquals(x, y);
+    public bool Equals(T? x, T? y)
+    {
+        return ReferenceEquals(x, y);
+    }
 
     /// <summary>
     /// Возвращает хеш-код для указанного объекта, используя <see cref="RuntimeHelpers.GetHashCode(object?)"/>
     /// </summary>
     /// <param name="obj">Объект, для которого требуется получить хеш-код.</param>
     /// <returns>Хеш-код, соответствующий идентичности объекта.</returns>
-    public int GetHashCode([DisallowNull] T obj) => RuntimeHelpers.GetHashCode(obj);
+    public int GetHashCode([DisallowNull] T obj)
+    {
+        return RuntimeHelpers.GetHashCode(obj);
+    }
 }

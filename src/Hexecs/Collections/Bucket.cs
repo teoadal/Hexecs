@@ -36,43 +36,65 @@ internal struct Bucket<T>(int capacity) : IEnumerable<T>, IActorComponent, IAsse
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Memory<T> AsMemory() => _array == null || _array.Length == 0
-        ? Memory<T>.Empty
-        : new Memory<T>(_array);
+    public readonly Memory<T> AsMemory()
+    {
+        return _array == null || _array.Length == 0
+            ? Memory<T>.Empty
+            : new Memory<T>(_array);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<T> AsSpan() => _length == 0
-        ? Span<T>.Empty
-        : _array.AsSpan(0, _length);
+    public readonly Span<T> AsSpan()
+    {
+        return _length == 0
+            ? Span<T>.Empty
+            : _array.AsSpan(0, _length);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ReadOnlySpan<T> AsReadOnlySpan() => _length == 0
-        ? ReadOnlySpan<T>.Empty
-        : new ReadOnlySpan<T>(_array, 0, _length);
+    public readonly ReadOnlySpan<T> AsReadOnlySpan()
+    {
+        return _length == 0
+            ? ReadOnlySpan<T>.Empty
+            : new ReadOnlySpan<T>(_array, 0, _length);
+    }
 
     public void Dispose()
     {
-        if (_array is { Length: > 0 }) ArrayPool<T>.Shared.Return(_array);
+        if (_array is { Length: > 0 })
+        {
+            ArrayPool<T>.Shared.Return(_array);
+        }
 
         _array = [];
         _length = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ArrayEnumerator<T> GetEnumerator() => _array == null
-        ? ArrayEnumerator<T>.Empty
-        : new ArrayEnumerator<T>(_array, _length);
+    public readonly ArrayEnumerator<T> GetEnumerator()
+    {
+        return _array == null
+            ? ArrayEnumerator<T>.Empty
+            : new ArrayEnumerator<T>(_array, _length);
+    }
 
     public readonly int IndexOf(T item, IEqualityComparer<T>? equalityComparer = null)
     {
-        if (_length == 0) return -1;
+        if (_length == 0)
+        {
+            return -1;
+        }
 
         equalityComparer ??= EqualityComparer<T>.Default;
 
-        var span = AsReadOnlySpan();
+        ReadOnlySpan<T> span = AsReadOnlySpan();
+
         for (var i = 0; i < span.Length; i++)
         {
-            if (equalityComparer.Equals(span[i], item)) return i;
+            if (equalityComparer.Equals(span[i], item))
+            {
+                return i;
+            }
         }
 
         return -1;
@@ -80,13 +102,19 @@ internal struct Bucket<T>(int capacity) : IEnumerable<T>, IActorComponent, IAsse
 
     public readonly bool Has(T item, IEqualityComparer<T>? equalityComparer = null)
     {
-        if (_length == 0) return false;
+        if (_length == 0)
+        {
+            return false;
+        }
 
         equalityComparer ??= EqualityComparer<T?>.Default;
 
-        foreach (var exists in AsReadOnlySpan())
+        foreach (T exists in AsReadOnlySpan())
         {
-            if (equalityComparer.Equals(exists, item)) return true;
+            if (equalityComparer.Equals(exists, item))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -94,17 +122,23 @@ internal struct Bucket<T>(int capacity) : IEnumerable<T>, IActorComponent, IAsse
 
     public bool Remove(T item, IEqualityComparer<T>? equalityComparer = null)
     {
-        var index = IndexOf(item, equalityComparer);
-        if (index == -1) return false;
+        int index = IndexOf(item, equalityComparer);
+
+        if (index == -1)
+        {
+            return false;
+        }
 
         RemoveAtSwapBack(index);
+
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RemoveAtSwapBack(int index)
     {
-        var lastIndex = _length - 1;
+        int lastIndex = _length - 1;
+
         if (index < lastIndex)
         {
             _array![index] = _array[lastIndex];
@@ -117,23 +151,40 @@ internal struct Bucket<T>(int capacity) : IEnumerable<T>, IActorComponent, IAsse
 
         _length--;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly T[] ToArray() => AsReadOnlySpan().ToArray();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Block<T> ToBlock() => new(AsReadOnlySpan());
+    public readonly T[] ToArray()
+    {
+        return AsReadOnlySpan().ToArray();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Block<T> ToBlock()
+    {
+        return new Block<T>(AsReadOnlySpan());
+    }
 
     public bool TryAdd(T item, IEqualityComparer<T>? equalityComparer = null)
     {
-        var has = Has(item, equalityComparer);
-        if (has) return false;
+        bool has = Has(item, equalityComparer);
+
+        if (has)
+        {
+            return false;
+        }
 
         Add(item);
+
         return true;
     }
 
-    readonly IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+    readonly IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-    readonly IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    readonly IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

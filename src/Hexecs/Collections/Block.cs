@@ -38,7 +38,10 @@ public readonly struct Block<T> : IEnumerable<T>, IActorComponent, IAssetCompone
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Block(T[] array) => _array = array;
+    public Block(T[] array)
+    {
+        _array = array;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Block(T[] array, int length)
@@ -49,28 +52,46 @@ public readonly struct Block<T> : IEnumerable<T>, IActorComponent, IAssetCompone
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Block(ReadOnlySpan<T> span) => _array = span.ToArray();
+    public Block(ReadOnlySpan<T> span)
+    {
+        _array = span.ToArray();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Block(List<T> collection) => _array = collection.ToArray();
+    public Block(List<T> collection)
+    {
+        _array = collection.ToArray();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Block(IEnumerable<T> collection) => _array = CollectionUtils.ToArray(collection);
+    public Block(IEnumerable<T> collection)
+    {
+        _array = CollectionUtils.ToArray(collection);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Block(IEnumerable<T> collection, int length) => _array = CollectionUtils.ToArray(collection, length);
+    public Block(IEnumerable<T> collection, int length)
+    {
+        _array = CollectionUtils.ToArray(collection, length);
+    }
 
     #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Memory<T> AsMemory() => _array == null || _array.Length == 0
-        ? Memory<T>.Empty
-        : new Memory<T>(_array);
+    public Memory<T> AsMemory()
+    {
+        return _array == null || _array.Length == 0
+            ? Memory<T>.Empty
+            : new Memory<T>(_array);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan() => _array == null || _array.Length == 0
-        ? Span<T>.Empty
-        : new Span<T>(_array);
+    public Span<T> AsSpan()
+    {
+        return _array == null || _array.Length == 0
+            ? Span<T>.Empty
+            : new Span<T>(_array);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(T value, IEqualityComparer<T>? equalityComparer = null)
@@ -81,26 +102,43 @@ public readonly struct Block<T> : IEnumerable<T>, IActorComponent, IAssetCompone
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetRef(int index)
     {
-        if (_array == null) return ref Unsafe.NullRef<T>();
+        if (_array == null)
+        {
+            return ref Unsafe.NullRef<T>();
+        }
+
         return ref _array[index];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ArrayEnumerator<T> GetEnumerator() => _array == null || _array.Length == 0
-        ? ArrayEnumerator<T>.Empty
-        : new ArrayEnumerator<T>(_array);
+    public ArrayEnumerator<T> GetEnumerator()
+    {
+        return _array == null || _array.Length == 0
+            ? ArrayEnumerator<T>.Empty
+            : new ArrayEnumerator<T>(_array);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T[] GetUnderlyingArray() => _array ?? [];
+    public T[] GetUnderlyingArray()
+    {
+        return _array ?? [];
+    }
 
     public int IndexOf(T value, IEqualityComparer<T>? equalityComparer = null)
     {
-        if (_array == null || _array.Length == 0) return -1;
+        if (_array == null || _array.Length == 0)
+        {
+            return -1;
+        }
 
         equalityComparer ??= EqualityComparer<T>.Default;
+
         for (var i = 0; i < _array.Length; i++)
         {
-            if (equalityComparer.Equals(_array[i], value)) return i;
+            if (equalityComparer.Equals(_array[i], value))
+            {
+                return i;
+            }
         }
 
         return -1;
@@ -114,7 +152,13 @@ public readonly struct Block<T> : IEnumerable<T>, IActorComponent, IAssetCompone
         set => _array![index] = value;
     }
 
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

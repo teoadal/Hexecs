@@ -5,9 +5,9 @@ public readonly ref struct ComponentsAccess<T>
     public static ComponentsAccess<T> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new();
+        get => new ComponentsAccess<T>();
     }
-    
+
     private readonly ReadOnlySpan<uint> _sparse;
     private readonly Span<T> _values;
 
@@ -30,10 +30,11 @@ public readonly ref struct ComponentsAccess<T>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            ref var sparseStart = ref MemoryMarshal.GetReference(_sparse);
-            ref var valuesStart = ref MemoryMarshal.GetReference(_values);
+            ref uint sparseStart = ref MemoryMarshal.GetReference(_sparse);
+            ref T valuesStart = ref MemoryMarshal.GetReference(_values);
 
-            var denseIndex = (int)Unsafe.Add(ref sparseStart, (nint)id) - 1;
+            int denseIndex = (int)Unsafe.Add(ref sparseStart, (nint)id) - 1;
+
             return ref Unsafe.Add(ref valuesStart, (nint)denseIndex);
         }
     }

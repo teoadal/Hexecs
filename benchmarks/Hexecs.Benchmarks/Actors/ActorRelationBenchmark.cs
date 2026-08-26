@@ -1,4 +1,6 @@
 using Friflo.Engine.ECS;
+
+using Hexecs.Actors.Relations;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 
@@ -10,7 +12,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method | Count | Mean          | Ratio | Allocated | Alloc Ratio |
 //     |------- |------ |--------------:|------:|----------:|------------:|
@@ -31,7 +33,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method | Count | Mean           | Ratio | Allocated | Alloc Ratio |
 //     |------- |------ |---------------:|------:|----------:|------------:|
@@ -46,14 +48,16 @@ namespace Hexecs.Benchmarks.Actors;
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class ActorRelationBenchmark
 {
-    [Params(10, 100, 1_000)] public int Count;
+    [Params(10, 100, 1_000)]
+    public int Count;
 
     private ActorContext _actorContext = null!;
     private Actor[] _actorBuffer = null!;
@@ -70,29 +74,33 @@ public class ActorRelationBenchmark
     public int Hexecs()
     {
         // Часть 1: Наполнение
-        using (var employeeEnumerator = _employeeFilter.GetEnumerator())
+        using (ActorFilter<Employee>.Enumerator employeeEnumerator = _employeeFilter.GetEnumerator())
         {
-            foreach (var employer in _employerFilter)
+            foreach (ActorRef<Employer> employer in _employerFilter)
             {
                 for (var i = 0; i < Count; i++)
                 {
-                    if (!employeeEnumerator.MoveNext()) break;
-                    var employee = employeeEnumerator.Current;
+                    if (!employeeEnumerator.MoveNext())
+                    {
+                        break;
+                    }
+
+                    ActorRef<Employee> employee = employeeEnumerator.Current;
                     employer.AddRelation(employee, new EmployeeAgreement { Salary = i });
                 }
             }
         }
 
         var result = 0;
-        var buffer = _actorBuffer;
+        Actor[] buffer = _actorBuffer;
 
         // Часть 2: Удаление
-        foreach (var employer in _employerFilter)
+        foreach (ActorRef<Employer> employer in _employerFilter)
         {
-            var relations = employer.Relations<EmployeeAgreement>();
+            ActorRelationEnumerator<EmployeeAgreement> relations = employer.Relations<EmployeeAgreement>();
             var i = 0;
 
-            foreach (var relation in relations)
+            foreach (ActorRelation<EmployeeAgreement> relation in relations)
             {
                 buffer[i++] = relation;
             }
@@ -113,30 +121,34 @@ public class ActorRelationBenchmark
     public int FriFlo()
     {
         // Часть 1: Наполнение
-        using (var employeeEnumerator = _frifloEmployees.Entities.GetEnumerator())
+        using (EntitiesEnumerator employeeEnumerator = _frifloEmployees.Entities.GetEnumerator())
         {
-            foreach (var employer in _frifloEmployers.Entities)
+            foreach (Entity employer in _frifloEmployers.Entities)
             {
                 for (var i = 0; i < Count; i++)
                 {
-                    if (!employeeEnumerator.MoveNext()) break;
-                    var employee = employeeEnumerator.Current;
+                    if (!employeeEnumerator.MoveNext())
+                    {
+                        break;
+                    }
+
+                    Entity employee = employeeEnumerator.Current;
                     employer.AddRelation(new EmployeeAgreement { Salary = i, Target = employee });
                 }
             }
         }
 
         var result = 0;
-        var buffer = _frifloBuffer;
+        Entity[] buffer = _frifloBuffer;
 
         // Часть 2: Удаление
-        foreach (var employer in _frifloEmployers.Entities)
+        foreach (Entity employer in _frifloEmployers.Entities)
         {
             // Получаем все связи данного типа у сущности
-            var relations = employer.GetRelations<EmployeeAgreement>();
+            Relations<EmployeeAgreement> relations = employer.GetRelations<EmployeeAgreement>();
             var i = 0;
 
-            foreach (var relation in relations)
+            foreach (EmployeeAgreement relation in relations)
             {
                 buffer[i++] = relation.Target;
             }
@@ -176,14 +188,14 @@ public class ActorRelationBenchmark
 
         for (var i = 0; i < Count; i++)
         {
-            var employer = _actorContext.CreateActor();
+            Actor employer = _actorContext.CreateActor();
             employer.Add(new Employer());
 
             _frifloWorld.CreateEntity(new Employer());
 
             for (var y = 0; y < Count; y++)
             {
-                var employee = _actorContext.CreateActor();
+                Actor employee = _actorContext.CreateActor();
                 employee.Add(new Employee());
 
                 _frifloWorld.CreateEntity(new Employee());

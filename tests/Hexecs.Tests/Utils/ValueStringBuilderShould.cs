@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+
 using Hexecs.Utils;
 
 namespace Hexecs.Tests.Utils;
@@ -238,7 +239,7 @@ public sealed class ValueStringBuilderShould
         // Arrange
         Span<char> buffer = stackalloc char[32];
         var builder = new ValueStringBuilder(buffer);
-        Span<char> value = stackalloc char[] { 'T', 'e', 's', 't' };
+        Span<char> value = ['T', 'e', 's', 't'];
 
         // Act
         builder.Append(value);

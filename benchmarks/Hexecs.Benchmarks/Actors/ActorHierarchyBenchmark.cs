@@ -1,4 +1,5 @@
 using Hexecs.Worlds;
+
 using Friflo.Engine.ECS;
 
 namespace Hexecs.Benchmarks.Actors;
@@ -9,7 +10,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method           | Count | Mean         | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------ |-------------:|------:|----------:|------------:|
@@ -27,7 +28,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method           | Count | Mean        | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------ |------------:|------:|----------:|------------:|
@@ -39,14 +40,16 @@ namespace Hexecs.Benchmarks.Actors;
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class ActorHierarchyBenchmark
 {
-    [Params(100, 1_000)] public int Count;
+    [Params(100, 1_000)]
+    public int Count;
 
     private ActorContext _actorContext = null!;
     private Actor[] _buffer = null!;
@@ -64,7 +67,8 @@ public class ActorHierarchyBenchmark
     public int Hexecs_Hierarchy()
     {
         var childIdx = 0;
-        foreach (var parent in _parents)
+
+        foreach (Actor parent in _parents)
         {
             for (var j = 0; j < Count; j++)
             {
@@ -73,14 +77,14 @@ public class ActorHierarchyBenchmark
         }
 
         var result = 0;
-        var buffer = _buffer;
+        Actor[] buffer = _buffer;
 
-        foreach (var parent in _parents)
+        foreach (Actor parent in _parents)
         {
-            var children = parent.Children();
+            ActorContext.ChildrenEnumerator children = parent.Children();
             var k = 0;
 
-            foreach (var child in children)
+            foreach (Actor child in children)
             {
                 buffer[k++] = child;
                 result++;
@@ -99,7 +103,8 @@ public class ActorHierarchyBenchmark
     public int Friflo_Hierarchy()
     {
         var childIdx = 0;
-        foreach (var parent in _friParents)
+
+        foreach (Entity parent in _friParents)
         {
             for (var j = 0; j < Count; j++)
             {
@@ -108,15 +113,15 @@ public class ActorHierarchyBenchmark
         }
 
         var result = 0;
-        var buffer = _friBuffer;
+        Entity[] buffer = _friBuffer;
 
         for (var i = 0; i < _friParents.Length; i++)
         {
-            var parent = _friParents[i];
-            var children = parent.ChildEntities;
+            Entity parent = _friParents[i];
+            ChildEntities children = parent.ChildEntities;
             var k = 0;
 
-            foreach (var child in children)
+            foreach (Entity child in children)
             {
                 buffer[k++] = child;
                 result++;
@@ -154,7 +159,7 @@ public class ActorHierarchyBenchmark
 
             for (var j = 0; j < Count; j++)
             {
-                var index = (i * Count) + j;
+                int index = (i * Count) + j;
                 _children[index] = _actorContext.CreateActor();
                 _friChildren[index] = _friStore.CreateEntity();
             }
@@ -162,5 +167,8 @@ public class ActorHierarchyBenchmark
     }
 
     [GlobalCleanup]
-    public void Cleanup() => _world.Dispose();
+    public void Cleanup()
+    {
+        _world.Dispose();
+    }
 }

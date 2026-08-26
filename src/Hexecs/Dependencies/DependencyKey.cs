@@ -7,14 +7,26 @@ internal readonly struct DependencyKey(Type serviceType, int index) : IEquatable
     public const int DefaultSlot = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DependencyKey First(Type serviceType) => new(serviceType, DefaultSlot);
-    
+    public static DependencyKey First(Type serviceType)
+    {
+        return new DependencyKey(serviceType, DefaultSlot);
+    }
+
     public readonly int Index = index;
     public readonly Type ServiceType = serviceType;
 
-    public bool Equals(DependencyKey other) => Index == other.Index && ServiceType == other.ServiceType;
+    public bool Equals(DependencyKey other)
+    {
+        return Index == other.Index && ServiceType == other.ServiceType;
+    }
 
-    public override bool Equals(object? obj) => obj is DependencyKey key && Equals(key);
+    public override bool Equals(object? obj)
+    {
+        return obj is DependencyKey key && Equals(key);
+    }
 
-    public override int GetHashCode() => HashCode.Combine(Index, ServiceType);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Index, ServiceType);
+    }
 }

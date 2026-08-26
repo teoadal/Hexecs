@@ -112,7 +112,10 @@ public readonly struct ContextLogger(LogService logService, string context)
     public void Write<T1, T2, T3, T4>(
         LogLevel level,
         string template,
-        T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4)
     {
         logService.Write(level, context, template, arg1, arg2, arg3, arg4);
     }
@@ -121,7 +124,11 @@ public readonly struct ContextLogger(LogService logService, string context)
     public void Write<T1, T2, T3, T4, T5>(
         LogLevel level,
         string template,
-        T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4,
+        T5 arg5)
     {
         logService.Write(level, context, template, arg1, arg2, arg3, arg4, arg5);
     }

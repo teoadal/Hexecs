@@ -13,7 +13,7 @@ public sealed class NotificationShould(PipelineTestFixture fixture) : IClassFixt
         var handler1 = new Mock<INotificationHandler<NotificationMock>>();
         handler1.Setup(h => h.Handle(It.IsAny<NotificationMock>()));
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddNotificationHandler(handler1.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddNotificationHandler(handler1.Object));
         var notification = new NotificationMock(25);
 
         // act
@@ -35,16 +35,16 @@ public sealed class NotificationShould(PipelineTestFixture fixture) : IClassFixt
     {
         // arrange
 
-        var handlers = fixture.CreateArray(_ =>
+        Mock<INotificationHandler<NotificationMock>>[] handlers = fixture.CreateArray(_ =>
         {
             var handler = new Mock<INotificationHandler<NotificationMock>>();
             handler.Setup(h => h.Handle(It.IsAny<NotificationMock>()));
             return handler;
         });
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.CreateNotificationHandler<NotificationMock>(builder =>
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.CreateNotificationHandler<NotificationMock>(builder =>
         {
-            foreach (var handler in handlers)
+            foreach (Mock<INotificationHandler<NotificationMock>> handler in handlers)
             {
                 builder.Add(handler.Object);
             }
@@ -61,7 +61,7 @@ public sealed class NotificationShould(PipelineTestFixture fixture) : IClassFixt
 
         // assert
 
-        foreach (var handler in handlers)
+        foreach (Mock<INotificationHandler<NotificationMock>> handler in handlers)
         {
             handler.Verify(h => h.Handle(notification), Times.Once);
         }
@@ -77,7 +77,7 @@ public sealed class NotificationShould(PipelineTestFixture fixture) : IClassFixt
         var handler1 = new Mock<INotificationHandler<NotificationMock>>();
         handler1.Setup(h => h.Handle(It.IsAny<NotificationMock>()));
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddNotificationHandler(handler1.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddNotificationHandler(handler1.Object));
         var notification = new NotificationMockNotRegistered(25);
 
         // act

@@ -59,8 +59,16 @@ internal readonly struct Dependency
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public object Resolve(IDependencyProvider provider)
     {
-        if (Instance != null) return Instance;
-        if (Resolver == null) DependencyError.ResolverNotFound(Contract, Lifetime);
+        if (Instance != null)
+        {
+            return Instance;
+        }
+
+        if (Resolver == null)
+        {
+            DependencyError.ResolverNotFound(Contract, Lifetime);
+        }
+
         return Resolver(provider);
     }
 }

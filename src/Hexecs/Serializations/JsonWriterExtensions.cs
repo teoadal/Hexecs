@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+
 using Hexecs.Actors;
 using Hexecs.Assets;
 using Hexecs.Collections;
@@ -9,18 +10,21 @@ public static class JsonWriterExtensions
 {
     extension(Utf8JsonWriter writer)
     {
-        public Utf8JsonWriter WriteProperty(string propertyName,
+        public Utf8JsonWriter WriteProperty(
+            string propertyName,
             Action<Utf8JsonWriter> value)
         {
             writer.WritePropertyName(propertyName);
             value(writer);
+
             return writer;
         }
 
-        public Utf8JsonWriter WriteProperty<TArray, TElement>(string propertyName,
+        public Utf8JsonWriter WriteProperty<TArray, TElement>(
+            string propertyName,
             in TArray array,
             Action<Utf8JsonWriter, TElement> value)
-            where TArray: struct, IArray<TElement>
+            where TArray : struct, IArray<TElement>
         {
             writer.WritePropertyName(propertyName);
             writer.WriteStartArray();
@@ -39,6 +43,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, ActorId value)
         {
             writer.WriteNumber(propertyName, value.Value);
+
             return writer;
         }
 
@@ -46,6 +51,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, AssetId value)
         {
             writer.WriteNumber(propertyName, value.Value);
+
             return writer;
         }
 
@@ -53,6 +59,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, bool value)
         {
             writer.WriteBoolean(propertyName, value);
+
             return writer;
         }
 
@@ -62,7 +69,8 @@ public static class JsonWriterExtensions
             writer.WritePropertyName(propertyName);
 
             Span<char> buffer = stackalloc char[68];
-            if (value.TryFormat(buffer, out var charsWritten))
+
+            if (value.TryFormat(buffer, out int charsWritten))
             {
                 writer.WriteStringValue(buffer[..charsWritten]);
             }
@@ -78,6 +86,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, int value)
         {
             writer.WriteNumber(propertyName, value);
+
             return writer;
         }
 
@@ -85,6 +94,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, long value)
         {
             writer.WriteNumber(propertyName, value);
+
             return writer;
         }
 
@@ -92,6 +102,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, string value)
         {
             writer.WriteString(propertyName, value);
+
             return writer;
         }
 
@@ -99,6 +110,7 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, Type value)
         {
             writer.WriteString(propertyName, value.FullName);
+
             return writer;
         }
 
@@ -106,16 +118,19 @@ public static class JsonWriterExtensions
         public Utf8JsonWriter WriteProperty(string propertyName, uint value)
         {
             writer.WriteNumber(propertyName, value);
+
             return writer;
         }
 
-        internal Utf8JsonWriter WriteProperty(string propertyName,
+        internal Utf8JsonWriter WriteProperty(
+            string propertyName,
             ref readonly InlineBucket<ushort> value)
         {
             writer.WritePropertyName(propertyName);
 
             writer.WriteStartArray();
-            foreach (var element in value)
+
+            foreach (ushort element in value)
             {
                 writer.WriteNumberValue(element);
             }

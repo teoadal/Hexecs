@@ -135,7 +135,6 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
             list.Add(actor);
         }
 
-
         // Assert
         list
             .Contains(actor.Id)

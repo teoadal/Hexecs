@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+
 using Hexecs.Threading;
 using Hexecs.Worlds;
 
@@ -40,12 +41,13 @@ public sealed class DefaultParallelWorkerShould : IDisposable
         using var worker = new DefaultParallelWorker(degreeOfParallelism);
 
         var executionCounts = new int[degreeOfParallelism];
-        var job = new TestParallelJob(_context,
+        var job = new TestParallelJob(
+            _context,
             (workerIndex, _) => { Interlocked.Increment(ref executionCounts[workerIndex]); });
 
         worker.Run(job);
 
-        foreach (var count in executionCounts)
+        foreach (int count in executionCounts)
         {
             Assert.Equal(1, count);
         }
@@ -78,11 +80,13 @@ public sealed class DefaultParallelWorkerShould : IDisposable
         using var worker = new DefaultParallelWorker(degreeOfParallelism);
 
         var threadIds = new ConcurrentBag<int>();
-        var job = new TestParallelJob(_context, (_, _) =>
-        {
-            threadIds.Add(Environment.CurrentManagedThreadId);
-            Thread.Sleep(10); // simulate work
-        });
+        var job = new TestParallelJob(
+            _context,
+            (_, _) =>
+            {
+                threadIds.Add(Environment.CurrentManagedThreadId);
+                Thread.Sleep(10); // simulate work
+            });
 
         worker.Run(job);
 
@@ -118,11 +122,13 @@ public sealed class DefaultParallelWorkerShould : IDisposable
         var indices = new ConcurrentBag<int>();
         var counts = new ConcurrentBag<int>();
 
-        var job = new TestParallelJob(_context, (workerIndex, workerCount) =>
-        {
-            indices.Add(workerIndex);
-            counts.Add(workerCount);
-        });
+        var job = new TestParallelJob(
+            _context,
+            (workerIndex, workerCount) =>
+            {
+                indices.Add(workerIndex);
+                counts.Add(workerCount);
+            });
 
         worker.Run(job);
 
@@ -158,14 +164,16 @@ public sealed class DefaultParallelWorkerShould : IDisposable
         const int frameCount = 60; // 60 кадров
         var totalExecutions = 0;
 
-        for (int frame = 0; frame < frameCount; frame++)
+        for (var frame = 0; frame < frameCount; frame++)
         {
             var frameExecutions = 0;
-            var job = new TestParallelJob(_context, (_, _) =>
-            {
-                Interlocked.Increment(ref frameExecutions);
-                Thread.SpinWait(100); // simulate work
-            });
+            var job = new TestParallelJob(
+                _context,
+                (_, _) =>
+                {
+                    Interlocked.Increment(ref frameExecutions);
+                    Thread.SpinWait(100); // simulate work
+                });
 
             worker.Run(job);
 

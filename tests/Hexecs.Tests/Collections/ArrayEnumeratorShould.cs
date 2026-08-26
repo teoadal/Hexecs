@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+
 using Hexecs.Collections;
 
 namespace Hexecs.Tests.Collections;
@@ -12,7 +13,7 @@ public sealed class ArrayEnumeratorShould
         var enumerator = ArrayEnumerator<int>.Empty;
 
         // Act
-        var result = enumerator.MoveNext();
+        bool result = enumerator.MoveNext();
 
         // Assert
         result.Should().BeFalse();
@@ -41,7 +42,7 @@ public sealed class ArrayEnumeratorShould
     public void Enumerator_Should_Respect_Specified_Length(int[] testArray)
     {
         // Arrange
-        var specifiedLength = testArray.Length / 2;
+        int specifiedLength = testArray.Length / 2;
         var enumerator = new ArrayEnumerator<int>(testArray, specifiedLength);
         var resultList = new List<int>();
 
@@ -65,7 +66,7 @@ public sealed class ArrayEnumeratorShould
 
         // Act - первый проход
         enumerator.MoveNext();
-        var firstElement = enumerator.Current;
+        int firstElement = enumerator.Current;
 
         // Полный проход
         while (enumerator.MoveNext())
@@ -74,8 +75,8 @@ public sealed class ArrayEnumeratorShould
 
         // Reset и снова первый элемент
         enumerator.Reset();
-        var hasMoved = enumerator.MoveNext();
-        var firstElementAfterReset = enumerator.Current;
+        bool hasMoved = enumerator.MoveNext();
+        int firstElementAfterReset = enumerator.Current;
 
         // Assert
         hasMoved.Should().BeTrue();
@@ -103,10 +104,10 @@ public sealed class ArrayEnumeratorShould
         IEnumerator genericEnumerator = enumerator;
         enumerator.MoveNext();
         genericEnumerator.MoveNext();
-        
+
         // Act
-        var current = enumerator.Current;
-        var genericCurrent = genericEnumerator.Current;
+        int current = enumerator.Current;
+        object? genericCurrent = genericEnumerator.Current;
 
         // Assert
         genericCurrent
@@ -135,8 +136,8 @@ public sealed class ArrayEnumeratorShould
 
         // Act
         enumerator.MoveNext();
-        var originalValue = enumerator.Current;
-        var newValue = originalValue + 1;
+        int originalValue = enumerator.Current;
+        int newValue = originalValue + 1;
 
         // Изменяем значение в массиве через ссылку
         testArray[0] = newValue;
@@ -164,11 +165,11 @@ public sealed class ArrayEnumeratorShould
         IEnumerator<int> genericEnumerator = enumerator;
         enumerator.MoveNext();
         genericEnumerator.MoveNext();
-        
+
         // Act
 
-        var current = enumerator.Current;
-        var genericCurrent = genericEnumerator.Current;
+        int current = enumerator.Current;
+        int genericCurrent = genericEnumerator.Current;
 
         // Assert
         genericCurrent

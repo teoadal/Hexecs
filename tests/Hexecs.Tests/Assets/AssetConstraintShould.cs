@@ -10,8 +10,8 @@ public sealed class AssetConstraintShould(AssetTestFixture fixture) : IClassFixt
     {
         // Arrange
 
-        var asset = fixture.CreateAsset<CarAsset>();
-        var constraint = AssetConstraint
+        Asset asset = fixture.CreateAsset<CarAsset>();
+        AssetConstraint constraint = AssetConstraint
             .Include<CarAsset>(fixture.Assets)
             .Build();
 
@@ -26,8 +26,8 @@ public sealed class AssetConstraintShould(AssetTestFixture fixture) : IClassFixt
     public void Should_Not_Be_Applicable_When_Excluded_Component_Exists()
     {
         // Arrange
-        var asset = fixture.CreateAsset<CarAsset>();
-        var constraint = AssetConstraint
+        Asset asset = fixture.CreateAsset<CarAsset>();
+        AssetConstraint constraint = AssetConstraint
             .Exclude<CarAsset>(fixture.Assets)
             .Build();
 
@@ -42,10 +42,10 @@ public sealed class AssetConstraintShould(AssetTestFixture fixture) : IClassFixt
     public void Builder_Should_Throw_On_Duplicate_Component()
     {
         // Arrange
-        var builder = AssetConstraint.Include<CarAsset>(fixture.Assets);
+        AssetConstraint.Builder builder = AssetConstraint.Include<CarAsset>(fixture.Assets);
 
         // Act
-        var action = () => builder.Include<CarAsset>();
+        Func<AssetConstraint.Builder> action = () => builder.Include<CarAsset>();
 
         // Assert
         action
@@ -57,12 +57,12 @@ public sealed class AssetConstraintShould(AssetTestFixture fixture) : IClassFixt
     public void Should_Implement_Equality_Correctly()
     {
         // Arrange
-        var context = fixture.Assets;
-        var constraint1 = AssetConstraint.Include<CarAsset>(context)
+        AssetContext context = fixture.Assets;
+        AssetConstraint constraint1 = AssetConstraint.Include<CarAsset>(context)
             .Exclude<UnitAsset>()
             .Build();
 
-        var constraint2 = AssetConstraint.Include<CarAsset>(context)
+        AssetConstraint constraint2 = AssetConstraint.Include<CarAsset>(context)
             .Exclude<UnitAsset>()
             .Build();
 
@@ -80,8 +80,8 @@ public sealed class AssetConstraintShould(AssetTestFixture fixture) : IClassFixt
     public void Should_Work_With_Multiple_Includes()
     {
         // Arrange
-        var actor = fixture.CreateAsset<CarAsset, UnitAsset>();
-        var constraint = AssetConstraint
+        Asset actor = fixture.CreateAsset<CarAsset, UnitAsset>();
+        AssetConstraint constraint = AssetConstraint
             .Include<CarAsset, UnitAsset>(fixture.Assets)
             .Build();
 

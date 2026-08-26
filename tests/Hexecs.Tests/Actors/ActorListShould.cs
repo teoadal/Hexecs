@@ -9,7 +9,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
 
         // Act
         list.Add(actor);
@@ -27,7 +27,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         var fakeId = new ActorId(999);
 
         // Act
-        var result = list.Remove(fakeId);
+        bool result = list.Remove(fakeId);
 
         // Assert
         result.Should().BeFalse();
@@ -54,7 +54,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
         list.Add(actor);
 
         // Act
@@ -76,14 +76,14 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor1 = fixture.CreateActor<Defence>();
-        var actor2 = fixture.CreateActor<Defence>();
+        Actor actor1 = fixture.CreateActor<Defence>();
+        Actor actor2 = fixture.CreateActor<Defence>();
         list.Add(actor1);
         list.Add(actor2);
 
         // Act
         var resultIds = new List<ActorId>();
-        foreach (var actor in list)
+        foreach (ActorRef<Defence> actor in list)
         {
             resultIds.Add(actor.Id);
         }
@@ -101,11 +101,11 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         // Arrange
         var list = new ActorList<Defence>(fixture.Actors);
         list.Dispose();
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
 
         // Act
 
-        var action = () => list.Add(actor);
+        Action action = () => list.Add(actor);
 
         // Assert
 
@@ -122,7 +122,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
 
         // Act
 

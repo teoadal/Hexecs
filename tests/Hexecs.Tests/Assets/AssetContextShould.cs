@@ -1,4 +1,5 @@
 ﻿using Hexecs.Assets;
+using Hexecs.Assets.Sources;
 
 namespace Hexecs.Tests.Assets;
 
@@ -9,17 +10,17 @@ public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var alias = fixture.RandomString();
-        AssetId assetId = AssetId.Empty;
+        string alias = fixture.RandomString();
+        var assetId = AssetId.Empty;
         fixture.CreateAssetContext(loader =>
         {
-            var asset = loader.CreateAsset(alias);
+            AssetConfigurator asset = loader.CreateAsset(alias);
             assetId = asset.Id;
         });
 
         // act
 
-        var actual = fixture.Assets.Invoking(ctx => ctx.GetAsset(alias))
+        Asset actual = fixture.Assets.Invoking(ctx => ctx.GetAsset(alias))
             .Should()
             .NotThrow()
             .Which;
@@ -36,7 +37,7 @@ public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture
     {
         // act && assert
 
-        var context = fixture.CreateAssetContext();
+        AssetContext context = fixture.CreateAssetContext();
         context.Invoking(ctx => ctx.GetAsset(fixture.RandomString()))
             .Should()
             .Throw<Exception>();

@@ -12,10 +12,10 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
 
         var component = fixture.CreateComponent<Attack>();
         Actor actor = fixture.CreateActor<Attack>(component1: component);
-        
+
         // act
 
-        var filter = fixture
+        ActorFilter<Attack> filter = fixture
             .Actors
             .Filter<Attack>();
 
@@ -39,13 +39,13 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
         // arrange
 
         var component = fixture.CreateComponent<Attack>();
-        var filter = fixture
+        ActorFilter<Attack> filter = fixture
             .Actors
             .Filter<Attack>();
 
         // act
 
-        var actor = fixture.CreateActor<Attack>(component1: component);
+        Actor actor = fixture.CreateActor<Attack>(component1: component);
 
         // assert
 
@@ -66,9 +66,9 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var actors = fixture.CreateActors<Attack, Defence>();
+        Actor[] actors = fixture.CreateActors<Attack, Defence>();
 
-        var filter = fixture
+        ActorFilter<Attack> filter = fixture
             .Actors
             .Filter<Attack>();
 
@@ -76,11 +76,11 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
             .Where(actor => actor.Id.Value % 2 == 0)
             .Do(actor => actor.Destroy());
 
-        var expectedActors = actors.Where(actor => actor.Id.Value % 2 != 0);
+        IEnumerable<Actor> expectedActors = actors.Where(actor => actor.Id.Value % 2 != 0);
 
         // act
 
-        var actualActors = filter.ToArray();
+        Actor[] actualActors = filter.ToArray();
 
         // assert
 
@@ -94,8 +94,8 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var actor = fixture.CreateActor<Attack>();
-        var filter = fixture
+        Actor actor = fixture.CreateActor<Attack>();
+        ActorFilter<Attack> filter = fixture
             .Actors
             .Filter<Attack>();
 
@@ -116,8 +116,8 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var actor = fixture.CreateActor<Attack, Defence>();
-        var filter = fixture
+        Actor actor = fixture.CreateActor<Attack, Defence>();
+        ActorFilter<Attack> filter = fixture
             .Actors
             .Filter<Attack>();
 
@@ -133,5 +133,5 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
             .BeFalse();
     }
 
-    
+
 }

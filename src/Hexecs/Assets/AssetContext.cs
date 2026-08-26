@@ -1,4 +1,5 @@
 using Hexecs.Assets.Components;
+using Hexecs.Assets.Delegates;
 using Hexecs.Worlds;
 
 namespace Hexecs.Assets;
@@ -12,7 +13,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     public readonly World World;
 
     private readonly Dictionary<string, uint> _aliases;
-    
+
     private bool _disposed;
 
     internal AssetContext(World world, int capacity = 256)
@@ -32,20 +33,20 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        
+
         ClearEntries();
-        
+
         _aliases.Clear();
     }
-    
+
     /// <summary>
     /// Проверяет существование ассета с указанным идентификатором.
     /// </summary>
     /// <param name="assetId">Идентификатор ассета для проверки</param>
     /// <returns>Возвращаем true, если ассет существует; иначе false</returns>
-    public bool ExistsAsset(uint assetId)
+    public bool ExistsAsset(AssetId assetId)
     {
-        ref var entry = ref GetEntry(assetId);
+        ref var entry = ref GetEntry(assetId.Value);
         return !Unsafe.IsNullRef(ref entry);
     }
 
@@ -55,7 +56,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <param name="assetId">Идентификатор ассета</param>
     /// <returns>Объект ассета</returns>
     /// <exception cref="Exception">Выбрасывается, если ассет не найден</exception>
-    public Asset GetAsset(uint assetId)
+    public Asset GetAsset(AssetId assetId)
     {
         if (!ExistsAsset(assetId)) AssetError.NotFound(assetId);
         return new Asset(this, assetId);
@@ -71,7 +72,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     {
         if (_aliases.TryGetValue(alias, out var assetId))
         {
-            return GetAsset(assetId);
+            return GetAsset(new AssetId(assetId));
         }
 
         AssetError.NotFound(alias);
@@ -84,37 +85,21 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <typeparam name="T1">Тип компонента</typeparam>
     /// <exception cref="Exception">Ассет с таким компонентом не существует</exception>
     /// <returns>Первый ассет, у которого есть этот компонент.</returns>
-    public Asset<T1> GetAsset<T1>()
+    public AssetRef<T1> GetAssetRef<T1>()
         where T1 : struct, IAssetComponent
     {
         var pool = GetComponentPool<T1>();
         if (pool != null)
         {
-            var firstId = pool.FirstId();
-            if (firstId != Asset.EmptyId)
+            var first = pool.First();
+            if (!first.IsEmpty)
             {
-                return new Asset<T1>(this, firstId);
+                return first;
             }
         }
 
         AssetError.NotFound<T1>();
-        return Asset<T1>.Empty;
-    }
-
-    /// <summary>
-    /// Получает типизированный ассет, содержащий указанный компонент.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента ассета</typeparam>
-    /// <param name="assetId">Идентификатор ассета</param>
-    /// <returns>Типизированный объект ассета</returns>
-    /// <exception cref="Exception">Выбрасывается, если ассет не найден или не содержит нужный компонент</exception>
-    public Asset<T1> GetAsset<T1>(uint assetId)
-        where T1 : struct, IAssetComponent
-    {
-        var pool = GetComponentPool<T1>();
-        if (pool == null || !pool.Has(assetId)) AssetError.ComponentNotFound<T1>(assetId);
-
-        return new Asset<T1>(this, assetId);
+        return AssetRef<T1>.Empty;
     }
 
     /// <summary>
@@ -124,16 +109,24 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <param name="alias">Строковый алиас ассета</param>
     /// <returns>Типизированный объект ассета</returns>
     /// <exception cref="Exception">Выбрасывается, если ассет не найден или не содержит нужный компонент</exception>
-    public Asset<T1> GetAsset<T1>(string alias)
+    public AssetRef<T1> GetAssetRef<T1>(string alias)
         where T1 : struct, IAssetComponent
     {
-        if (_aliases.TryGetValue(alias, out var assetId))
+        if (_aliases.TryGetValue(alias, out var assetIdRaw))
         {
-            return GetAsset<T1>(assetId);
+            var assetId = new AssetId(assetIdRaw);
+
+            var pool = GetComponentPool<T1>();
+            if (pool == null) AssetError.ComponentNotFound<T1>(assetId);
+
+            ref var component = ref pool.Get(assetId);
+            if (Unsafe.IsNullRef(ref component)) AssetError.ComponentNotFound<T1>(assetId);
+
+            return new AssetRef<T1>(this, assetId, ref component);
         }
 
         AssetError.NotFound(alias);
-        return Asset<T1>.Empty;
+        return AssetRef<T1>.Empty;
     }
 
     /// <summary>
@@ -143,7 +136,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <param name="assetId">Идентификатор ассета</param>
     /// <returns>Ссылка на компонент ассета</returns>
     /// <exception cref="Exception">Выбрасывается, если ассет не найден или не содержит нужный компонент</exception>
-    public AssetRef<T1> GetAssetRef<T1>(uint assetId)
+    public AssetRef<T1> GetAssetRef<T1>(AssetId assetId)
         where T1 : struct, IAssetComponent
     {
         var pool = GetComponentPool<T1>();
@@ -155,6 +148,23 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
         return new AssetRef<T1>(this, assetId, ref component);
     }
 
+    public AssetRef<T1> GetActorRef<T1>(AssetPredicate<T1> predicate)
+        where T1 : struct, IAssetComponent
+    {
+        var pool = GetComponentPool<T1>();
+        if (pool != null)
+        {
+            var exists = pool.First(predicate);
+            if (!exists.IsEmpty)
+            {
+                return exists;
+            }
+        }
+
+        AssetError.ApplicableNotFound<T1>();
+        return AssetRef<T1>.Empty;
+    }
+    
     /// <summary>
     /// Формирует строковое описание ассета с перечислением его компонентов.
     /// </summary>
@@ -162,27 +172,27 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <param name="maxComponentDescription">Максимальное количество компонентов для отображения</param>
     /// <returns>Строковое описание ассета</returns>
     [SkipLocalsInit]
-    public string GetDescription(uint assetId, int maxComponentDescription = 5)
+    public string GetDescription(AssetId assetId, int maxComponentDescription = 5)
     {
         var builder = new ValueStringBuilder(stackalloc char[512]);
         GetDescription(assetId, ref builder, maxComponentDescription);
         return builder.Flush();
     }
 
-    public void GetDescription(uint assetId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
+    public void GetDescription(AssetId assetId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
     {
-        ref var entry = ref GetEntry(assetId);
+        ref var entry = ref GetEntry(assetId.Value);
         if (Unsafe.IsNullRef(ref entry))
         {
             builder.Append('\'');
             builder.Append(StringUtils.EmptyValue);
             builder.Append('\'');
-            
+
             return;
         }
 
         builder.Append("Id = ");
-        builder.Append(assetId);
+        builder.Append(assetId.Value);
 
         ref var components = ref entry;
         var componentsLength = components.Length;
@@ -225,26 +235,8 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
 
         if (printMore) builder.Append(", ...");
         builder.Append(')');
-    }
-
-    /// <summary>
-    /// Пытается получить типизированный ассет с указанным идентификатором.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента ассета</typeparam>
-    /// <param name="assetId">Идентификатор ассета</param>
-    /// <param name="asset">Результирующий типизированный ассет, если найден</param>
-    /// <returns>Возвращает true, если ассет найден и содержит указанный компонент; иначе false</returns>
-    public bool TryGetAsset<T1>(uint assetId, out Asset<T1> asset) where T1 : struct, IAssetComponent
-    {
-        var pool = GetComponentPool<T1>();
-        if (pool == null || !pool.Has(assetId))
-        {
-            asset = Asset<T1>.Empty;
-            return false;
-        }
-
-        asset = new Asset<T1>(this, assetId);
-        return true;
+        
+        pool.Return(buffer);
     }
 
     /// <summary>
@@ -254,7 +246,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <param name="assetId">Идентификатор ассета</param>
     /// <param name="asset">Результирующая ссылка на компонент ассета, если компонент найден</param>
     /// <returns>Возвращает true, если ассет найден и содержит указанный компонент; иначе false</returns>
-    public bool TryGetAssetRef<T1>(uint assetId, out AssetRef<T1> asset) where T1 : struct, IAssetComponent
+    public bool TryGetAssetRef<T1>(AssetId assetId, out AssetRef<T1> asset) where T1 : struct, IAssetComponent
     {
         var pool = GetComponentPool<T1>();
         if (pool == null)

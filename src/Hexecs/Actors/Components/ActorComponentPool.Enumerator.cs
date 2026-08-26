@@ -15,7 +15,7 @@ internal sealed partial class ActorComponentPool<T>
                 var index = _index;
                 return new ActorRef<T>(
                     _context, 
-                    _dense[index], 
+                    new ActorId(_dense[index]), 
                     ref _values[index]);
             }
         }

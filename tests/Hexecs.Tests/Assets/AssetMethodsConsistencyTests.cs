@@ -1,24 +1,25 @@
 ﻿using System.Reflection;
+using Hexecs.Assets;
 
-namespace Hexecs.Tests.Actors;
+namespace Hexecs.Tests.Assets;
 
-public class ActorMethodsConsistencyTests
+public class AssetMethodsConsistencyTests
 {
     /// <summary>
     /// Все типы, которые должны иметь общие методы
     /// </summary>
-    private static readonly Type[] ActorTypes =
+    private static readonly Type[] AssetTypes =
     [
-        typeof(Actor),
-        typeof(ActorRef<>),
-        typeof(ActorRef<,>),
-        typeof(ActorRef<,,>)
+        typeof(Asset),
+        typeof(AssetRef<>),
+        typeof(AssetRef<,>),
+        typeof(AssetRef<,,>)
     ];
 
     /// <summary>
     /// Эталонный тип — источник правды для списка методов
     /// </summary>
-    private static readonly Type ReferenceType = typeof(Actor);
+    private static readonly Type ReferenceType = typeof(Asset);
 
     /// <summary>
     /// Методы, которые исключаем из проверки (специфичные для типа или системные)
@@ -44,7 +45,7 @@ public class ActorMethodsConsistencyTests
     {
         var expectedMethods = CommonMethodNames.ToList();
 
-        foreach (var type in ActorTypes.Where(t => t != ReferenceType))
+        foreach (var type in AssetTypes.Where(t => t != ReferenceType))
         {
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
             var methodNames = methods.Select(m => m.Name).Distinct().ToHashSet();
@@ -64,7 +65,7 @@ public class ActorMethodsConsistencyTests
         {
             var referenceMethods = GetMethodSignatures(ReferenceType, methodName);
 
-            foreach (var type in ActorTypes.Where(t => t != ReferenceType))
+            foreach (var type in AssetTypes.Where(t => t != ReferenceType))
             {
                 var typeMethods = GetMethodSignatures(type, methodName);
 
@@ -78,7 +79,7 @@ public class ActorMethodsConsistencyTests
     [Fact(DisplayName = "Все общие методы должны иметь AggressiveInlining-атрибут")]
     public void CommonMethods_ShouldHaveAggressiveInlining()
     {
-        foreach (var type in ActorTypes)
+        foreach (var type in AssetTypes)
         {
             var methods = type
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)

@@ -14,12 +14,17 @@ namespace Hexecs.Actors;
 public readonly struct ActorId : IEquatable<ActorId>
 {
     /// <summary>
+    /// Константа, представляющая собой пустой идентификатор актёра.
+    /// </summary>
+    internal const uint EmptyId = 0;
+
+    /// <summary>
     /// Пустой идентификатор актёра, используемый по умолчанию.
     /// </summary>
     public static ActorId Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(Actor.EmptyId);
+        get => new(EmptyId);
     }
 
     /// <summary>
@@ -33,7 +38,16 @@ public readonly struct ActorId : IEquatable<ActorId>
     public bool IsEmpty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Value == Actor.EmptyId;
+        get => Value == EmptyId;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли идентификатор НЕ пустым.
+    /// </summary>
+    public bool IsNotEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Value != EmptyId;
     }
 
     /// <summary>
@@ -52,79 +66,53 @@ public readonly struct ActorId : IEquatable<ActorId>
     /// <param name="context">Контекст актёра.</param>
     /// <returns>Актёр с данным идентификатором.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor Unwrap(ActorContext context) => context.GetActor(Value);
+    public Actor Unwrap(ActorContext context)
+    {
+        return context.GetActor(this);
+    }
 
-    /// <summary>
-    /// Преобразует идентификатор в типизированного актёра с указанным контекстом и компонентом.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <param name="context">Контекст актёра.</param>
-    /// <returns>Типизированный актёр с данным идентификатором и компонентом.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<T> Unwrap<T>(ActorContext context) where T : struct, IActorComponent => context.GetActor<T>(Value);
-
-    /// <summary>
-    /// Возвращает строковое представление идентификатора актёра.
-    /// </summary>
-    /// <returns>Строковое представление идентификатора.</returns>
-    public override string ToString() => ActorMarshal.TryGetDebugContext(out var context)
-        ? context.GetDescription(Value)
-        : IsEmpty
-            ? StringUtils.EmptyValue
-            : Value.ToString();
+    public override string ToString()
+    {
+        return ActorMarshal.TryGetDebugContext(out var context)
+            ? context.GetDescription(this)
+            : IsEmpty
+                ? StringUtils.EmptyValue
+                : Value.ToString();
+    }
 
     #region Equality
 
-    /// <summary>
-    /// Проверяет равенство между двумя идентификаторами актёров.
-    /// </summary>
-    /// <param name="other">Идентификатор для сравнения.</param>
-    /// <returns>Возвращает true, если идентификаторы равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(ActorId other) => Value == other.Value;
 
-    /// <summary>
-    /// Проверяет равенство с другим объектом.
-    /// </summary>
-    /// <param name="obj">Объект для сравнения.</param>
-    /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
     public override bool Equals(object? obj) => obj is ActorId other && Equals(other);
 
-    /// <summary>
-    /// Возвращает хеш-код для идентификатора актёра.
-    /// </summary>
-    /// <returns>Хеш-код идентификатора.</returns>
     public override int GetHashCode() => HashCode.Combine(Value);
 
-    /// <summary>
-    /// Сравнивает два идентификатора актёров на равенство.
-    /// </summary>
-    /// <param name="left">Левый идентификатор.</param>
-    /// <param name="right">Правый идентификатор.</param>
-    /// <returns>Возвращает true, если идентификаторы равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in ActorId left, in ActorId right) => left.Equals(right);
+    public static bool operator ==(in ActorId left, in ActorId right) => left.Value == right.Value;
 
-    /// <summary>
-    /// Сравнивает два идентификатора актёров на неравенство.
-    /// </summary>
-    /// <param name="left">Левый идентификатор.</param>
-    /// <param name="right">Правый идентификатор.</param>
-    /// <returns>Возвращает true, если идентификаторы не равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in ActorId left, in ActorId right) => !left.Equals(right);
+    public static bool operator !=(in ActorId left, in ActorId right) => left.Value != right.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(in ActorId left, in ActorId right) => left.Value < right.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(in ActorId left, in ActorId right) => left.Value > right.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <=(in ActorId left, in ActorId right) => left.Value <= right.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >=(in ActorId left, in ActorId right) => left.Value >= right.Value;
 
     #endregion
 
     #region Implicit
 
-    /// <summary>
-    /// Неявное преобразование идентификатора актёра в bool.
-    /// </summary>
-    /// <param name="actor">Идентификатор для преобразования.</param>
-    /// <returns>Возвращает true, если идентификатор не пустой; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in ActorId actor) => !actor.IsEmpty;
+    public static implicit operator bool(in ActorId actor) => actor.IsNotEmpty;
 
     #endregion
 }

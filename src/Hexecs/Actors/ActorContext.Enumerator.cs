@@ -15,7 +15,7 @@ public sealed partial class ActorContext
         public readonly Actor Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, _dense[_index]);
+            get => new(_context, new ActorId(_dense[_index]));
         }
 
         public readonly int Length

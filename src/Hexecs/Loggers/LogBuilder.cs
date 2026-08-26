@@ -36,10 +36,6 @@ public sealed class LogBuilder
         ], ReferenceComparer<Type>.Instance);
 
         _valueFactories = new Queue<ILogValueWriterFactory>(4);
-        _valueFactories.Enqueue(ActorLogWriter.Factory);
-        _valueFactories.Enqueue(ActorIdLogWriter.Factory);
-        _valueFactories.Enqueue(AssetLogWriter.Factory);
-        _valueFactories.Enqueue(AssetIdLogWriter.Factory);
     }
 
     internal LogService Build()

@@ -12,7 +12,7 @@ namespace Hexecs.Actors.Bounds;
 [DebuggerDisplay("Asset: {ToString()}")]
 [DebuggerTypeProxy(typeof(BoundComponentDebugProxy))]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-internal readonly struct BoundComponent(uint assetId) : IActorComponent
+internal readonly struct BoundComponent(AssetId assetId) : IActorComponent
 {
     public static ActorComponentConfiguration<BoundComponent> CreatePoolConfiguration()
     {
@@ -26,11 +26,14 @@ internal readonly struct BoundComponent(uint assetId) : IActorComponent
     /// <summary>
     /// Идентификатор ресурса (<see cref="Asset"/>), привязанного к актёру
     /// </summary>
-    public readonly uint AssetId = assetId;
+    public readonly AssetId AssetId = assetId;
 
-    public override string ToString() => AssetMarshal.TryGetDebugContext(out var context)
-        ? context.GetDescription(AssetId)
-        : AssetId == Asset.EmptyId
-            ? StringUtils.EmptyValue
-            : AssetId.ToString();
+    public override string ToString()
+    {
+        return AssetMarshal.TryGetDebugContext(out var context)
+            ? context.GetDescription(AssetId)
+            : AssetId.IsEmpty
+                ? StringUtils.EmptyValue
+                : AssetId.ToString();
+    }
 }

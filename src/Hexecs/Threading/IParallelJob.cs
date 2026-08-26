@@ -6,5 +6,5 @@ public interface IParallelJob
 {
     ActorContext Context { get; }
 
-    void Execute(int workerIndex, int workerCount);
+    void Execute(int workerIndex, int workersCount);
 }

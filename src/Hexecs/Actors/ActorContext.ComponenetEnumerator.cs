@@ -25,7 +25,7 @@ public sealed partial class ActorContext
         }
         
         private int _index;
-        private readonly uint _actorId;
+        private readonly ActorId _actorId;
         private readonly ReadOnlySpan<ushort> _componentIds;
         private readonly IActorComponentPool?[] _pools;
 
@@ -33,13 +33,13 @@ public sealed partial class ActorContext
         public ComponentEnumerator()
         {
             _index = -1;
-            _actorId = 0;
+            _actorId = ActorId.Empty;
             _componentIds = ReadOnlySpan<ushort>.Empty;
             _pools = [];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ComponentEnumerator(uint actorId, IActorComponentPool?[] pools, ReadOnlySpan<ushort> componentIds)
+        internal ComponentEnumerator(ActorId actorId, IActorComponentPool?[] pools, ReadOnlySpan<ushort> componentIds)
         {
             _index = -1;
             _actorId = actorId;

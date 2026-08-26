@@ -66,12 +66,12 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     /// <summary>
     /// Событие, вызываемое при добавлении актёра, соответствующего ограничениям.
     /// </summary>
-    public event Action<uint>? Added;
+    public event Action<ActorId>? Added;
 
     /// <summary>
     /// Событие, вызываемое при удалении актёра, который ранее соответствовал ограничениям.
     /// </summary>
-    public event Action<uint>? Removing;
+    public event Action<ActorId>? Removing;
 
     private readonly int _contextId;
     private readonly int _hash;
@@ -94,7 +94,7 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
     /// </summary>
     /// <param name="actorId">Идентификатор актёра для проверки</param>
     /// <returns>Возвращает true, если актёр соответствует всем ограничениям; иначе false</returns>
-    public bool Applicable(uint actorId)
+    public bool Applicable(ActorId actorId)
     {
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var subscription in _subscriptions)
@@ -105,9 +105,9 @@ public sealed partial class ActorConstraint : IEquatable<ActorConstraint>, IDisp
         return true;
     }
 
-    private void OnExclude(uint actorId) => Removing?.Invoke(actorId);
+    private void OnExclude(ActorId actorId) => Removing?.Invoke(actorId);
 
-    private void OnInclude(uint actorId)
+    private void OnInclude(ActorId actorId)
     {
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var subscription in _subscriptions)

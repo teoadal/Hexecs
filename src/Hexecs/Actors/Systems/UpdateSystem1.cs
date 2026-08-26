@@ -74,14 +74,14 @@ public abstract class UpdateSystem<T1> : UpdateSystem, IParallelJob
 
     protected abstract void Update(in ActorRef<T1> actor, in WorldTime time);
 
-    void IParallelJob.Execute(int workerIndex, int workerCount)
+    void IParallelJob.Execute(int workerIndex, int workersCount)
     {
         var start = workerIndex * _currentBatchSize;
         var length = _currentLength;
 
         if ((uint)start < (uint)length)
         {
-            var batch = workerIndex == workerCount
+            var batch = workerIndex == workersCount
                 ? Filter.Skip(start)
                 : Filter.Skip(start, _currentBatchSize);
 

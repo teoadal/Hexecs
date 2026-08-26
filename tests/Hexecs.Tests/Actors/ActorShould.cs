@@ -83,7 +83,7 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
 
         // act
 
-        var actor1 = actor.As<Attack>();
+        var actor1 = actor.AsRef<Attack>();
 
         // assert
 
@@ -143,17 +143,13 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
         // act
 
         expected
-            .Is<Defence>(out var actual)
+            .IsRef<Defence>(out var actual)
             .Should()
             .BeTrue();
 
         // assert
 
-        expected
-            .Should()
-            .Be(actual);
-
-        expected.Component1
+        expected.Get<Defence>()
             .Should()
             .Be(actual.Component1);
     }
@@ -289,7 +285,7 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
     {
         // arrange
 
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
         var actor = fixture.Actors.BuildActor(asset);
 
         // act
@@ -297,9 +293,10 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
 
         // assert
         retrievedAsset
-            .As<UnitAsset>()
+            .AsRef<UnitAsset>()
+            .Equals(asset)
             .Should()
-            .Be(asset);
+            .BeTrue();
     }
 
     [Fact(DisplayName = "Получить ссылку на компонент")]
@@ -373,7 +370,9 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
         ActorId actorId = actor;
 
         // assert
-        actorId.Value.Should().Be(actor.Id);
+        actorId
+            .Should()
+            .Be(actor.Id);
     }
 
     [Fact(DisplayName = "Удалить отношение между акторами")]
@@ -423,15 +422,16 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
         // act
 
         expected
-            .Is<Attack>(out var actual)
+            .IsRef<Attack>(out var actual)
             .Should()
             .BeFalse();
 
         // assert
 
         expected
+            .Equals(actual)
             .Should()
-            .NotBe(actual);
+            .BeFalse();
     }
 
     [Fact(DisplayName = "Не удалить несуществующий компонент")]
@@ -567,7 +567,7 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
     {
         // arrange
 
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
         var actor = fixture.Actors.BuildActor(asset);
 
         // act
@@ -580,9 +580,10 @@ public sealed class ActorShould(ActorTestFixture fixture) : IClassFixture<ActorT
             .BeTrue();
 
         actualAsset
-            .As<UnitAsset>()
+            .AsRef<UnitAsset>()
+            .Equals(asset)
             .Should()
-            .Be(asset);
+            .BeTrue();
     }
 
     [Fact(DisplayName = "Успешно пробовать получить существующий компонент")]

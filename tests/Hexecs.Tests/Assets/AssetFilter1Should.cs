@@ -1,4 +1,5 @@
-﻿using Hexecs.Tests.Mocks.Assets;
+﻿using Hexecs.Assets;
+using Hexecs.Tests.Mocks.Assets;
 
 namespace Hexecs.Tests.Assets;
 
@@ -8,18 +9,21 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
     public void ContainsAllAssets()
     {
         // arrange 
-        var assetIds = new List<uint>();
+
+        var assetIds = new List<AssetId>();
 
         var context = fixture.CreateAssetContext(loader =>
         {
-            for (int i = 1; i < 100; i++)
+            for (var i = 1; i < 100; i++)
             {
                 var asset = loader.CreateAsset(new CarAsset(i, i));
                 assetIds.Add(asset.Id);
             }
         });
 
-        var expectedAssets = assetIds.Select(id => context.GetAsset(id)).ToArray();
+        var expectedAssets = assetIds
+            .Select(context.GetAsset)
+            .ToArray();
 
         // act
 
@@ -37,7 +41,8 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
     public void AssetFilterShouldEnumerable()
     {
         // arrange 
-        var expectedIds = new Dictionary<uint, CarAsset>();
+
+        var expectedIds = new Dictionary<AssetId, CarAsset>();
 
         var context = fixture.CreateAssetContext(loader =>
         {
@@ -56,7 +61,7 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
 
         // assert
 
-        var actualIds = new List<uint>();
+        var actualIds = new List<AssetId>();
         foreach (var asset in filter)
         {
             actualIds.Add(asset.Id);
@@ -95,8 +100,8 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
     [Fact(DisplayName = "Фильтр должен учитывать constraint")]
     public void FilterWithConstraint()
     {
-        var notExpectedIds = new List<uint>();
-        uint expectedId = 0;
+        var notExpectedIds = new List<AssetId>();
+        var expectedId = AssetId.Empty;
 
         // arrange
         var context = fixture.CreateAssetContext(loader =>
@@ -146,7 +151,7 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
 
         // act
 
-        Action act = () => filter.Get(999); // Несуществующий ID
+        Action act = () => filter.Get(new AssetId(999)); // Несуществующий ID
 
         // assert
         act
@@ -158,7 +163,8 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
     public void ContainsReturnsCorrectStatus()
     {
         // arrange
-        uint existingId = 0;
+
+        var existingId = AssetId.Empty;
         var context = fixture.CreateAssetContext(loader =>
         {
             var asset = loader.CreateAsset(new CarAsset(1, 1));
@@ -174,7 +180,7 @@ public sealed class AssetFilter1Should(AssetTestFixture fixture) : IClassFixture
             .BeTrue();
 
         filter
-            .Contains(existingId + 100)
+            .Contains(new AssetId(existingId.Value + 100))
             .Should()
             .BeFalse();
     }

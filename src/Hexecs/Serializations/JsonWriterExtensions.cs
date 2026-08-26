@@ -43,23 +43,7 @@ public static class JsonWriterExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Utf8JsonWriter WriteProperty<T>(string propertyName, ActorId<T> value)
-            where T : struct, IActorComponent
-        {
-            writer.WriteNumber(propertyName, value.Value);
-            return writer;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Utf8JsonWriter WriteProperty(string propertyName, AssetId value)
-        {
-            writer.WriteNumber(propertyName, value.Value);
-            return writer;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Utf8JsonWriter WriteProperty<T>(string propertyName, AssetId<T> value)
-            where T : struct, IAssetComponent
         {
             writer.WriteNumber(propertyName, value.Value);
             return writer;

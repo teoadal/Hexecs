@@ -11,17 +11,12 @@ namespace Hexecs.Assets;
 public readonly struct Asset : IEquatable<Asset>
 {
     /// <summary>
-    /// Константа, представляющая идентификатор пустого ассета.
-    /// </summary>
-    internal const uint EmptyId = 0;
-
-    /// <summary>
     /// Возвращает пустой экземпляр ассета.
     /// </summary>
     public static Asset Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, EmptyId);
+        get => new(null!, AssetId.Empty);
     }
 
     /// <summary>
@@ -41,7 +36,7 @@ public readonly struct Asset : IEquatable<Asset>
     /// <summary>
     /// Уникальный идентификатор ассета в контексте.
     /// </summary>
-    public readonly uint Id;
+    public readonly AssetId Id;
 
     /// <summary>
     /// Создает новый экземпляр ассета с указанным контекстом и идентификатором.
@@ -49,20 +44,11 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="context">Контекст ассета</param>
     /// <param name="id">Идентификатор ассета</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal Asset(AssetContext context, uint id)
+    internal Asset(AssetContext context, AssetId id)
     {
         Context = context;
         Id = id;
     }
-
-    /// <summary>
-    /// Преобразует ассет в типизированный ассет с указанным компонентом.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента ассета</typeparam>
-    /// <exception cref="Exception">Выбрасывает ошибку, если компонент отсутствует в ассете</exception>
-    /// <returns>Типизированный ассет</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Asset<T> As<T>() where T : struct, IAssetComponent => Context.GetAsset<T>(Id);
 
     /// <summary>
     /// Преобразует ассет в ссылку на типизированный ассет с указанным компонентом.
@@ -71,7 +57,11 @@ public readonly struct Asset : IEquatable<Asset>
     /// <exception cref="Exception">Выбрасывает ошибку, если компонент отсутствует в ассете</exception>
     /// <returns>Ссылка на типизированный ассет</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetRef<T> AsRef<T>() where T : struct, IAssetComponent => Context.GetAssetRef<T>(Id);
+    public AssetRef<T> AsRef<T>()
+        where T : struct, IAssetComponent
+    {
+        return Context.GetAssetRef<T>(Id);
+    }
 
     /// <summary>
     /// Получает компонент указанного типа для данного ассета.
@@ -80,7 +70,11 @@ public readonly struct Asset : IEquatable<Asset>
     /// <exception cref="Exception">Выбрасывает ошибку, если компонент отсутствует в ассете</exception>
     /// <returns>Ссылка на компонент</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly T Get<T>() where T : struct, IAssetComponent => ref Context.GetComponent<T>(Id);
+    public ref readonly T Get<T>()
+        where T : struct, IAssetComponent
+    {
+        return ref Context.GetComponent<T>(Id);
+    }
 
     /// <summary>
     /// Проверяет наличие компонента указанного типа у ассета.
@@ -88,17 +82,11 @@ public readonly struct Asset : IEquatable<Asset>
     /// <typeparam name="T">Тип компонента</typeparam>
     /// <returns>Возвращает true, если компонент существует; иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IAssetComponent => Context.HasComponent<T>(Id);
-
-    /// <summary>
-    /// Проверяет, является ли ассет ассетом с указанным типом компонента.
-    /// В случае успеха возвращает типизированный ассет.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента</typeparam>
-    /// <param name="asset">Результирующий типизированный ассет</param>
-    /// <returns>Возвращает true, если ассет содержит указанный компонент; иначе false</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Is<T>(out Asset<T> asset) where T : struct, IAssetComponent => Context.TryGetAsset(Id, out asset);
+    public bool Has<T>()
+        where T : struct, IAssetComponent
+    {
+        return Context.HasComponent<T>(Id);
+    }
 
     /// <summary>
     /// Проверяет, является ли ассет ссылкой на ассет с указанным типом компонента.
@@ -108,7 +96,8 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="asset">Результирующая ссылка на типизированный ассет</param>
     /// <returns>Возвращает true, если ассет содержит указанный компонент; иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsRef<T>(out AssetRef<T> asset) where T : struct, IAssetComponent
+    public bool IsRef<T>(out AssetRef<T> asset)
+        where T : struct, IAssetComponent
     {
         return Context.TryGetAssetRef(Id, out asset);
     }
@@ -117,10 +106,13 @@ public readonly struct Asset : IEquatable<Asset>
     /// Возвращает строковое представление ассета.
     /// Для пустого ассета возвращает специальное значение, иначе - описание из контекста.
     /// </summary>
-    public override string ToString() => Context == null 
-        ? StringUtils.EmptyValue 
-        : Context.GetDescription(Id);
-    
+    public override string ToString()
+    {
+        return Context == null
+            ? StringUtils.EmptyValue
+            : Context.GetDescription(Id);
+    }
+
     #region Equality
 
     /// <summary>
@@ -181,7 +173,7 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="asset">Ассет для преобразования</param>
     /// <returns>Идентификатор ассета</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId(in Asset asset) => new(asset.Id);
-    
+    public static implicit operator AssetId(in Asset asset) => asset.Id;
+
     #endregion
 }

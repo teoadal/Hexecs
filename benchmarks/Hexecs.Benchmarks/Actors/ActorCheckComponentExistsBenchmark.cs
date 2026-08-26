@@ -124,7 +124,7 @@ public class ActorCheckComponentExistsBenchmark
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
         foreach (var actor in _context)
         {
-            if (actor.Is<Speed>(out _))
+            if (actor.IsRef<Speed>(out _))
             {
                 result++;
             }

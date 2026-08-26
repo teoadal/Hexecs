@@ -12,7 +12,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
 
         // act
 
@@ -46,8 +46,8 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         var actor = fixture.Actors.CreateActor(expectedId);
 
         // assert
-        actor.Id.Should().Be(expectedId);
-        fixture.Actors.ActorAlive(expectedId).Should().BeTrue();
+        actor.Id.Value.Should().Be(expectedId);
+        fixture.Actors.ActorAlive(new ActorId(expectedId)).Should().BeTrue();
     }
 
     [Fact(DisplayName = "Проверять существование актёра")]
@@ -59,7 +59,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
 
         // act
         var actorExists = fixture.Actors.ActorAlive(actor.Id);
-        var nonExistentActorExists = fixture.Actors.ActorAlive(nonExistentId);
+        var nonExistentActorExists = fixture.Actors.ActorAlive(new ActorId(nonExistentId));
 
         // assert
         actorExists.Should().BeTrue();
@@ -97,7 +97,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
     public void CloneActor()
     {
         // arrange
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
         var originalActor = fixture.Actors.BuildActor(asset);
 
         // act
@@ -141,9 +141,9 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         actor.Add(new Defence { Value = defenceValue });
 
         // act
-        var hasAttack = actors.TryGetActor<Attack>(actor.Id, out var actorWithAttack);
-        var hasDefence = actors.TryGetActor<Defence>(actor.Id, out var actorWithDefence);
-        var hasNonExistentComponent = actors.TryGetActor<NonExistentComponent>(actor.Id, out _);
+        var hasAttack = actors.TryGetActorRef<Attack>(actor.Id, out var actorWithAttack);
+        var hasDefence = actors.TryGetActorRef<Defence>(actor.Id, out var actorWithDefence);
+        var hasNonExistentComponent = actors.TryGetActorRef<NonExistentComponent>(actor.Id, out _);
 
         // assert
         hasAttack.Should().BeTrue();
@@ -169,16 +169,16 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         var description = fixture.Actors.GetDescription(actor.Id);
 
         // assert
-        description.Should().Contain(actor.Id.ToString());
-        description.Should().Contain(typeof(Attack).Name);
-        description.Should().Contain(typeof(Defence).Name);
+        description.Should().Contain(actor.Id.Value.ToString());
+        description.Should().Contain(nameof(Attack));
+        description.Should().Contain(nameof(Defence));
     }
 
     [Fact(DisplayName = "Привязывать и получать ассет к актёру")]
     public void BindAndGetAsset()
     {
         // arrange
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
         var actor = fixture.Actors.CreateActor();
 
         // act
@@ -311,13 +311,13 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         var actor = fixture.Actors.CreateActor();
         uint? addedActorId = null;
 
-        fixture.Actors.OnComponentAdded<Attack>(id => addedActorId = id);
+        fixture.Actors.OnComponentAdded<Attack>(id => addedActorId = id.Value);
 
         // act
         fixture.Actors.AddComponent(actor.Id, new Attack { Value = 10 });
 
         // assert
-        addedActorId.Should().Be(actor.Id);
+        addedActorId.Should().Be(actor.Id.Value);
     }
 
     [Fact(DisplayName = "Вызывать обработчик со значением при добавлении компонента")]
@@ -328,9 +328,9 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         uint? addedActorId = null;
         Attack? addedComponent = null;
 
-        fixture.Actors.OnComponentAdded((uint id, ref Attack component) =>
+        fixture.Actors.OnComponentAdded((ActorId id, ref Attack component) =>
         {
-            addedActorId = id;
+            addedActorId = id.Value;
             addedComponent = component;
         });
 
@@ -338,7 +338,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         fixture.Actors.AddComponent(actor.Id, new Attack { Value = 15 });
 
         // assert
-        addedActorId.Should().Be(actor.Id);
+        addedActorId.Should().Be(actor.Id.Value);
         addedComponent.Should().NotBeNull();
         addedComponent?.Value.Should().Be(15);
     }
@@ -351,13 +351,13 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         fixture.Actors.AddComponent(actor.Id, new Attack { Value = 10 });
 
         uint? removedActorId = null;
-        fixture.Actors.OnComponentRemoving<Attack>(id => removedActorId = id);
+        fixture.Actors.OnComponentRemoving<Attack>(id => removedActorId = id.Value);
 
         // act
         fixture.Actors.RemoveComponent<Attack>(actor.Id);
 
         // assert
-        removedActorId.Should().Be(actor.Id);
+        removedActorId.Should().Be(actor.Id.Value);
     }
 
     [Fact(DisplayName = "Вызывать обработчик со значением при удалении компонента")]
@@ -370,9 +370,9 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         uint? removedActorId = null;
         Attack? removedComponent = null;
 
-        fixture.Actors.OnComponentRemoving((uint id, ref Attack component) =>
+        fixture.Actors.OnComponentRemoving((ActorId id, ref Attack component) =>
         {
-            removedActorId = id;
+            removedActorId = id.Value;
             removedComponent = component;
         });
 
@@ -380,7 +380,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         fixture.Actors.RemoveComponent<Attack>(actor.Id);
 
         // assert
-        removedActorId.Should().Be(actor.Id);
+        removedActorId.Should().Be(actor.Id.Value);
         removedComponent.Should().NotBeNull();
         removedComponent?.Value.Should().Be(20);
     }
@@ -396,9 +396,9 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         Attack? oldComponent = null;
         Attack? newComponent = null;
 
-        fixture.Actors.OnComponentUpdating((uint id, ref Attack oldValue, in Attack newValue) =>
+        fixture.Actors.OnComponentUpdating((ActorId id, ref Attack oldValue, in Attack newValue) =>
         {
-            updatedActorId = id;
+            updatedActorId = id.Value;
             oldComponent = oldValue;
             newComponent = newValue;
         });
@@ -408,7 +408,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         fixture.Actors.UpdateComponent(actor.Id, updatedAttack);
 
         // assert
-        updatedActorId.Should().Be(actor.Id);
+        updatedActorId.Should().Be(actor.Id.Value);
         oldComponent.Should().NotBeNull();
         oldComponent?.Value.Should().Be(10);
         newComponent.Should().NotBeNull();
@@ -529,7 +529,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
     public void TryGetBoundAsset()
     {
         // arrange
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
         var actor = fixture.Actors.CreateActor();
         fixture.Actors.SetBoundAsset(actor.Id, asset);
 
@@ -595,7 +595,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
 
         // act
         var actorRef = fixture.Actors.GetActorRef<Attack>(actor.Id);
-        var retrievedActor = actorRef.AsActor();
+        Actor retrievedActor = actorRef;
 
         // assert
         retrievedActor.Id.Should().Be(actor.Id);
@@ -617,11 +617,18 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         actor3.Add(new Attack { Value = 15 });
 
         // act
-        var actorWithAttack10 = fixture.Actors.GetActor((in ActorRef<Attack> actor) => actor.Get<Attack>().Value == 10);
+        var actorWithAttack10 =
+            fixture.Actors.GetActorRef((in ActorRef<Attack> actor) => actor.Get<Attack>().Value == 10);
 
         // assert
-        actorWithAttack10.Id.Should().Be(actor2.Id);
-        actorWithAttack10.Get<Attack>().Value.Should().Be(10);
+        actorWithAttack10.Id
+            .Should()
+            .Be(actor2.Id);
+
+        actorWithAttack10
+            .Get<Attack>().Value
+            .Should()
+            .Be(10);
     }
 
     [Fact(DisplayName = "Получать единственного актёра с компонентом")]
@@ -633,11 +640,18 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         actor.Add(new NonExistentComponent());
 
         // act
-        var singleActor = fixture.Actors.Single<NonExistentComponent>();
+        var singleActor = fixture.Actors.SingleRef<NonExistentComponent>();
 
         // assert
-        singleActor.Id.Should().Be(actor.Id);
-        singleActor.Has<NonExistentComponent>().Should().BeTrue();
+        singleActor
+            .Id
+            .Should()
+            .Be(actor.Id);
+
+        singleActor
+            .Has<NonExistentComponent>()
+            .Should()
+            .BeTrue();
     }
 
     [Fact(DisplayName = "Генерировать исключение при получении Single, когда нет актёров с компонентом")]
@@ -647,7 +661,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         fixture.Actors.Clear();
 
         // act
-        Action action = () => fixture.Actors.Single<NonExistentComponent1>();
+        Action action = () => fixture.Actors.SingleRef<NonExistentComponent1>();
 
         // assert
         action.Should().Throw<Exception>();
@@ -665,7 +679,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
         actor2.Add(new Attack { Value = 20 });
 
         // act
-        Action action = () => fixture.Actors.Single<Attack>();
+        Action action = () => fixture.Actors.SingleRef<Attack>();
 
         // assert
         action.Should().Throw<Exception>();
@@ -675,7 +689,7 @@ public sealed class ActorContextShould(ActorTestFixture fixture) : IClassFixture
     public void RemoveBoundAssetWhenSettingEmptyAsset()
     {
         // arrange
-        var asset = fixture.Assets.GetAsset<UnitAsset>();
+        var asset = fixture.Assets.GetAssetRef<UnitAsset>();
         var actor = fixture.Actors.CreateActor();
         fixture.Actors.SetBoundAsset(actor.Id, asset);
 

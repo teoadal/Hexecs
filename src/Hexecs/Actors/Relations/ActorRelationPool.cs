@@ -23,7 +23,7 @@ internal sealed partial class ActorRelationPool<T> : IActorRelationPool
     private RelationKey[] _keys;
     private int _count;
     private readonly Dictionary<RelationKey, int> _indexMap;
-    
+
     private Bucket<int>[]?[] _sparsePages;
     private const int PageBits = 10; // 1024
     private const int PageSize = 1 << PageBits;
@@ -45,7 +45,7 @@ internal sealed partial class ActorRelationPool<T> : IActorRelationPool
         _count = 0;
     }
 
-    public ref T Add(uint subject, uint relative, in T value)
+    public ref T Add(ActorId subject, ActorId relative, in T value)
     {
         var key = new RelationKey(subject, relative);
         // Если такая связь уже есть (неважно, кто субъект, а кто цель), выбрасываем ошибку
@@ -64,14 +64,168 @@ internal sealed partial class ActorRelationPool<T> : IActorRelationPool
         _indexMap[key] = index;
 
         // ВАЖНО: Добавляем индекс в списки ОБОИХ участников
-        AddToAdjacency(subject, index);
+        AddToAdjacency(subject.Value, index);
         // Если это не связь сам с собой, добавляем и второму
         if (subject != relative)
         {
-            AddToAdjacency(relative, index);
+            AddToAdjacency(relative.Value, index);
         }
 
         return ref _values[index];
+    }
+
+    public void Clear()
+    {
+        _indexMap.Clear();
+        ArrayUtils.Clear(_values, _count);
+        ArrayUtils.Clear(_keys, _count);
+
+        foreach (var page in _sparsePages)
+        {
+            if (page == null) continue;
+            for (var i = 0; i < page.Length; i++)
+            {
+                page[i].Dispose();
+            }
+        }
+
+        _count = 0;
+    }
+
+    public int Count(ActorId subject)
+    {
+        var subjectIdRaw = subject.Value;
+        var pageIndex = (int)(subjectIdRaw >> PageBits);
+        if (pageIndex >= _sparsePages.Length)
+        {
+            return 0;
+        }
+
+        var page = _sparsePages[pageIndex];
+        if (page == null)
+        {
+            return 0;
+        }
+
+        return page[subjectIdRaw & PageMask].Length;
+    }
+
+    public ref T Get(ActorId subject, ActorId relative)
+    {
+        var key = new RelationKey(subject, relative);
+        if (_indexMap.TryGetValue(key, out var index))
+        {
+            return ref _values[index];
+        }
+
+        ActorError.RelationNotFound<T>(subject, relative);
+        return ref Unsafe.NullRef<T>();
+    }
+
+    public ActorRelationEnumerator<T> GetRelations(ActorId subject)
+    {
+        var subjectIdRaw = subject.Value;
+
+        var pageIndex = (int)(subjectIdRaw >> PageBits);
+        if (pageIndex >= _sparsePages.Length)
+        {
+            return ActorRelationEnumerator<T>.Empty;
+        }
+
+        var page = _sparsePages[pageIndex];
+        if (page == null)
+        {
+            return ActorRelationEnumerator<T>.Empty;
+        }
+
+        return new ActorRelationEnumerator<T>(
+            pool: this, 
+            indices: page[subjectIdRaw & PageMask].AsReadOnlySpan(), 
+            subject);
+    }
+
+    public bool Has(ActorId subject, ActorId relative)
+    {
+        var key = new RelationKey(subject, relative);
+        return _indexMap.ContainsKey(key);
+    }
+
+    public bool Remove(ActorId subject)
+    {
+        var subjectIdRaw = subject.Value;
+        
+        var pageIndex = (int)(subjectIdRaw >> PageBits);
+        if (pageIndex >= _sparsePages.Length) return false;
+        var page = _sparsePages[pageIndex];
+        if (page == null) return false;
+
+        ref var bucket = ref page[subjectIdRaw & PageMask];
+        if (bucket.Length == 0) return false;
+
+        var removedAny = false;
+        // Итерируемся с конца бакета, так как при Remove связь удаляется из бакета 
+        // (но Swap-Back в основном пуле все равно может перемешать индексы других связей в этом же бакете)
+        while (bucket.Length > 0)
+        {
+            // Берем всегда первый индекс из бакета
+            var index = bucket.AsReadOnlySpan()[0];
+            var key = _keys[index];
+            if (Remove(key.First, key.Second, out _))
+            {
+                removedAny = true;
+            }
+            else
+            {
+                // Защита от бесконечного цикла, если что-то пошло не так
+                break;
+            }
+        }
+
+        return removedAny;
+    }
+
+    public bool Remove(ActorId subject, ActorId relative, out T removed)
+    {
+        var key = new RelationKey(subject, relative);
+        if (!_indexMap.TryGetValue(key, out var index))
+        {
+            removed = default;
+            return false;
+        }
+
+        removed = _values[index];
+        _indexMap.Remove(key);
+
+        // Удаляем из списков смежности ОБОИХ участников
+        RemoveFromAdjacency(key.First.Value, index);
+        if (key.First != key.Second)
+        {
+            RemoveFromAdjacency(key.Second.Value, index);
+        }
+
+        var lastIndex = _count - 1;
+        if (index != lastIndex)
+        {
+            var lastKey = _keys[lastIndex];
+            var lastValue = _values[lastIndex];
+
+            _keys[index] = lastKey;
+            _values[index] = lastValue;
+            _indexMap[lastKey] = index;
+
+            // Обновляем индексы в списках смежности для перемещенной связи у ОБОИХ участников
+            ReplaceInAdjacency(lastKey.First.Value, lastIndex, index);
+            if (lastKey.First != lastKey.Second)
+            {
+                ReplaceInAdjacency(lastKey.Second.Value, lastIndex, index);
+            }
+        }
+
+        _keys[lastIndex] = default;
+        _values[lastIndex] = default;
+        _count--;
+
+        return true;
     }
 
     private void AddToAdjacency(uint actorId, int index)
@@ -94,7 +248,7 @@ internal sealed partial class ActorRelationPool<T> : IActorRelationPool
         var pageIndex = (int)(actorId >> PageBits);
         var page = _sparsePages[pageIndex];
         ref var bucket = ref page![actorId & PageMask];
-            
+
         var span = bucket.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
@@ -122,144 +276,13 @@ internal sealed partial class ActorRelationPool<T> : IActorRelationPool
         }
     }
 
-    public void Clear()
-    {
-        _indexMap.Clear();
-        ArrayUtils.Clear(_values, _count);
-        ArrayUtils.Clear(_keys, _count);
-
-        foreach (var page in _sparsePages)
-        {
-            if (page == null) continue;
-            for (var i = 0; i < page.Length; i++)
-            {
-                page[i].Dispose();
-            }
-        }
-
-        _count = 0;
-    }
-
-    public int Count(uint subject)
-    {
-        var pageIndex = (int)(subject >> PageBits);
-        if (pageIndex >= _sparsePages.Length) return 0;
-        var page = _sparsePages[pageIndex];
-        if (page == null) return 0;
-        return page[subject & PageMask].Length;
-    }
-
-    public ref T Get(uint subject, uint relative)
-    {
-        var key = new RelationKey(subject, relative);
-        if (_indexMap.TryGetValue(key, out var index))
-        {
-            return ref _values[index];
-        }
-
-        ActorError.RelationNotFound<T>(subject, relative);
-        return ref Unsafe.NullRef<T>();
-    }
-
-    public ActorRelationEnumerator<T> GetRelations(uint subject)
-    {
-        var pageIndex = (int)(subject >> PageBits);
-        if (pageIndex >= _sparsePages.Length) return ActorRelationEnumerator<T>.Empty;
-        var page = _sparsePages[pageIndex];
-        if (page == null) return ActorRelationEnumerator<T>.Empty;
-
-        return new ActorRelationEnumerator<T>(this, page[subject & PageMask].AsReadOnlySpan(), subject);
-    }
-
-    public bool Has(uint subject, uint relative)
-    {
-        var key = new RelationKey(subject, relative);
-        return _indexMap.ContainsKey(key);
-    }
-
-    public bool Remove(uint subject)
-    {
-        var pageIndex = (int)(subject >> PageBits);
-        if (pageIndex >= _sparsePages.Length) return false;
-        var page = _sparsePages[pageIndex];
-        if (page == null) return false;
-
-        ref var bucket = ref page[subject & PageMask];
-        if (bucket.Length == 0) return false;
-
-        var removedAny = false;
-        // Итерируемся с конца бакета, так как при Remove связь удаляется из бакета 
-        // (но Swap-Back в основном пуле все равно может перемешать индексы других связей в этом же бакете)
-        while (bucket.Length > 0)
-        {
-            // Берем всегда первый индекс из бакета
-            var index = bucket.AsReadOnlySpan()[0];
-            var key = _keys[index];
-            if (Remove(key.First, key.Second, out _))
-            {
-                removedAny = true;
-            }
-            else
-            {
-                // Защита от бесконечного цикла, если что-то пошло не так
-                break;
-            }
-        }
-
-        return removedAny;
-    }
-
-    public bool Remove(uint subject, uint relative, out T removed)
-    {
-        var key = new RelationKey(subject, relative);
-        if (!_indexMap.TryGetValue(key, out var index))
-        {
-            removed = default;
-            return false;
-        }
-
-        removed = _values[index];
-        _indexMap.Remove(key);
-
-        // Удаляем из списков смежности ОБОИХ участников
-        RemoveFromAdjacency(key.First, index);
-        if (key.First != key.Second)
-        {
-            RemoveFromAdjacency(key.Second, index);
-        }
-
-        var lastIndex = _count - 1;
-        if (index != lastIndex)
-        {
-            var lastKey = _keys[lastIndex];
-            var lastValue = _values[lastIndex];
-
-            _keys[index] = lastKey;
-            _values[index] = lastValue;
-            _indexMap[lastKey] = index;
-
-            // Обновляем индексы в списках смежности для перемещенной связи у ОБОИХ участников
-            ReplaceInAdjacency(lastKey.First, lastIndex, index);
-            if (lastKey.First != lastKey.Second)
-            {
-                ReplaceInAdjacency(lastKey.Second, lastIndex, index);
-            }
-        }
-
-        _keys[lastIndex] = default;
-        _values[lastIndex] = default;
-        _count--;
-
-        return true;
-    }
-
     [DebuggerDisplay("{First} to {Second}")]
     internal readonly struct RelationKey : IEquatable<RelationKey>
     {
-        public readonly uint First;
-        public readonly uint Second;
+        public readonly ActorId First;
+        public readonly ActorId Second;
 
-        public RelationKey(uint first, uint second)
+        public RelationKey(ActorId first, ActorId second)
         {
             if (first < second)
             {
@@ -280,7 +303,7 @@ internal sealed partial class ActorRelationPool<T> : IActorRelationPool
         public override bool Equals(object? obj) => obj is RelationKey key && Equals(key);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Is(uint value) => First == value || Second == value;
+        public bool Is(ActorId value) => First == value || Second == value;
     }
 
     ActorContext IActorRelationPool.Context => Context;

@@ -20,7 +20,7 @@ public sealed partial class ActorContext
     /// <param name="relation">Данные отношения.</param>
     /// <returns>Ссылка на добавленное отношение.</returns>
     /// <exception cref="Exception">Вызывается, если отношение между указанными актёрами уже существует.</exception>
-    public ref T AddRelation<T>(uint subject, uint relative, in T relation)
+    public ref T AddRelation<T>(ActorId subject, ActorId relative, in T relation)
         where T : struct
     {
         var relationPool = GetOrCreateRelationPool<T>();
@@ -45,7 +45,7 @@ public sealed partial class ActorContext
     /// <param name="relative">Идентификатор второго актёра (относительного).</param>
     /// <returns>Ссылка на найденное отношение.</returns>
     /// <exception cref="Exception">Вызывается, если отношение не найдено.</exception>
-    public ref T GetRelation<T>(uint subject, uint relative) where T : struct
+    public ref T GetRelation<T>(ActorId subject, ActorId relative) where T : struct
     {
         var pool = GetRelationPool<T>();
         if (pool == null) ActorError.RelationNotFound<T>(subject, relative);
@@ -59,7 +59,7 @@ public sealed partial class ActorContext
     /// <param name="subject">Идентификатор первого актёра (субъекта).</param>
     /// <param name="relative">Идентификатор второго актёра (относительного).</param>
     /// <returns>True, если отношение существует, иначе false.</returns>
-    public bool HasRelation<T>(uint subject, uint relative) where T : struct
+    public bool HasRelation<T>(ActorId subject, ActorId relative) where T : struct
     {
         var pool = GetRelationPool<T>();
         return pool != null && pool.Has(subject, relative);
@@ -71,7 +71,7 @@ public sealed partial class ActorContext
     /// <typeparam name="T">Тип отношения. Должен быть структурой.</typeparam>
     /// <param name="subject">Идентификатор актёра (субъекта).</param>
     /// <returns>Перечислитель отношений.</returns>
-    public ActorRelationEnumerator<T> Relations<T>(uint subject) where T : struct
+    public ActorRelationEnumerator<T> Relations<T>(ActorId subject) where T : struct
     {
         var pool = GetRelationPool<T>();
 
@@ -88,7 +88,7 @@ public sealed partial class ActorContext
     /// <param name="subject">Идентификатор первого актёра (субъекта).</param>
     /// <param name="relative">Идентификатор второго актёра (относительного).</param>
     /// <returns>True, если отношение было успешно удалено, иначе false.</returns>
-    public bool RemoveRelation<T>(uint subject, uint relative) where T : struct
+    public bool RemoveRelation<T>(ActorId subject, ActorId relative) where T : struct
     {
         return RemoveRelation<T>(subject, relative, out _);
     }
@@ -102,7 +102,7 @@ public sealed partial class ActorContext
     /// <param name="relation">Удаленное отношение.</param>
     /// <returns>True, если отношение было успешно удалено, иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveRelation<T>(uint subject, uint relative, out T relation) where T : struct
+    public bool RemoveRelation<T>(ActorId subject, ActorId relative, out T relation) where T : struct
     {
         var pool = GetRelationPool<T>();
         if (pool == null)

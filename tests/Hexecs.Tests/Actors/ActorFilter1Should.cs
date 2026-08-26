@@ -11,7 +11,7 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
         // arrange
 
         var component = fixture.CreateComponent<Attack>();
-        Actor<Attack> actor = fixture.CreateActor<Attack>(component1: component);
+        Actor actor = fixture.CreateActor<Attack>(component1: component);
         
         // act
 
@@ -73,10 +73,10 @@ public sealed class ActorFilter1Should(ActorTestFixture fixture) : IClassFixture
             .Filter<Attack>();
 
         actors
-            .Where(actor => actor.Id % 2 == 0)
+            .Where(actor => actor.Id.Value % 2 == 0)
             .Do(actor => actor.Destroy());
 
-        var expectedActors = actors.Where(actor => actor.Id % 2 != 0);
+        var expectedActors = actors.Where(actor => actor.Id.Value % 2 != 0);
 
         // act
 

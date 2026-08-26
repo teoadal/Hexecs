@@ -11,7 +11,7 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра</param>
     /// <returns>Ассет, привязанный к актёру</returns>
     /// <exception cref="Exception">Возникает, если актёр не имеет привязанного ассета</exception>
-    public Asset GetBoundAsset(uint actorId)
+    public Asset GetBoundAsset(ActorId actorId)
     {
         ref var component = ref TryGetComponentRef<BoundComponent>(actorId);
         if (Unsafe.IsNullRef(ref component)) ActorError.AssetNotFound(actorId);
@@ -25,7 +25,7 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра</param>
     /// <param name="asset">Переменная для сохранения найденного ассета</param>
     /// <returns>Возвращает true, если актёр имеет привязанный ассет, иначе false</returns>
-    public bool TryGetBoundAsset(uint actorId, out Asset asset)
+    public bool TryGetBoundAsset(ActorId actorId, out Asset asset)
     {
         ref var component = ref TryGetComponentRef<BoundComponent>(actorId);
         if (Unsafe.IsNullRef(ref component))
@@ -43,7 +43,7 @@ public sealed partial class ActorContext
     /// </summary>
     /// <param name="actorId">Идентификатор актёра</param>
     /// <param name="asset">Ассет для привязки</param>
-    internal void SetBoundAsset(uint actorId, in Asset asset)
+    internal void SetBoundAsset(ActorId actorId, in Asset asset)
     {
         var pool = GetOrCreateComponentPool<BoundComponent>();
         if (asset.IsEmpty)

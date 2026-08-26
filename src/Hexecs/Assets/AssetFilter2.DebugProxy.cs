@@ -8,7 +8,7 @@ public sealed partial class AssetFilter<T1, T2>
         public IEnumerable<Asset> Assets
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => filter._dictionary.Keys.Select(key => new Asset(filter.Context, key));
+            get => filter._dictionary.Keys.Select(key => new Asset(filter.Context, new AssetId(key)));
         }
     }
 }

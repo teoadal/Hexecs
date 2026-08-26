@@ -28,7 +28,7 @@ public sealed partial class AssetContext
         }
 
         private int _index;
-        private readonly uint _assetId;
+        private readonly AssetId _assetId;
         private readonly ReadOnlySpan<ushort> _componentIds;
         private readonly IAssetComponentPool?[] _pools;
 
@@ -36,13 +36,13 @@ public sealed partial class AssetContext
         public ComponentEnumerator()
         {
             _index = -1;
-            _assetId = 0;
+            _assetId = AssetId.Empty;
             _componentIds = ReadOnlySpan<ushort>.Empty;
             _pools = [];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ComponentEnumerator(uint assetId, IAssetComponentPool?[] pools, ReadOnlySpan<ushort> componentIds)
+        internal ComponentEnumerator(AssetId assetId, IAssetComponentPool?[] pools, ReadOnlySpan<ushort> componentIds)
         {
             _index = -1;
             _assetId = assetId;

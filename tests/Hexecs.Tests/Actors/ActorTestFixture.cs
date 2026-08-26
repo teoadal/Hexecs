@@ -29,16 +29,16 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
         return actor;
     }
 
-    public Actor<T1> CreateActor<T1>(uint? id = null, T1? component1 = null)
+    public Actor CreateActor<T1>(uint? id = null, T1? component1 = null)
         where T1 : struct, IActorComponent
     {
         var actor = Actors.CreateActor(id);
         actor.Add(component1 ?? CreateComponent<T1>());
 
-        return actor.As<T1>();
+        return actor;
     }
 
-    public Actor<T1> CreateActor<T1, T2>(uint? id = null, T1? component1 = null, T2? component2 = null)
+    public Actor CreateActor<T1, T2>(uint? id = null, T1? component1 = null, T2? component2 = null)
         where T1 : struct, IActorComponent
         where T2 : struct, IActorComponent
     {
@@ -46,10 +46,10 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
         actor.Add(component1 ?? CreateComponent<T1>());
         actor.Add(component2 ?? CreateComponent<T2>());
 
-        return actor.As<T1>();
+        return actor;
     }
 
-    public Actor<T1> CreateActor<T1, T2, T3>(uint? id = null, T1? component1 = null, T2? component2 = null,
+    public Actor CreateActor<T1, T2, T3>(uint? id = null, T1? component1 = null, T2? component2 = null,
         T3? component3 = null)
         where T1 : struct, IActorComponent
         where T2 : struct, IActorComponent
@@ -60,7 +60,7 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
         actor.Add(component2 ?? CreateComponent<T2>());
         actor.Add(component3 ?? CreateComponent<T3>());
 
-        return actor.As<T1>();
+        return actor;
     }
 
     public Actor[] CreateActors<T1>(int? length = null)

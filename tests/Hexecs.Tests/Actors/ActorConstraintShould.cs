@@ -45,8 +45,10 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
         actor.Add(new Description()); // Теперь актор соответствует Include<Description>
 
         // Assert
-        monitoredSubject.Should().Raise(nameof(constraint.Added))
-            .WithArgs<uint>(id => id == actor.Id);
+        monitoredSubject
+            .Should()
+            .Raise(nameof(constraint.Added))
+            .WithArgs<ActorId>(id => id == actor.Id);
     }
 
     [Fact(DisplayName = "Должен вызывать событие Removing, когда актор перестает соответствовать фильтру")]
@@ -62,8 +64,10 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
         actor.Remove<Description>();
 
         // Assert
-        monitoredSubject.Should().Raise(nameof(constraint.Removing))
-            .WithArgs<uint>(id => id == actor.Id);
+        monitoredSubject
+            .Should()
+            .Raise(nameof(constraint.Removing))
+            .WithArgs<ActorId>(id => id == actor.Id);
     }
 
     [Fact(DisplayName = "Builder должен выбрасывать исключение при добавлении дублирующегося компонента")]
@@ -129,6 +133,8 @@ public sealed class ActorConstraintShould(ActorTestFixture fixture) : IClassFixt
         actor.Add(new Description());
 
         // Assert
-        monitoredSubject.Should().NotRaise(nameof(constraint.Added));
+        monitoredSubject
+            .Should()
+            .NotRaise(nameof(constraint.Added));
     }
 }

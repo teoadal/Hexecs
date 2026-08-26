@@ -11,10 +11,10 @@ public readonly ref struct ActorRelation<T1>
     public ActorRelation<T1> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, Actor.EmptyId, ref Unsafe.NullRef<T1>());
+        get => new(null!, ActorId.Empty, ref Unsafe.NullRef<T1>());
     }
 
-    public readonly uint Id;
+    public readonly ActorId Id;
 
     public readonly ActorContext Context;
 
@@ -33,7 +33,7 @@ public readonly ref struct ActorRelation<T1>
     private readonly ref T1 _relation;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ActorRelation(ActorContext context, uint id, ref T1 relation)
+    internal ActorRelation(ActorContext context, ActorId id, ref T1 relation)
     {
         Id = id;
         Context = context;
@@ -42,34 +42,56 @@ public readonly ref struct ActorRelation<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add<T>(in T component) where T : struct, IActorComponent => Context.AddComponent(Id, in component);
+    public void Add<T>(in T component)
+        where T : struct, IActorComponent
+    {
+        Context.AddComponent(Id, in component);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddChild(in Actor child) => Context.AddChild(Id, child.Id);
+    public void AddChild(in Actor child)
+    {
+        Context.AddChild(Id, child.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T AddRelation<T>(in Actor relative, in T relation) where T : struct
+    public ref T AddRelation<T>(in Actor relative, in T relation)
+        where T : struct
     {
         return ref Context.AddRelation(Id, relative.Id, in relation);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<T> As<T>() where T : struct, IActorComponent => Context.GetActor<T>(Id);
+    public ActorRef<T> AsRef<T>()
+        where T : struct, IActorComponent
+    {
+        return Context.GetActorRef<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRef<T> AsRef<T>() where T : struct, IActorComponent => Context.GetActorRef<T>(Id);
+    public ActorContext.ChildrenEnumerator Children()
+    {
+        return Context.Children(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorContext.ChildrenEnumerator Children() => Context.Children(Id);
+    public bool Destroy()
+    {
+        return Context.DestroyActor(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Destroy() => Context.DestroyActor(Id);
+    public ref T Get<T>()
+        where T : struct, IActorComponent
+    {
+        return ref Context.GetComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get<T>() where T : struct, IActorComponent => ref Context.GetComponent<T>(Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Asset GetAsset() => Context.GetBoundAsset(Id);
+    public Asset GetAsset()
+    {
+        return Context.GetBoundAsset(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetRelation<T>(in Actor relative) where T : struct => ref Context.GetRelation<T>(Id, relative.Id);
@@ -79,9 +101,6 @@ public readonly ref struct ActorRelation<T1>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Is<T>(out Actor<T> actor) where T : struct, IActorComponent => Context.TryGetActor(Id, out actor);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRef<T>(out ActorRef<T> actor) where T : struct, IActorComponent

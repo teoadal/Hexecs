@@ -2,7 +2,7 @@ namespace Hexecs.Actors.Components;
 
 internal sealed partial class ActorComponentPool<T>
 {
-    private uint[] _sparse; 
+    private uint[] _sparse;
     private uint[] _dense;
     private T[] _values;
     private int _count;
@@ -78,8 +78,9 @@ internal sealed partial class ActorComponentPool<T>
                     ref var componentRef = ref _values[denseIndex];
                     value = componentRef;
 
-                    Removing?.Invoke(ownerId);
-                    ComponentRemoving?.Invoke(ownerId, ref componentRef);
+                    var actorId = new ActorId(_dense[denseIndex]);
+                    Removing?.Invoke(actorId);
+                    ComponentRemoving?.Invoke(actorId, ref componentRef);
                     _disposeHandler?.Invoke(ref componentRef);
 
                     var lastIndex = _count - 1;

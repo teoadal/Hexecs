@@ -23,7 +23,7 @@ public sealed partial class ActorConstraint
         /// <summary>
         /// Функция проверки актёра на соответствие ограничению.
         /// </summary>
-        public readonly Func<uint, bool> Check;
+        public readonly Func<ActorId, bool> Check;
 
         /// <summary>
         /// Флаг, указывающий, является ли подписка включающей (true) или исключающей (false).
@@ -42,7 +42,7 @@ public sealed partial class ActorConstraint
         /// <param name="pool">Пул компонентов для подписки</param>
         /// <param name="check">Функция проверки актёра</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Subscription(bool include, IActorComponentPool pool, Func<uint, bool> check)
+        public Subscription(bool include, IActorComponentPool pool, Func<ActorId, bool> check)
         {
             Check = check;
 

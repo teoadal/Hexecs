@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using Hexecs.Actors;
+using Hexecs.Assets;
 
 namespace Hexecs.Utils;
 
@@ -186,7 +188,7 @@ public ref struct ValueStringBuilder
         value.CopyTo(_buffer[_length..]);
         _length += value.Length;
     }
-
+    
     #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

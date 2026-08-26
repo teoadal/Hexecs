@@ -72,7 +72,7 @@ public sealed partial class AssetConstraint
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddSubscription<T>(bool include, IAssetComponentPool pool, Func<uint, bool> check)
+        private void AddSubscription<T>(bool include, IAssetComponentPool pool, Func<AssetId, bool> check)
             where T : struct, IAssetComponent
         {
             var id = AssetComponentType<T>.Id;

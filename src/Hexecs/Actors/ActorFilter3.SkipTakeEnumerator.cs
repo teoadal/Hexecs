@@ -1,6 +1,4 @@
-﻿using Hexecs.Actors.Components;
-
-namespace Hexecs.Actors;
+﻿namespace Hexecs.Actors;
 
 public sealed partial class ActorFilter<T1, T2, T3>
 {
@@ -21,15 +19,6 @@ public sealed partial class ActorFilter<T1, T2, T3>
 
     public ref struct SkipTakeEnumerator
     {
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1, T2, T3> _filter;
-        private readonly ActorComponentPool<T1> _pool1;
-        private readonly ActorComponentPool<T2> _pool2;
-        private readonly ActorComponentPool<T3> _pool3;
-        
-        private readonly ReadOnlySpan<uint> _ids;
-        private int _index;
-        
         public readonly ActorRef<T1, T2, T3> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,10 +28,10 @@ public sealed partial class ActorFilter<T1, T2, T3>
 
                 return new ActorRef<T1, T2, T3>(
                     _context,
-                    id,
-                    ref _pool1.Get(id),
-                    ref _pool2.Get(id),
-                    ref _pool3.Get(id));
+                    new ActorId(id),
+                    ref _pool1[id],
+                    ref _pool2[id],
+                    ref _pool3[id]);
             }
         }
 
@@ -52,14 +41,23 @@ public sealed partial class ActorFilter<T1, T2, T3>
             get => _filter.Length;
         }
 
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1, T2, T3> _filter;
+        private readonly ComponentsAccess<T1> _pool1;
+        private readonly ComponentsAccess<T2> _pool2;
+        private readonly ComponentsAccess<T3> _pool3;
+
+        private readonly ReadOnlySpan<uint> _ids;
+        private int _index;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal SkipTakeEnumerator(ActorFilter<T1, T2, T3> filter, int skip, int take = int.MaxValue)
         {
             _filter = filter;
             _context = filter.Context;
-            _pool1 = filter._pool1;
-            _pool2 = filter._pool2;
-            _pool3 = filter._pool3;
+            _pool1 = filter._pool1.GetComponentAccess();
+            _pool2 = filter._pool2.GetComponentAccess();
+            _pool3 = filter._pool3.GetComponentAccess();
 
             var count = filter._count;
             var actualSkip = Math.Min(skip, count);

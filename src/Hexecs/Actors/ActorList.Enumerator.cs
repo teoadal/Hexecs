@@ -17,7 +17,10 @@ public sealed partial class ActorList<T>
             get
             {
                 var id = _ids[_index];
-                return new ActorRef<T>(_pool.Context, id, ref _pool.Get(id));
+                return new ActorRef<T>(
+                    context: _pool.Context,
+                    id: id,
+                    component1: ref _pool.Get(id));
             }
         }
 
@@ -26,9 +29,9 @@ public sealed partial class ActorList<T>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _ids.Length;
         }
-        
+
         private readonly ActorComponentPool<T> _pool;
-        private readonly Span<uint> _ids;
+        private readonly Span<ActorId> _ids;
         private int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +39,7 @@ public sealed partial class ActorList<T>
         {
             _index = -1;
             _pool = null!;
-            _ids = Span<uint>.Empty;
+            _ids = Span<ActorId>.Empty;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,16 +55,16 @@ public sealed partial class ActorList<T>
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator() => this;
-        
-        public Actor<T>[] ToArray()
+
+        public Actor[] ToArray()
         {
             var count = 0;
-            var actors = ArrayUtils.Create<Actor<T>>(_ids.Length);
+            var actors = ArrayUtils.Create<Actor>(_ids.Length);
             foreach (var actor in this)
             {
                 actors[count++] = actor;
             }
-            
+
             return actors;
         }
     }

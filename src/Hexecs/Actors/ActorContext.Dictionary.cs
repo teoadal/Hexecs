@@ -26,7 +26,7 @@ public sealed partial class ActorContext
         ref var entry = ref TryAddEntry(actorId);
         if (!Unsafe.IsNullRef(ref entry))
         {
-            Created?.Invoke(actorId);
+            Created?.Invoke(new ActorId(actorId));
             return ref entry;
         }
 
@@ -34,8 +34,9 @@ public sealed partial class ActorContext
         return ref Unsafe.NullRef<Entry>();
     }
 
-    private void ClearEntry(uint actorId, ref Entry entry)
+    private void ClearEntry(uint actorIdRaw, ref Entry entry)
     {
+        var actorId = new ActorId(actorIdRaw);
         ref var node = ref TryGetComponentRef<ActorNodeComponent>(actorId);
         if (!Unsafe.IsNullRef(ref node))
         {
@@ -152,7 +153,7 @@ public sealed partial class ActorContext
         if (_dense[denseIndex] != actorId) return false;
 
         // 1. Уведомляем системы ПЕРЕД какими-либо изменениями структуры
-        Destroying?.Invoke(actorId);
+        Destroying?.Invoke(new ActorId(actorId));
 
         // 2. Очищаем данные сущности (пулы компонентов и т.д.)
         ref var entryToRemove = ref _values[denseIndex];

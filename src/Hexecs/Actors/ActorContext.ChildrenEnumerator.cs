@@ -25,15 +25,15 @@ public sealed partial class ActorContext
         }
 
         private readonly ActorContext _context;
-        private uint _currentId;
-        private uint _nextId;
+        private ActorId _currentId;
+        private ActorId _nextId;
         private readonly uint _count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ChildrenEnumerator(ActorContext context, uint firstChildId, uint count)
+        internal ChildrenEnumerator(ActorContext context, ActorId firstChildId, uint count)
         {
             _context = context;
-            _currentId = 0;
+            _currentId = ActorId.Empty;
             _nextId = firstChildId;
             _count = count;
         }
@@ -41,7 +41,7 @@ public sealed partial class ActorContext
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (_nextId == 0) return false;
+            if (_nextId.IsEmpty) return false;
 
             _currentId = _nextId;
             ref var node = ref _context.GetComponent<ActorNodeComponent>(_currentId);

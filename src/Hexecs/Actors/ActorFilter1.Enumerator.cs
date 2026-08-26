@@ -19,13 +19,6 @@ public sealed partial class ActorFilter<T1>
 
     public ref struct Enumerator
     {
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1> _filter;
-        private readonly ComponentsAccess<T1> _pool1;
-
-        private readonly ReadOnlySpan<uint> _ids;
-        private int _index;
-
         public readonly ActorRef<T1> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,7 +28,7 @@ public sealed partial class ActorFilter<T1>
 
                 return new ActorRef<T1>(
                     _context,
-                    id,
+                    new ActorId(id),
                     ref _pool1[id]);
             }
         }
@@ -45,6 +38,13 @@ public sealed partial class ActorFilter<T1>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _ids.Length;
         }
+        
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1> _filter;
+        private readonly ComponentsAccess<T1> _pool1;
+
+        private readonly ReadOnlySpan<uint> _ids;
+        private int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal Enumerator(ActorFilter<T1> filter)

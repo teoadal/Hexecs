@@ -1,5 +1,3 @@
-using Hexecs.Actors.Components;
-
 namespace Hexecs.Actors;
 
 public sealed partial class ActorFilter<T1, T2>
@@ -21,14 +19,6 @@ public sealed partial class ActorFilter<T1, T2>
 
     public ref struct SkipTakeEnumerator
     {
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1, T2> _filter;
-        private readonly ActorComponentPool<T1> _pool1;
-        private readonly ActorComponentPool<T2> _pool2;
-        
-        private readonly ReadOnlySpan<uint> _ids;
-        private int _index;
-        
         public readonly ActorRef<T1, T2> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,9 +28,9 @@ public sealed partial class ActorFilter<T1, T2>
 
                 return new ActorRef<T1, T2>(
                     _context,
-                    id,
-                    ref _pool1.Get(id),
-                    ref _pool2.Get(id));
+                    new ActorId(id),
+                    ref _pool1[id],
+                    ref _pool2[id]);
             }
         }
 
@@ -50,13 +40,21 @@ public sealed partial class ActorFilter<T1, T2>
             get => _filter.Length;
         }
 
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1, T2> _filter;
+        private readonly ComponentsAccess<T1> _pool1;
+        private readonly ComponentsAccess<T2> _pool2;
+
+        private readonly ReadOnlySpan<uint> _ids;
+        private int _index;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal SkipTakeEnumerator(ActorFilter<T1, T2> filter, int skip, int take = int.MaxValue)
         {
-            _filter = filter;
             _context = filter.Context;
-            _pool1 = filter._pool1;
-            _pool2 = filter._pool2;
+            _filter = filter;
+            _pool1 = filter._pool1.GetComponentAccess();
+            _pool2 = filter._pool2.GetComponentAccess();
 
             var count = filter._count;
             var actualSkip = Math.Min(skip, count);

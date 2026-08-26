@@ -11,12 +11,12 @@ internal interface IActorComponentPool
     /// <summary>
     /// Событие, вызываемое при добавлении компонента к актёру с указанным идентификатором.
     /// </summary>
-    event Action<uint>? Added;
+    event Action<ActorId>? Added;
     
     /// <summary>
     /// Событие, вызываемое перед удалением компонента у актёра с указанным идентификатором.
     /// </summary>
-    event Action<uint>? Removing;
+    event Action<ActorId>? Removing;
 
     /// <summary>
     /// Контекст актёра, к которому принадлежит этот пул компонентов.
@@ -48,28 +48,28 @@ internal interface IActorComponentPool
     /// </summary>
     /// <param name="ownerId">Идентификатор актёра-источника.</param>
     /// <param name="cloneId">Идентификатор актёра-получателя.</param>
-    void Clone(uint ownerId, uint cloneId);
+    void Clone(ActorId ownerId, ActorId cloneId);
 
     /// <summary>
     /// Получает компонент для актёра с указанным идентификатором.
     /// </summary>
     /// <param name="ownerId">Идентификатор актёра.</param>
     /// <returns>Компонент актёра.</returns>
-    IActorComponent Get(uint ownerId);
+    IActorComponent Get(ActorId ownerId);
 
     /// <summary>
     /// Проверяет, есть ли компонент у актёра с указанным идентификатором.
     /// </summary>
     /// <param name="ownerId">Идентификатор актёра.</param>
     /// <returns>Возвращает true, если компонент существует; иначе false.</returns>
-    bool Has(uint ownerId);
+    bool Has(ActorId ownerId);
 
     /// <summary>
     /// Удаляет компонент у актёра с указанным идентификатором.
     /// </summary>
     /// <param name="ownerId">Идентификатор актёра.</param>
     /// <returns>Возвращает true, если компонент был удален; иначе false.</returns>
-    bool Remove(uint ownerId);
+    bool Remove(ActorId ownerId);
 
     /// <summary>
     /// Сериализует содержимое пула компонентов в формат JSON.

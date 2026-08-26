@@ -30,8 +30,8 @@ public readonly ref struct ActorRef<T1>
     /// <summary>
     /// Уникальный идентификатор актёра.
     /// </summary>
-    public readonly uint Id;
-    
+    public readonly ActorId Id;
+
     /// <summary>
     /// Пустая ссылка на актёра, используемая по умолчанию.
     /// </summary>
@@ -75,7 +75,7 @@ public readonly ref struct ActorRef<T1>
     /// <param name="id">Идентификатор актёра.</param>
     /// <param name="component1">Ссылка на первый компонент актёра.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ActorRef(ActorContext context, uint id, ref T1 component1)
+    internal ActorRef(ActorContext context, ActorId id, ref T1 component1)
     {
         Context = context;
         _component1 = ref component1;
@@ -120,21 +120,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Типизированный актёр с указанным компонентом.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<T> As<T>() where T : struct, IActorComponent => Context.GetActor<T>(Id);
-
-    /// <summary>
-    /// Преобразует ссылку на актёра в ссылку на типизированного актёра.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <returns>Ссылка на типизированного актёра.</returns>
-    /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRef<T> AsRef<T>() where T : struct, IActorComponent => Context.GetActorRef<T>(Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<T1> AsActor() => IsEmpty 
-        ? Actor<T1>.Empty 
-        : new Actor<T1>(Context, Id);
+    public ActorRef<T> AsRef<T>()
+        where T : struct, IActorComponent
+    {
+        return Context.GetActorRef<T>(Id);
+    }
 
     /// <summary>
     /// Возвращает перечислитель дочерних актёров.
@@ -142,14 +132,20 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Перечислитель дочерних актёров.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorContext.ChildrenEnumerator Children() => Context.Children(Id);
+    public ActorContext.ChildrenEnumerator Children()
+    {
+        return Context.Children(Id);
+    }
 
     /// <summary>
     /// Уничтожает актёра.
     /// </summary>
     /// <returns>Возвращает true, если актёр был успешно уничтожен; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Destroy() => Context.DestroyActor(Id);
+    public bool Destroy()
+    {
+        return Context.DestroyActor(Id);
+    }
 
     /// <summary>
     /// Получает компонент актёра указанного типа.
@@ -166,7 +162,10 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Ассет, связанный с актёром.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или с ним не связан ассет.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Asset GetAsset() => Context.GetBoundAsset(Id);
+    public Asset GetAsset()
+    {
+        return Context.GetBoundAsset(Id);
+    }
 
     /// <summary>
     /// Получает отношение между текущим актёром и указанным родственным актёром.
@@ -176,7 +175,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Ссылка на отношение.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или отношение не существует.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetRelation<T>(in Actor relative) where T : struct => ref Context.GetRelation<T>(Id, relative.Id);
+    public ref T GetRelation<T>(in Actor relative)
+        where T : struct
+    {
+        return ref Context.GetRelation<T>(Id, relative.Id);
+    }
 
     /// <summary>
     /// Проверяет, содержит ли актёр компонент указанного типа.
@@ -185,11 +188,18 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если актёр содержит компонент; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IActorComponent => Context.HasComponent<T>(Id);
+    public bool Has<T>()
+        where T : struct, IActorComponent
+    {
+        return Context.HasComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasChild(in Actor child) => Context.HasChild(Id, child.Id);
-    
+    public bool HasChild(in Actor child)
+    {
+        return Context.HasChild(Id, child.Id);
+    }
+
     /// <summary>
     /// Проверяет, существует ли отношение между текущим актёром и указанным родственным актёром.
     /// </summary>
@@ -198,7 +208,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если отношение существует; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
+    public bool HasRelation<T>(in Actor relative)
+        where T : struct
+    {
+        return Context.HasRelation<T>(Id, relative.Id);
+    }
 
     /// <summary>
     /// Проверяет, можно ли преобразовать ссылку на актёра в типизированного актёра с указанным компонентом.
@@ -207,16 +221,8 @@ public readonly ref struct ActorRef<T1>
     /// <param name="actor">Результирующий типизированный актёр.</param>
     /// <returns>Возвращает true, если преобразование успешно; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Is<T>(out Actor<T> actor) where T : struct, IActorComponent => Context.TryGetActor(Id, out actor);
-
-    /// <summary>
-    /// Проверяет, можно ли преобразовать ссылку на актёра в ссылку на типизированного актёра.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <param name="actor">Результирующая ссылка на типизированного актёра.</param>
-    /// <returns>Возвращает true, если преобразование успешно; иначе false.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsRef<T>(out ActorRef<T> actor) where T : struct, IActorComponent
+    public bool IsRef<T>(out ActorRef<T> actor)
+        where T : struct, IActorComponent
     {
         return Context.TryGetActorRef(Id, out actor);
     }
@@ -228,7 +234,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Перечислитель отношений.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRelationEnumerator<T> Relations<T>() where T : struct => Context.Relations<T>(Id);
+    public ActorRelationEnumerator<T> Relations<T>()
+        where T : struct
+    {
+        return Context.Relations<T>(Id);
+    }
 
     /// <summary>
     /// Удаляет компонент указанного типа из актёра.
@@ -237,7 +247,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если компонент был успешно удален; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Remove<T>() where T : struct, IActorComponent => Context.RemoveComponent<T>(Id);
+    public bool Remove<T>()
+        where T : struct, IActorComponent
+    {
+        return Context.RemoveComponent<T>(Id);
+    }
 
     /// <summary>
     /// Удаляет компонент указанного типа из актёра и возвращает его значение.
@@ -247,7 +261,8 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если компонент был успешно удален; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Remove<T>(out T component) where T : struct, IActorComponent
+    public bool Remove<T>(out T component)
+        where T : struct, IActorComponent
     {
         return Context.RemoveComponent(Id, out component);
     }
@@ -259,7 +274,10 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если дочерний актёр был успешно удален; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveChild(in Actor child) => Context.RemoveChild(Id, child.Id);
+    public bool RemoveChild(in Actor child)
+    {
+        return Context.RemoveChild(Id, child.Id);
+    }
 
     /// <summary>
     /// Удаляет отношение указанного типа между текущим актёром и указанным родственным актёром.
@@ -269,7 +287,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если отношение было успешно удалено; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveRelation<T>(in Actor relative) where T : struct => Context.RemoveRelation<T>(Id, relative.Id);
+    public bool RemoveRelation<T>(in Actor relative)
+        where T : struct
+    {
+        return Context.RemoveRelation<T>(Id, relative.Id);
+    }
 
     /// <summary>
     /// Удаляет отношение указанного типа между текущим актёром и указанным родственным актёром и возвращает его значение.
@@ -289,9 +311,12 @@ public readonly ref struct ActorRef<T1>
     /// Возвращает строковое представление ссылки на актёра.
     /// </summary>
     /// <returns>Строковое представление ссылки на актёра.</returns>
-    public override string ToString() => Context == null 
-        ? StringUtils.EmptyValue 
-        : Context.GetDescription(Id);
+    public override string ToString()
+    {
+        return Context == null
+            ? StringUtils.EmptyValue
+            : Context.GetDescription(Id);
+    }
 
     /// <summary>
     /// Пытается добавить компонент к актёру, если он еще не существует.
@@ -301,7 +326,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если компонент был успешно добавлен; иначе false, если он уже существует.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAdd<T>(in T component) where T : struct, IActorComponent => Context.TryAdd(Id, in component);
+    public bool TryAdd<T>(in T component)
+        where T : struct, IActorComponent
+    {
+        return Context.TryAdd(Id, in component);
+    }
 
     /// <summary>
     /// Пытается получить ассет, связанный с актёром.
@@ -310,7 +339,10 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если ассет был успешно получен; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetAsset(out Asset asset) => Context.TryGetBoundAsset(Id, out asset);
+    public bool TryGetAsset(out Asset asset)
+    {
+        return Context.TryGetBoundAsset(Id, out asset);
+    }
 
     /// <summary>
     /// Пытается получить ссылку на компонент актёра указанного типа.
@@ -319,7 +351,11 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Ссылка на компонент или на пустой компонент, если он не существует.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T TryGetRef<T>() where T : struct, IActorComponent => ref Context.TryGetComponentRef<T>(Id);
+    public ref T TryGetRef<T>()
+        where T : struct, IActorComponent
+    {
+        return ref Context.TryGetComponentRef<T>(Id);
+    }
 
     /// <summary>
     /// Пытается получить родительского актёра для текущего.
@@ -328,7 +364,10 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если родительский актёр существует; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetParent(out Actor parent) => Context.TryGetParent(Id, out parent);
+    public bool TryGetParent(out Actor parent)
+    {
+        return Context.TryGetParent(Id, out parent);
+    }
 
     /// <summary>
     /// Обновляет существующий компонент или создает новый, если он не существует.
@@ -339,7 +378,8 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если компонент был успешно обновлен или создан; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Update<T>(in T component, bool createIfNotExists = true) where T : struct, IActorComponent
+    public bool Update<T>(in T component, bool createIfNotExists = true)
+        where T : struct, IActorComponent
     {
         return Context.UpdateComponent(Id, in component, createIfNotExists);
     }
@@ -361,7 +401,6 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
     public override bool Equals(object? obj) => obj switch
     {
-        Actor<T1> other => other.Id == Id,
         Actor actor => actor.IsRef<T1>(out var expected) && Equals(expected),
         _ => false
     };
@@ -408,15 +447,7 @@ public readonly ref struct ActorRef<T1>
     /// <param name="actor">Ссылка на актёра для преобразования.</param>
     /// <returns>Идентификатор актёра.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId(in ActorRef<T1> actor) => new(actor.Id);
-
-    /// <summary>
-    /// Неявное преобразование ссылки на актёра в типизированный идентификатор актёра.
-    /// </summary>
-    /// <param name="actor">Ссылка на актёра для преобразования.</param>
-    /// <returns>Типизированный идентификатор актёра.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId<T1>(in ActorRef<T1> actor) => new(actor.Id);
+    public static implicit operator ActorId(in ActorRef<T1> actor) => actor.Id;
 
     /// <summary>
     /// Неявное преобразование ссылки на актёра в актёра.
@@ -425,14 +456,6 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Актёр.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Actor(in ActorRef<T1> actor) => new(actor.Context, actor.Id);
-
-    /// <summary>
-    /// Неявное преобразование ссылки на актёра в типизированного актёра.
-    /// </summary>
-    /// <param name="actor">Ссылка на актёра для преобразования.</param>
-    /// <returns>Типизированный актёр.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor<T1>(in ActorRef<T1> actor) => new(actor.Context, actor.Id);
 
     #endregion
 }

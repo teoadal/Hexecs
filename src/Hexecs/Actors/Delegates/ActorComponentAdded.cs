@@ -6,5 +6,5 @@
 /// <typeparam name="T">Тип компонента, должен быть структурой и реализовывать интерфейс IActorComponent.</typeparam>
 /// <param name="actorId">Идентификатор актёра, к которому был добавлен компонент.</param>
 /// <param name="component">Ссылка на добавленный компонент.</param>
-public delegate void ActorComponentAdded<T>(uint actorId, ref T component)
+public delegate void ActorComponentAdded<T>(ActorId actorId, ref T component)
     where T : struct, IActorComponent;

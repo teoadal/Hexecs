@@ -40,9 +40,9 @@ internal static class ActorError
     /// </summary>
     /// <param name="actorId">Идентификатор актёра</param>
     [DoesNotReturn]
-    public static void AssetNotFound(uint actorId)
+    public static void AssetNotFound(ActorId actorId)
     {
-        throw new Exception($"Actor {actorId} don't have associated asset");
+        throw new Exception($"Actor '{actorId.Value}' don't have associated asset");
     }
 
     /// <summary>
@@ -95,9 +95,9 @@ internal static class ActorError
     /// <typeparam name="T">Тип компонента</typeparam>
     /// <param name="actorId">Идентификатор актёра</param>
     [DoesNotReturn]
-    public static void ComponentExists<T>(uint actorId)
+    public static void ComponentExists<T>(ActorId actorId)
     {
-        throw new Exception($"Actor {actorId} already has component {TypeOf<T>.GetTypeName()}");
+        throw new Exception($"Actor '{actorId.Value}' already has component {TypeOf<T>.GetTypeName()}");
     }
 
     /// <summary>
@@ -107,9 +107,9 @@ internal static class ActorError
     /// <param name="actorId">Идентификатор актёра</param>
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ref T ComponentNotFound<T>(uint actorId)
+    public static ref T ComponentNotFound<T>(ActorId actorId)
     {
-        throw new Exception($"Actor {actorId} don't have component {TypeOf<T>.GetTypeName()}");
+        throw new Exception($"Actor '{actorId.Value}' doesn't have component {TypeOf<T>.GetTypeName()}");
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ internal static class ActorError
     {
         throw new Exception("Invalid actor id");
     }
-    
+
     /// <summary>
     /// Генерирует исключение, когда актёр с указанным ключом не найден.
     /// </summary>
@@ -163,9 +163,16 @@ internal static class ActorError
     /// </summary>
     /// <param name="actorId">Идентификатор актёра</param>
     [DoesNotReturn]
+    public static void NotFound(ActorId actorId) => NotFound(actorId.Value);
+    
+    /// <summary>
+    /// Генерирует исключение, когда актёр с указанным идентификатором не найден.
+    /// </summary>
+    /// <param name="actorId">Идентификатор актёра</param>
+    [DoesNotReturn]
     public static void NotFound(uint actorId)
     {
-        throw new Exception($"Actor with id {actorId} isn't found");
+        throw new Exception($"Actor '{actorId}' isn't found");
     }
 
     /// <summary>
@@ -205,9 +212,9 @@ internal static class ActorError
     }
 
     [DoesNotReturn]
-    public static void RelationAlreadyExists<T>(uint subject, uint relative)
+    public static void RelationAlreadyExists<T>(ActorId subject, ActorId relative)
     {
-        throw new Exception($"Actor '{subject}' already has relation {TypeOf<T>.GetTypeName()} with '{relative}'");
+        throw new Exception($"Actor '{subject.Value}' already has relation {TypeOf<T>.GetTypeName()} with '{relative.Value}'");
     }
 
     /// <summary>
@@ -217,9 +224,9 @@ internal static class ActorError
     /// <param name="subject">Идентификатор субъекта связи</param>
     /// <param name="relative">Идентификатор связанного актёра</param>
     [DoesNotReturn]
-    public static void RelationNotFound<T>(uint subject, uint relative)
+    public static void RelationNotFound<T>(ActorId subject, ActorId relative)
     {
-        throw new Exception($"Actor {subject} don't have relation {TypeOf<T>.GetTypeName()} with {relative}");
+        throw new Exception($"Actor {subject.Value} don't have relation {TypeOf<T>.GetTypeName()} with {relative.Value}");
     }
 
     /// <summary>

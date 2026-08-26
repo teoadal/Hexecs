@@ -24,12 +24,12 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <summary>
     /// Событие, вызываемое при завершении создания актёра.
     /// </summary>
-    public event Action<uint>? Created;
+    public event Action<ActorId>? Created;
 
     /// <summary>
     /// Событие, вызываемое в начале удаления актёра.
     /// </summary>
-    public event Action<uint>? Destroying;
+    public event Action<ActorId>? Destroying;
 
     /// <summary>
     /// Уникальный идентификатор контекста актёров.
@@ -100,7 +100,10 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор актёра для проверки</param>
     /// <returns>Возвращает true, если актёр существует, иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ActorAlive(uint actorId) => !Unsafe.IsNullRef(ref GetEntryRef(actorId));
+    public bool ActorAlive(ActorId actorId)
+    {
+        return !Unsafe.IsNullRef(ref GetEntryRef(actorId.Value));
+    }
 
     /// <summary>
     /// Очищает контекст актёров, удаляя всех актёров и их компоненты.
@@ -133,12 +136,13 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="withParent">Флаг, указывающий нужно ли сохранять родительскую связь</param>
     /// <returns>Новый актёр, являющийся клоном исходного</returns>
     /// <exception cref="Exception">Возникает, если актёр с указанным идентификатором не найден</exception>
-    public Actor Clone(uint actorId, bool withParent = true)
+    public Actor Clone(ActorId actorId, bool withParent = true)
     {
-        var cloneId = GetNextActorId();
-        ref var cloneEntry = ref AddEntry(cloneId);
+        var cloneIdRaw = GetNextActorId();
+        ref var cloneEntry = ref AddEntry(cloneIdRaw);
 
-        ref var entry = ref GetEntryRefExact(actorId);
+        var cloneId = new ActorId(cloneIdRaw);
+        ref var entry = ref GetEntryRefExact(actorId.Value);
         foreach (var componentId in entry)
         {
             var componentPool = _componentPools[componentId]!;
@@ -164,11 +168,11 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Actor CreateActor(uint? expectedId = null)
     {
-        if (expectedId == Actor.EmptyId) ActorError.InvalidId();
+        if (expectedId == ActorId.EmptyId) ActorError.InvalidId();
         var actorId = expectedId ?? GetNextActorId();
 
         AddEntry(actorId);
-        return new Actor(this, actorId);
+        return new Actor(this, new ActorId(actorId));
     }
 
     /// <summary>
@@ -177,11 +181,11 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор уничтожаемого актёра</param>
     /// <returns>Возвращает true, если актёр был успешно уничтожен, иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool DestroyActor(uint actorId)
+    public bool DestroyActor(ActorId actorId)
     {
-        if (RemoveEntry(actorId))
+        if (RemoveEntry(actorId.Value))
         {
-            _freeIds.Push(actorId);
+            _freeIds.Push(actorId.Value);
             return true;
         }
 
@@ -217,7 +221,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор актёра</param>
     /// <returns>Актёр с указанным идентификатором</returns>
     /// <exception cref="Exception">Возникает, если актёр с указанным идентификатором не найден</exception>
-    public Actor GetActor(uint actorId)
+    public Actor GetActor(ActorId actorId)
     {
         if (!ActorAlive(actorId)) ActorError.NotFound(actorId);
         return new Actor(this, actorId);
@@ -229,87 +233,20 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <typeparam name="T1">Тип компонента</typeparam>
     /// <returns>Первый найденный актёр с компонентом указанного типа</returns>
     /// <exception cref="Exception">Возникает, если актёр с компонентом указанного типа не найден</exception>
-    public Actor<T1> GetActor<T1>()
-        where T1 : struct, IActorComponent
-    {
-        var pool = GetComponentPool<T1>();
-        if (pool is { Length: > 0 }) return pool.First();
-
-        ActorError.NotFound<T1>();
-        return Actor<T1>.Empty;
-    }
-
-    /// <summary>
-    /// Получает первого актёра с компонентом указанного типа, удовлетворяющего предикату.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента</typeparam>
-    /// <param name="predicate">Предикат для фильтрации актёров</param>
-    /// <returns>Первый найденный актёр, удовлетворяющий предикату</returns>
-    /// <exception cref="Exception">Возникает, если подходящий актёр не найден</exception>
-    public Actor<T1> GetActor<T1>(ActorPredicate<T1> predicate)
-        where T1 : struct, IActorComponent
-    {
-        var pool = GetComponentPool<T1>();
-        if (pool != null)
-        {
-            var exists = pool.First(predicate);
-            if (exists) return new Actor<T1>(this, exists.Id);
-        }
-
-        ActorError.ApplicableNotFound<T1>();
-        return Actor<T1>.Empty;
-    }
-
-    /// <summary>
-    /// Получает актёра с указанным идентификатором и компонентом указанного типа.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента</typeparam>
-    /// <param name="actorId">Идентификатор актёра</param>
-    /// <returns>Актёр с указанным идентификатором и компонентом</returns>
-    /// <exception cref="Exception">Возникает, если актёр не найден или не содержит указанный компонент</exception>
-    public Actor<T1> GetActor<T1>(uint actorId)
-        where T1 : struct, IActorComponent
-    {
-        var pool = GetComponentPool<T1>();
-        if (pool == null || !pool.Has(actorId)) ActorError.ComponentNotFound<T1>(actorId);
-
-        return new Actor<T1>(this, actorId);
-    }
-
-    /// <summary>
-    /// Получает ссылку на первого актёра с компонентом указанного типа.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента</typeparam>
-    /// <returns>Ссылка на первого найденного актёра с компонентом указанного типа</returns>
-    /// <exception cref="Exception">Возникает, если актёр с компонентом указанного типа не найден</exception>
     public ActorRef<T1> GetActorRef<T1>()
         where T1 : struct, IActorComponent
     {
         var pool = GetComponentPool<T1>();
-        if (pool is { Length: > 0 }) return pool.First();
-
-        ActorError.NotFound<T1>();
-        return ActorRef<T1>.Empty;
-    }
-
-    /// <summary>
-    /// Получает ссылку на первого актёра с компонентом указанного типа, удовлетворяющего предикату.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента</typeparam>
-    /// <param name="predicate">Предикат для фильтрации актёров</param>
-    /// <returns>Ссылка на первого найденного актёра, удовлетворяющего предикату</returns>
-    /// <exception cref="Exception">Возникает, если подходящий актёр не найден</exception>
-    public ActorRef<T1> GetActorRef<T1>(ActorPredicate<T1> predicate)
-        where T1 : struct, IActorComponent
-    {
-        var pool = GetComponentPool<T1>();
         if (pool != null)
         {
-            var exists = pool.First(predicate);
-            if (exists) return exists;
+            var first = pool.First();
+            if (!first.IsEmpty)
+            {
+                return first;
+            }
         }
 
-        ActorError.ApplicableNotFound<T1>();
+        ActorError.NotFound<T1>();
         return ActorRef<T1>.Empty;
     }
 
@@ -320,7 +257,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор актёра</param>
     /// <returns>Ссылка на актёра с указанным идентификатором и компонентом</returns>
     /// <exception cref="Exception">Возникает, если актёр не найден или не содержит указанный компонент</exception>
-    public ActorRef<T1> GetActorRef<T1>(uint actorId)
+    public ActorRef<T1> GetActorRef<T1>(ActorId actorId)
         where T1 : struct, IActorComponent
     {
         ref var component = ref TryGetComponentRef<T1>(actorId);
@@ -330,33 +267,58 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     }
 
     /// <summary>
+    /// Получает первого актёра с компонентом указанного типа, удовлетворяющего предикату.
+    /// </summary>
+    /// <typeparam name="T1">Тип компонента</typeparam>
+    /// <param name="predicate">Предикат для фильтрации актёров</param>
+    /// <returns>Первый найденный актёр, удовлетворяющий предикату</returns>
+    /// <exception cref="Exception">Возникает, если подходящий актёр не найден</exception>
+    public ActorRef<T1> GetActorRef<T1>(ActorPredicate<T1> predicate)
+        where T1 : struct, IActorComponent
+    {
+        var pool = GetComponentPool<T1>();
+        if (pool != null)
+        {
+            var exists = pool.First(predicate);
+            if (!exists.IsEmpty)
+            {
+                return exists;
+            }
+        }
+
+        ActorError.ApplicableNotFound<T1>();
+        return ActorRef<T1>.Empty;
+    }
+
+    /// <summary>
     /// Получает текстовое описание актёра.
     /// </summary>
     /// <param name="actorId">Идентификатор актёра</param>
     /// <param name="maxComponentDescription">Максимальное количество отображаемых компонентов</param>
     /// <returns>Текстовое описание актёра</returns>
     [SkipLocalsInit]
-    public string GetDescription(uint actorId, int maxComponentDescription = 5)
+    public string GetDescription(ActorId actorId, int maxComponentDescription = 5)
     {
         var builder = new ValueStringBuilder(stackalloc char[512]);
         GetDescription(actorId, ref builder, maxComponentDescription);
         return builder.Flush();
     }
 
-
-    public void GetDescription(uint actorId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
+    public void GetDescription(ActorId actorId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
     {
-        ref var entry = ref GetEntryRef(actorId);
+        ref var entry = ref GetEntryRef(actorId.Value);
         if (Unsafe.IsNullRef(ref entry))
         {
             builder.Append('\'');
             builder.Append(StringUtils.EmptyValue);
             builder.Append('\'');
+            
+            return;
         }
 
         builder.Append("Id = ");
-        builder.Append(actorId);
-        
+        builder.Append(actorId.Value);
+
         var componentsLength = entry.Length;
         if (componentsLength == 0) return;
 
@@ -397,33 +359,8 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
 
         if (printMore) builder.Append(", ...");
         builder.Append(')');
-        
+
         pool.Return(buffer);
-    }
-
-    /// <summary>
-    /// Получает единственный актёр с компонентом указанного типа.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента</typeparam>
-    /// <returns>Единственный актёр с компонентом указанного типа</returns>
-    /// <exception cref="Exception">Возникает, если актёр не найден или найдено более одного актёра</exception>
-    public Actor<T1> Single<T1>()
-        where T1 : struct, IActorComponent
-    {
-        var componentId = ActorComponentType<T1>.Id;
-        if (_singles.TryGetValue(componentId, out var exists))
-        {
-            return new Actor<T1>(this, exists);
-        }
-
-        var pool = GetComponentPool<T1>();
-        if (pool == null) ActorError.SingleNotFound<T1>();
-        if (pool.Length > 1) ActorError.NotSingle<T1>();
-
-        var single = pool.First();
-        _singles.Add(componentId, single.Id);
-
-        return single;
     }
 
     /// <summary>
@@ -447,30 +384,9 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         if (pool.Length > 1) ActorError.NotSingle<T1>();
 
         var single = pool.First();
-        _singles.Add(componentId, single.Id);
+        _singles.Add(componentId, single.Id.Value);
 
         return single;
-    }
-
-    /// <summary>
-    /// Пытается получить актёра с указанным идентификатором и компонентом указанного типа.
-    /// </summary>
-    /// <typeparam name="T1">Тип компонента</typeparam>
-    /// <param name="actorId">Идентификатор актёра</param>
-    /// <param name="actor">Переменная для сохранения найденного актёра</param>
-    /// <returns>Возвращает true, если актёр найден и содержит указанный компонент, иначе false</returns>
-    public bool TryGetActor<T1>(uint actorId, out Actor<T1> actor)
-        where T1 : struct, IActorComponent
-    {
-        var pool = GetComponentPool<T1>();
-        if (pool == null || !pool.Has(actorId))
-        {
-            actor = Actor<T1>.Empty;
-            return false;
-        }
-
-        actor = new Actor<T1>(this, actorId);
-        return true;
     }
 
     /// <summary>
@@ -480,7 +396,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     /// <param name="actorId">Идентификатор актёра</param>
     /// <param name="actor">Переменная для сохранения ссылки на найденного актёра</param>
     /// <returns>Возвращает true, если актёр найден и содержит указанный компонент, иначе false</returns>
-    public bool TryGetActorRef<T1>(uint actorId, out ActorRef<T1> actor)
+    public bool TryGetActorRef<T1>(ActorId actorId, out ActorRef<T1> actor)
         where T1 : struct, IActorComponent
     {
         ref var component = ref TryGetComponentRef<T1>(actorId);
@@ -506,7 +422,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         }
 
         var actorId = Interlocked.Increment(ref _nextActorId);
-        while (ActorAlive(actorId))
+        while (!Unsafe.IsNullRef(ref GetEntryRef(actorId))) // is alive
         {
             actorId = Interlocked.Increment(ref _nextActorId);
         }

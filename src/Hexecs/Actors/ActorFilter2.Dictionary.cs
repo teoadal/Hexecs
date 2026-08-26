@@ -89,7 +89,7 @@ public sealed partial class ActorFilter<T1, T2>
                     _sparse[actorId] = 0;
                     _count = lastIndex;
 
-                    Removed?.Invoke(actorId);
+                    Removed?.Invoke(new ActorId(actorId));
                     return true;
                 }
             }
@@ -111,7 +111,7 @@ public sealed partial class ActorFilter<T1, T2>
                 _dense[idx] = actorId;
                 _count++;
 
-                Added?.Invoke(actorId);
+                Added?.Invoke(new ActorId(actorId));
                 return true;
             }
 
@@ -137,7 +137,7 @@ public sealed partial class ActorFilter<T1, T2>
         _dense[denseIndex] = actorId;
         _count++;
 
-        Added?.Invoke(actorId);
+        Added?.Invoke(new ActorId(actorId));
         return true;
     }
 }

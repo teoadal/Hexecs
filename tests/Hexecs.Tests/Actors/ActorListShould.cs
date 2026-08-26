@@ -24,7 +24,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        uint fakeId = 999;
+        var fakeId = new ActorId(999);
 
         // Act
         var result = list.Remove(fakeId);
@@ -58,11 +58,17 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         list.Add(actor);
 
         // Act
+
         actor.Remove<Defence>(); // Это вызывает событие Removing в пуле
 
         // Assert
-        list.Contains(actor).Should().BeFalse();
-        list.Length.Should().Be(0);
+        list.Contains(actor)
+            .Should()
+            .BeFalse();
+
+        list.Length
+            .Should()
+            .Be(0);
     }
 
     [Fact(DisplayName = "Должен корректно итерироваться по добавленным акторам")]
@@ -76,7 +82,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         list.Add(actor2);
 
         // Act
-        var resultIds = new List<uint>();
+        var resultIds = new List<ActorId>();
         foreach (var actor in list)
         {
             resultIds.Add(actor.Id);
@@ -98,10 +104,14 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         var actor = fixture.CreateActor<Defence>();
 
         // Act
+
         var action = () => list.Add(actor);
 
         // Assert
-        action.Should().Throw<Exception>()
+
+        action
+            .Should()
+            .Throw<Exception>()
             .WithMessage("*disposed*");
     }
 
@@ -115,12 +125,21 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         var actor = fixture.CreateActor<Defence>();
 
         // Act
+
         if (useActorRef)
-            list.Add(actor.AsRef());
+        {
+            list.Add(actor.AsRef<Defence>());
+        }
         else
+        {
             list.Add(actor);
+        }
+
 
         // Assert
-        list.Contains(actor.Id).Should().BeTrue();
+        list
+            .Contains(actor.Id)
+            .Should()
+            .BeTrue();
     }
 }

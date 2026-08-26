@@ -23,7 +23,7 @@ public readonly ref struct ActorRef<T1, T2, T3>
     /// <summary>
     /// Уникальный идентификатор актёра.
     /// </summary>
-    public readonly uint Id;
+    public readonly ActorId Id;
 
     public static ActorRef<T1, T2, T3> Empty
     {
@@ -62,7 +62,7 @@ public readonly ref struct ActorRef<T1, T2, T3>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ActorRef(ActorContext context, uint id, ref T1 component1, ref T2 component2, ref T3 component3)
+    internal ActorRef(ActorContext context, ActorId id, ref T1 component1, ref T2 component2, ref T3 component3)
     {
         Context = context;
 
@@ -84,9 +84,6 @@ public readonly ref struct ActorRef<T1, T2, T3>
     {
         return ref Context.AddRelation(Id, relative.Id, in relation);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<T> As<T>() where T : struct, IActorComponent => Context.GetActor<T>(Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActorRef<T> AsRef<T>() where T : struct, IActorComponent => Context.GetActorRef<T>(Id);
@@ -111,12 +108,9 @@ public readonly ref struct ActorRef<T1, T2, T3>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasChild(in Actor child) => Context.HasChild(Id, child.Id);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Is<T>(out Actor<T> actor) where T : struct, IActorComponent => Context.TryGetActor(Id, out actor);
+    public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRef<T>(out ActorRef<T> actor) where T : struct, IActorComponent
@@ -193,28 +187,10 @@ public readonly ref struct ActorRef<T1, T2, T3>
     public static implicit operator bool(in ActorRef<T1, T2, T3> actor) => !actor.IsEmpty;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId(in ActorRef<T1, T2, T3> actor) => new(actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId<T1>(in ActorRef<T1, T2, T3> actor) => new(actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId<T2>(in ActorRef<T1, T2, T3> actor) => new(actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId<T3>(in ActorRef<T1, T2, T3> actor) => new(actor.Id);
+    public static implicit operator ActorId(in ActorRef<T1, T2, T3> actor) => actor.Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Actor(in ActorRef<T1, T2, T3> actor) => new(actor.Context, actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor<T1>(in ActorRef<T1, T2, T3> actor) => new(actor.Context, actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor<T2>(in ActorRef<T1, T2, T3> actor) => new(actor.Context, actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor<T3>(in ActorRef<T1, T2, T3> actor) => new(actor.Context, actor.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ActorRef<T1>(in ActorRef<T1, T2, T3> actor) => new(

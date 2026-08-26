@@ -6,7 +6,7 @@ namespace Hexecs.Actors.Relations;
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposable
 {
-    public static ActorRelationComponent Create(uint actorId) => new(4);
+    public static ActorRelationComponent Create(ActorId _) => new(4);
 
     public static ActorComponentConfiguration<ActorRelationComponent> CreatePoolConfiguration()
     {

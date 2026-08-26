@@ -11,9 +11,9 @@ internal static class AssetError
     /// </summary>
     /// <param name="assetId">Идентификатор ассета, для которого не найден псевдоним.</param>
     [DoesNotReturn]
-    public static void AliasNotFound(uint assetId)
+    public static void AliasNotFound(AssetId assetId)
     {
-        throw new Exception($"Alias for asset {assetId} isn't found");
+        throw new Exception($"Alias for asset '{assetId.Value}' isn't found");
     }
 
     /// <summary>
@@ -71,9 +71,9 @@ internal static class AssetError
     /// <typeparam name="T">Тип компонента, который уже существует в ассете.</typeparam>
     /// <param name="assetId">Идентификатор ассета.</param>
     [DoesNotReturn]
-    public static void ComponentAlreadyExists<T>(uint assetId)
+    public static void ComponentAlreadyExists<T>(AssetId assetId)
     {
-        throw new Exception($"Asset {assetId} already has component {TypeOf<T>.GetTypeName()}");
+        throw new Exception($"Asset '{assetId.Value}' already has component {TypeOf<T>.GetTypeName()}");
     }
 
     /// <summary>
@@ -82,9 +82,9 @@ internal static class AssetError
     /// <typeparam name="T">Тип компонента, который отсутствует в ассете.</typeparam>
     /// <param name="assetId">Идентификатор ассета.</param>
     [DoesNotReturn]
-    public static void ComponentNotFound<T>(uint assetId)
+    public static void ComponentNotFound<T>(AssetId assetId)
     {
-        throw new Exception($"Asset {assetId} don't have component {TypeOf<T>.GetTypeName()}");
+        throw new Exception($"Asset '{assetId.Value}' doesn't have component {TypeOf<T>.GetTypeName()}");
     }
 
     /// <summary>
@@ -129,6 +129,16 @@ internal static class AssetError
     [DoesNotReturn]
     public static void NotFound(uint assetId)
     {
-        throw new Exception($"Asset with id {assetId} isn't found");
+        throw new Exception($"Asset '{assetId}' isn't found");
+    }
+    
+    /// <summary>
+    /// Генерирует исключение, когда ассет с указанным идентификатором не найден.
+    /// </summary>
+    /// <param name="assetId">Идентификатор ассета, который не найден.</param>
+    [DoesNotReturn]
+    public static void NotFound(AssetId assetId)
+    {
+        throw new Exception($"Asset '{assetId.Value}' isn't found");
     }
 }

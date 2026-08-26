@@ -68,7 +68,7 @@ public sealed partial class AssetConstraint : IEquatable<AssetConstraint>
         _subscriptions = subscriptions;
     }
 
-    public bool Applicable(uint assetId)
+    public bool Applicable(AssetId assetId)
     {
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var subscription in _subscriptions)

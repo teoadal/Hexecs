@@ -27,23 +27,25 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
     private AssetContext? _assets;
     private World? _world;
 
-    public Asset<T> CreateAsset<T>() where T : struct, IAssetComponent
+    public Asset CreateAsset<T>() where T : struct, IAssetComponent
     {
-        var assetId = Asset.EmptyId;
+        var assetId = AssetId.Empty;
+
         _world = new WorldBuilder()
             .CreateAssetData(CreateAssets)
             .CreateAssetData(loader => { assetId = loader.CreateAsset(CreateComponent<T>()).Id; })
             .Build();
 
         _assets = _world.Assets;
-        return Assets.GetAsset<T>(assetId);
+        return Assets.GetAsset(assetId);
     }
 
-    public Asset<T1> CreateAsset<T1, T2>()
+    public Asset CreateAsset<T1, T2>()
         where T1 : struct, IAssetComponent
         where T2 : struct, IAssetComponent
     {
-        var assetId = Asset.EmptyId;
+        var assetId = AssetId.Empty;
+        
         _world = new WorldBuilder()
             .CreateAssetData(CreateAssets)
             .CreateAssetData(loader =>
@@ -55,7 +57,7 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
             .Build();
 
         _assets = _world.Assets;
-        return Assets.GetAsset<T1>(assetId);
+        return Assets.GetAssetRef<T1>(assetId);
     }
 
     public AssetContext CreateAssetContext(Action<IAssetLoader>? assets = null)

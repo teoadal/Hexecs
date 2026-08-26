@@ -36,11 +36,11 @@ public sealed partial class AssetFilter<T1, T2, T3> : IAssetFilter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(uint assetId) => _dictionary.ContainsKey(assetId);
+    public bool Contains(AssetId assetId) => _dictionary.ContainsKey(assetId.Value);
 
-    public AssetRef<T1, T2, T3> Get(uint assetId)
+    public AssetRef<T1, T2, T3> Get(AssetId assetId)
     {
-        if (!_dictionary.TryGetValue(assetId, out var entry)) AssetError.NotFound(assetId);
+        if (!_dictionary.TryGetValue(assetId.Value, out var entry)) AssetError.NotFound(assetId);
 
         return new AssetRef<T1, T2, T3>(
             Context,
@@ -63,7 +63,7 @@ public sealed partial class AssetFilter<T1, T2, T3> : IAssetFilter
         var index = 0;
         foreach (var assetId in dictionary.Keys)
         {
-            assets[index++] = new Asset(ctx, assetId);
+            assets[index++] = new Asset(ctx, new AssetId(assetId));
         }
 
         return assets;
@@ -81,7 +81,7 @@ public sealed partial class AssetFilter<T1, T2, T3> : IAssetFilter
         var length = 0;
 
         var constraintFunction = constraint == null
-            ? DelegateUtils<uint>.AlwaysTrue
+            ? DelegateUtils<AssetId>.AlwaysTrue
             : constraint.Applicable;
 
         foreach (var asset in context)
@@ -103,7 +103,7 @@ public sealed partial class AssetFilter<T1, T2, T3> : IAssetFilter
                 ref buffer,
                 bufferPool,
                 length,
-                new KeyValuePair<uint, Entry>(assetId, new Entry(index1, index2, index3)));
+                new KeyValuePair<uint, Entry>(assetId.Value, new Entry(index1, index2, index3)));
 
             length++;
         }

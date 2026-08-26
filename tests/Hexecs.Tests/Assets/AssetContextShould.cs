@@ -1,4 +1,6 @@
-﻿namespace Hexecs.Tests.Assets;
+﻿using Hexecs.Assets;
+
+namespace Hexecs.Tests.Assets;
 
 public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture<AssetTestFixture>
 {
@@ -8,7 +10,7 @@ public sealed class AssetContextShould(AssetTestFixture fixture) : IClassFixture
         // arrange
 
         var alias = fixture.RandomString();
-        uint? assetId = null;
+        AssetId assetId = AssetId.Empty;
         fixture.CreateAssetContext(loader =>
         {
             var asset = loader.CreateAsset(alias);

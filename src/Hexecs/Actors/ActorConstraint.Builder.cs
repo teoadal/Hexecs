@@ -72,7 +72,7 @@ public sealed partial class ActorConstraint
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddSubscription<T>(bool include, IActorComponentPool pool, Func<uint, bool> check)
+        private void AddSubscription<T>(bool include, IActorComponentPool pool, Func<ActorId, bool> check)
             where T : struct, IActorComponent
         {
             var id = ActorComponentType<T>.Id;

@@ -1,11 +1,11 @@
+using Hexecs.Assets.Delegates;
+
 namespace Hexecs.Assets.Components;
 
 [DebuggerDisplay("{Length}")]
 internal sealed class AssetComponentPool<T> : IAssetComponentPool
     where T : struct, IAssetComponent
 {
-    //private const int EmptySlot = 0;
-
     private const int PageBits = 12;
     private const int PageSize = 1 << PageBits; // 4096
     private const int PageMask = PageSize - 1;
@@ -40,23 +40,46 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint FirstId() => _count > 0
-        ? _dense[0]
-        : Asset.EmptyId;
-
-    public ref T Get(uint assetId)
+    public AssetRef<T> First()
     {
-        var pageIndex = (int)(assetId >> PageBits);
+        return _count > 0
+            ? new AssetRef<T>(Context, new AssetId(_dense[0]), ref _values[0])
+            : AssetRef<T>.Empty;
+    }
+
+    public AssetRef<T> First(AssetPredicate<T> predicate)
+    {
+        var count = _count;
+        var keys = _dense;
+        var values = _values;
+        var context = Context;
+
+        for (var i = 0; i < count; i++)
+        {
+            var actor = new AssetRef<T>(context, new AssetId(keys[i]), ref values[i]);
+            if (predicate(in actor))
+            {
+                return actor;
+            }
+        }
+
+        return AssetRef<T>.Empty;
+    }
+    
+    public ref T Get(AssetId assetId)
+    {
+        var assetIdRaw = assetId.Value;
+        var pageIndex = (int)(assetIdRaw >> PageBits);
         if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
             var page = _sparsePages[pageIndex];
             if (page != null)
             {
-                var denseIndexPlusOne = page[assetId & PageMask];
+                var denseIndexPlusOne = page[assetIdRaw & PageMask];
                 if (denseIndexPlusOne != 0)
                 {
                     var index = (int)denseIndexPlusOne - 1;
-                    if (_dense[index] == assetId)
+                    if (_dense[index] == assetIdRaw)
                     {
                         return ref _values[index];
                     }
@@ -71,9 +94,10 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
     public ref T GetByIndex(int index) => ref _values[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(uint assetId)
+    public bool Has(AssetId assetId)
     {
-        var pageIndex = (int)(assetId >> PageBits);
+        var assetIdRaw = assetId.Value;
+        var pageIndex = (int)(assetIdRaw >> PageBits);
         var pages = _sparsePages;
 
         if ((uint)pageIndex < (uint)pages.Length)
@@ -81,17 +105,18 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
             var page = pages[pageIndex];
             if (page != null)
             {
-                var denseIndexPlusOne = page[assetId & PageMask];
-                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == assetId;
+                var denseIndexPlusOne = page[assetIdRaw & PageMask];
+                return denseIndexPlusOne != 0 && _dense[denseIndexPlusOne - 1] == assetIdRaw;
             }
         }
 
         return false;
     }
 
-    public ref T Set(uint assetId, in T component)
+    public ref T Set(AssetId assetId, in T component)
     {
-        var pageIndex = (int)(assetId >> PageBits);
+        var assetIdRaw = assetId.Value;
+        var pageIndex = (int)(assetIdRaw >> PageBits);
         var pages = _sparsePages;
 
         // Максимально компактная проверка на готовность страницы и места
@@ -100,12 +125,12 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
             var page = pages[pageIndex];
             if (page != null && (uint)_count < (uint)_dense.Length)
             {
-                ref var slot = ref page[assetId & PageMask];
+                ref var slot = ref page[assetIdRaw & PageMask];
                 if (slot == 0) // Чистая вставка (самый частый случай в ECS)
                 {
                     var idx = (uint)_count;
                     slot = idx + 1;
-                    _dense[idx] = assetId;
+                    _dense[idx] = assetIdRaw;
                     ref var internalRef = ref _values[idx];
 
                     _values[idx] = component;
@@ -115,7 +140,7 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
                 }
 
                 // Если не 0, проверяем на дубликат (чуть медленнее)
-                if (_dense[slot - 1] == assetId)
+                if (_dense[slot - 1] == assetIdRaw)
                 {
                     AssetError.ComponentAlreadyExists<T>(assetId);
                 }
@@ -125,19 +150,20 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
         return ref SetSlow(assetId, in component);
     }
 
-    public ref T TryGet(uint assetId)
+    public ref T TryGet(AssetId assetId)
     {
-        var pageIndex = (int)(assetId >> PageBits);
+        var assetIdRaw = assetId.Value;
+        var pageIndex = (int)(assetIdRaw >> PageBits);
         if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
             var page = _sparsePages[pageIndex];
             if (page != null)
             {
-                var denseIndexPlusOne = page[assetId & PageMask];
+                var denseIndexPlusOne = page[assetIdRaw & PageMask];
                 if (denseIndexPlusOne != 0)
                 {
                     var index = (int)denseIndexPlusOne - 1;
-                    if (_dense[index] == assetId)
+                    if (_dense[index] == assetIdRaw)
                     {
                         return ref _values[index];
                     }
@@ -148,9 +174,11 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
         return ref Unsafe.NullRef<T>();
     }
 
-    public int TryGetIndex(uint assetId)
+    public int TryGetIndex(AssetId assetId)
     {
-        var pageIndex = (int)(assetId >> PageBits);
+        var assetIdRaw = assetId.Value;
+
+        var pageIndex = (int)(assetIdRaw >> PageBits);
         var pages = _sparsePages;
 
         if ((uint)pageIndex < (uint)pages.Length)
@@ -158,11 +186,11 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
             var page = pages[pageIndex];
             if (page != null)
             {
-                var slot = page[assetId & PageMask];
+                var slot = page[assetIdRaw & PageMask];
                 if (slot != 0)
                 {
                     var denseIndex = (int)slot - 1;
-                    if (_dense[denseIndex] == assetId)
+                    if (_dense[denseIndex] == assetIdRaw)
                     {
                         return denseIndex;
                     }
@@ -193,10 +221,12 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ref T SetSlow(uint assetId, in T component)
+    private ref T SetSlow(AssetId assetId, in T component)
     {
+        var assetIdRaw = assetId.Value;
+
         EnsureDenseCapacity();
-        var pageIndex = (int)(assetId >> PageBits);
+        var pageIndex = (int)(assetIdRaw >> PageBits);
         EnsurePageArraySize(pageIndex);
 
         ref var page = ref _sparsePages[pageIndex];
@@ -206,10 +236,10 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
             Array.Clear(page, 0, page.Length);
         }
 
-        ref var denseIndexPlusOne = ref page[assetId & PageMask];
+        ref var denseIndexPlusOne = ref page[assetIdRaw & PageMask];
         if (denseIndexPlusOne != 0)
         {
-            if (_dense[denseIndexPlusOne - 1] == assetId)
+            if (_dense[denseIndexPlusOne - 1] == assetIdRaw)
             {
                 AssetError.ComponentAlreadyExists<T>(assetId);
             }
@@ -217,7 +247,7 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
 
         var denseIndex = (uint)_count;
         denseIndexPlusOne = denseIndex + 1;
-        _dense[denseIndex] = assetId;
+        _dense[denseIndex] = assetIdRaw;
 
         ref var internalRef = ref _values[denseIndex];
         internalRef = component;
@@ -233,5 +263,5 @@ internal sealed class AssetComponentPool<T> : IAssetComponentPool
         get => Context;
     }
 
-    IAssetComponent IAssetComponentPool.Get(uint assetId) => Get(assetId);
+    IAssetComponent IAssetComponentPool.Get(AssetId assetId) => Get(assetId);
 }

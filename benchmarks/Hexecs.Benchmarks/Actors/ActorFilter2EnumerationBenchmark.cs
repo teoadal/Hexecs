@@ -38,17 +38,17 @@ namespace Hexecs.Benchmarks.Actors;
 //
 //     | Method                 | Count  | Mean      | Ratio | Gen0   | Allocated | Alloc Ratio |
 //     |----------------------- |------- |----------:|------:|-------:|----------:|------------:|
-//     | FriFlo                 | 10000  |  5.864 us |  0.57 | 0.0076 |      88 B |          NA |
-//     | FriFlo_Chunks          | 10000  |  6.740 us |  0.65 |      - |         - |          NA |
-//     | Hexecs_ComponentAccess | 10000  |  9.124 us |  0.88 |      - |         - |          NA |
-//     | DefaultEcs             | 10000  |  9.672 us |  0.93 |      - |         - |          NA |
-//     | Hexecs                 | 10000  | 10.357 us |  1.00 |      - |         - |          NA |
+//     | FriFlo                 | 10000  |  6.061 us |  0.71 | 0.0076 |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  6.241 us |  0.73 |      - |         - |          NA |
+//     | FriFlo_Chunks          | 10000  |  6.732 us |  0.79 |      - |         - |          NA |
+//     | Hexecs                 | 10000  |  8.534 us |  1.00 |      - |         - |          NA |
+//     | DefaultEcs             | 10000  |  9.906 us |  1.16 |      - |         - |          NA |
 //     |                        |        |           |       |        |           |             |
-//     | FriFlo                 | 100000 | 56.446 us |  0.60 |      - |      88 B |          NA |
-//     | FriFlo_Chunks          | 100000 | 67.383 us |  0.72 |      - |         - |          NA |
-//     | Hexecs_ComponentAccess | 100000 | 83.895 us |  0.89 |      - |         - |          NA |
-//     | DefaultEcs             | 100000 | 92.942 us |  0.99 |      - |         - |          NA |
-//     | Hexecs                 | 100000 | 93.962 us |  1.00 |      - |         - |          NA |
+//     | FriFlo                 | 100000 | 56.486 us |  0.77 |      - |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 56.937 us |  0.77 |      - |         - |          NA |
+//     | FriFlo_Chunks          | 100000 | 67.463 us |  0.92 |      - |         - |          NA |
+//     | Hexecs                 | 100000 | 73.653 us |  1.00 |      - |         - |          NA |
+//     | DefaultEcs             | 100000 | 93.593 us |  1.27 |      - |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

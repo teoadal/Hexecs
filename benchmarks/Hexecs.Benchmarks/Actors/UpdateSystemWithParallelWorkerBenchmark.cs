@@ -29,21 +29,21 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.102
+//     .NET SDK 10.0.400
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), Arm64 RyuJIT armv8.0-a
 //
 // Job=.NET 10.0  Runtime=.NET 10.0  
 //
 //     | Method              | Count   | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |-------------------- |-------- |----------:|------:|----------:|------------:|
-//     | FriFlo_Parallel     | 100000  |  30.15 us |  0.61 |         - |          NA |
-//     | Hexecs_Parallel     | 100000  |  49.46 us |  1.00 |         - |          NA |
-//     | DefaultEcs_Parallel | 100000  |  89.68 us |  1.81 |         - |          NA |
+//     | FriFlo_Parallel     | 100000  |  30.01 us |  0.66 |         - |          NA |
+//     | Hexecs_Parallel     | 100000  |  45.29 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 100000  |  87.11 us |  1.92 |         - |          NA |
 //     |                     |         |           |       |           |             |
-//     | FriFlo_Parallel     | 1000000 | 295.67 us |  0.78 |         - |          NA |
-//     | Hexecs_Parallel     | 1000000 | 378.41 us |  1.00 |         - |          NA |
-//     | DefaultEcs_Parallel | 1000000 | 906.10 us |  2.39 |         - |          NA |
+//     | FriFlo_Parallel     | 1000000 | 294.72 us |  0.88 |         - |          NA |
+//     | Hexecs_Parallel     | 1000000 | 334.05 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 1000000 | 796.86 us |  2.39 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

@@ -1,5 +1,3 @@
-using Hexecs.Actors;
-
 namespace Hexecs.Assets.Delegates;
 
 public delegate bool AssetPredicate<T1>(in AssetRef<T1> component)

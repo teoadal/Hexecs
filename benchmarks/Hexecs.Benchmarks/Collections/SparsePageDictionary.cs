@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Hexecs.Utils;
 
 namespace Hexecs.Benchmarks.Collections;
 

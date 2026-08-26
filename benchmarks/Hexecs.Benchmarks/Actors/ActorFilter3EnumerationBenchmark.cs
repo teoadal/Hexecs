@@ -39,17 +39,17 @@ namespace Hexecs.Benchmarks.Actors;
 //
 //     | Method                 | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
 //     |----------------------- |------- |-----------:|------:|----------:|------------:|
-//     | FriFlo                 | 10000  |   8.304 us |  0.59 |      88 B |          NA |
-//     | FriFlo_Chunks          | 10000  |   9.552 us |  0.68 |         - |          NA |
-//     | Hexecs_ComponentAccess | 10000  |  12.520 us |  0.90 |         - |          NA |
-//     | DefaultEcs             | 10000  |  13.495 us |  0.96 |         - |          NA |
-//     | Hexecs                 | 10000  |  13.987 us |  1.00 |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |   8.256 us |  0.81 |         - |          NA |
+//     | FriFlo                 | 10000  |   8.398 us |  0.82 |      88 B |          NA |
+//     | FriFlo_Chunks          | 10000  |   9.560 us |  0.93 |         - |          NA |
+//     | Hexecs                 | 10000  |  10.240 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 10000  |  13.360 us |  1.30 |         - |          NA |
 //     |                        |        |            |       |           |             |
-//     | FriFlo                 | 100000 |  82.093 us |  0.58 |      88 B |          NA |
-//     | FriFlo_Chunks          | 100000 |  95.106 us |  0.67 |         - |          NA |
-//     | Hexecs_ComponentAccess | 100000 | 132.204 us |  0.93 |         - |          NA |
-//     | Hexecs                 | 100000 | 142.729 us |  1.00 |         - |          NA |
-//     | DefaultEcs             | 100000 | 158.741 us |  1.11 |         - |          NA |
+//     | FriFlo                 | 100000 |  83.226 us |  0.79 |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 100000 |  84.102 us |  0.80 |         - |          NA |
+//     | FriFlo_Chunks          | 100000 |  95.161 us |  0.91 |         - |          NA |
+//     | Hexecs                 | 100000 | 104.746 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 100000 | 162.182 us |  1.55 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]

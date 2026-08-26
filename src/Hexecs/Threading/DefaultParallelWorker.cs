@@ -17,9 +17,12 @@ public sealed class DefaultParallelWorker : IParallelWorker
         ThreadPriority priority = ThreadPriority.AboveNormal)
     {
         if (degreeOfParallelism < 2)
-            throw new ArgumentOutOfRangeException(nameof(degreeOfParallelism),
-                "Degree of parallelism must be at least 2.");
-
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: nameof(degreeOfParallelism), 
+                message: "Degree of parallelism must be at least 2.");
+        }
+            
         DegreeOfParallelism = degreeOfParallelism;
 
         _cts = new CancellationTokenSource();

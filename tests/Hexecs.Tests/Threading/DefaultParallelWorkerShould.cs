@@ -179,7 +179,7 @@ public sealed class DefaultParallelWorkerShould : IDisposable
     [Fact(DisplayName = "НЕ должен работать с DegreeOfParallelism < 2")]
     public void ThrowIfDegreeOfParallelismIsOne()
     {
-        Assert.Throws<ArgumentException>(() => new DefaultParallelWorker(1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new DefaultParallelWorker(1));
     }
 
     private sealed class TestParallelJob : IParallelJob

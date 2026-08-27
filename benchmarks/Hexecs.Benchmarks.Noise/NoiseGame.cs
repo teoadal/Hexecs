@@ -111,6 +111,11 @@ internal sealed class NoiseGame : Game
             }
         }
 
+        if (keyboard.IsKeyDown(Keys.Escape))
+        {
+            Exit();
+        }
+
         _benchmarkCounter.Update(gameTime);
         _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 

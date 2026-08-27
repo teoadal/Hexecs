@@ -6,6 +6,7 @@ using Hexecs.Threading;
 using Hexecs.Worlds;
 
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Hexecs.Benchmarks.Spawn;
 
@@ -26,8 +27,8 @@ internal sealed class SpawnGame : Game
             PreferredBackBufferHeight = 720,
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
-            SynchronizeWithVerticalRetrace = false,
-            IsFullScreen = false,
+            SynchronizeWithVerticalRetrace = true,
+            IsFullScreen = true,
             HardwareModeSwitch = false
         };
 
@@ -73,6 +74,13 @@ internal sealed class SpawnGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+        KeyboardState keyboard = Keyboard.GetState();
+
+        if (keyboard.IsKeyDown(Keys.Escape))
+        {
+            Exit();
+        }
+
         _benchmarkCounter.Update(gameTime);
         _world.Update(gameTime.ElapsedGameTime, gameTime.TotalGameTime);
 

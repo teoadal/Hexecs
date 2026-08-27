@@ -91,8 +91,9 @@ internal sealed class CityGame : Game
     {
         KeyboardState keyboard = Keyboard.GetState();
 
-        if (keyboard.IsKeyDown(Keys.Space))
+        if (keyboard.IsKeyDown(Keys.Escape))
         {
+            Exit();
         }
 
         _camera.Update(gameTime);

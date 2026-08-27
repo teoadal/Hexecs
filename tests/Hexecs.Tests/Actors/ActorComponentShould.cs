@@ -8,7 +8,7 @@ public sealed class ActorComponentShould(ActorTestFixture fixture) : IClassFixtu
     public void BeDisposedAfterDestroyComponent()
     {
         var monitor = new Mock<IDisposable>();
-        var actor = fixture.CreateActor<DisposableComponent>(component1: new DisposableComponent(monitor.Object));
+        Actor actor = fixture.CreateActor<DisposableComponent>(component1: new DisposableComponent(monitor.Object));
 
         actor.Destroy();
 

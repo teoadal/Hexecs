@@ -19,7 +19,7 @@ public static class CollectionUtils
     /// <param name="action">Действие <see cref="Action{T}"/>, которое нужно выполнить для каждого элемента.</param>
     public static void Do<T>(this IEnumerable<T> collection, Action<T> action)
     {
-        foreach (var element in collection)
+        foreach (T element in collection)
         {
             action(element);
         }
@@ -34,7 +34,7 @@ public static class CollectionUtils
     /// <param name="action">Действие <see cref="Action{T}"/>, которое нужно выполнить для каждого элемента.</param>
     public static void Do<T>(this T[] collection, Action<T> action)
     {
-        foreach (var element in collection)
+        foreach (T element in collection)
         {
             action(element);
         }
@@ -65,9 +65,13 @@ public static class CollectionUtils
         Func<T, TContext, TValue> selector,
         TContext context)
     {
-        if (collection.Count == 0) return [];
+        if (collection.Count == 0)
+        {
+            return [];
+        }
 
-        var result = ArrayUtils.Create<TValue>(collection.Count);
+        TValue[] result = ArrayUtils.Create<TValue>(collection.Count);
+
         for (var i = 0; i < collection.Count; i++)
         {
             result[i] = selector(collection[i], context);
@@ -86,16 +90,20 @@ public static class CollectionUtils
     /// <returns>Новый массив <typeparamref name="T"/>[], содержащий элементы из коллекции. Возвращает пустой массив, если исходная коллекция пуста.</returns>
     public static T[] ToArray<T>(IEnumerable<T> collection)
     {
-        if (!collection.TryGetNonEnumeratedCount(out var count))
+        if (!collection.TryGetNonEnumeratedCount(out int count))
         {
             return collection.ToArray();
         }
 
-        if (count == 0) return [];
+        if (count == 0)
+        {
+            return [];
+        }
 
-        var array = ArrayUtils.Create<T>(count);
+        T[] array = ArrayUtils.Create<T>(count);
         var index = 0;
-        foreach (var element in collection)
+
+        foreach (T element in collection)
         {
             array[index++] = element;
         }
@@ -117,13 +125,21 @@ public static class CollectionUtils
     /// </returns>
     public static T[] ToArray<T>(IEnumerable<T> collection, int length)
     {
-        if (length == 0) return [];
-
-        var array = ArrayUtils.Create<T>(length);
-        var index = 0;
-        foreach (var element in collection)
+        if (length == 0)
         {
-            if (index == length) break;
+            return [];
+        }
+
+        T[] array = ArrayUtils.Create<T>(length);
+        var index = 0;
+
+        foreach (T element in collection)
+        {
+            if (index == length)
+            {
+                break;
+            }
+
             array[index++] = element;
         }
 
@@ -159,14 +175,26 @@ public static class CollectionUtils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerator<TResult> GetEnumerator() => this;
+        public IEnumerator<TResult> GetEnumerator()
+        {
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => _collection.MoveNext();
+        public bool MoveNext()
+        {
+            return _collection.MoveNext();
+        }
 
-        public void Reset() => _collection.Reset();
+        public void Reset()
+        {
+            _collection.Reset();
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() => this;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this;
+        }
 
         object? IEnumerator.Current => Current;
     }

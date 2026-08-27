@@ -19,16 +19,19 @@ public static class ActorMarshal
     public static void ClearComponentsData<T>(ActorContext context)
         where T : struct, IActorComponent
     {
-        var pool = context.GetComponentPool<T>();
+        ActorComponentPool<T>? pool = context.GetComponentPool<T>();
         pool?.GetValues().Clear();
     }
-    
+
     /// <summary>
     /// Получает идентификатор типа компонента.
     /// </summary>
     /// <typeparam name="T">Тип компонента актёра.</typeparam>
     /// <returns>Идентификатор типа компонента.</returns>
-    public static ushort GetComponentId<T>() where T : struct, IActorComponent => ActorComponentType<T>.Id;
+    public static ushort GetComponentId<T>() where T : struct, IActorComponent
+    {
+        return ActorComponentType<T>.Id;
+    }
 
     /// <summary>
     /// Получает идентификатор типа компонента по его типу.
@@ -38,7 +41,11 @@ public static class ActorMarshal
     /// <exception cref="ArgumentException">Выбрасывается, если переданный тип не является компонентом актёра.</exception>
     public static ushort GetComponentId(Type componentType)
     {
-        if (componentType.IsAssignableTo(typeof(IActorComponent))) ActorError.NotComponentType(componentType);
+        if (componentType.IsAssignableTo(typeof(IActorComponent)))
+        {
+            ActorError.NotComponentType(componentType);
+        }
+
         return ActorComponentType.GetId(componentType);
     }
 
@@ -48,7 +55,10 @@ public static class ActorMarshal
     /// <param name="componentId">Идентификатор типа компонента.</param>
     /// <returns>Тип компонента.</returns>
     /// <exception cref="Exception">Выбрасывается, если по указанному идентификатору не найден тип компонента.</exception>
-    public static Type GetComponentType(ushort componentId) => ActorComponentType.GetType(componentId);
+    public static Type GetComponentType(ushort componentId)
+    {
+        return ActorComponentType.GetType(componentId);
+    }
 
     /// <summary>
     /// Получает владельца компонента.
@@ -64,10 +74,10 @@ public static class ActorMarshal
     public static ActorRef<T> GetOwner<T>(ActorContext context, ref T component)
         where T : struct, IActorComponent
     {
-        var pool = context.GetComponentPool<T>();
+        ActorComponentPool<T>? pool = context.GetComponentPool<T>();
         if (pool != null)
         {
-            foreach (var exists in pool)
+            foreach (ActorRef<T> exists in pool)
             {
                 if (Unsafe.AreSame(ref component, ref exists.Component1))
                 {
@@ -83,7 +93,10 @@ public static class ActorMarshal
     /// <summary>
     /// Реализует ли этот компонент интерфейс <see cref="IViewComponent"/>
     /// </summary>
-    public static bool IsViewComponent<T>() where T : struct, IActorComponent => ActorComponentType<T>.IsView;
+    public static bool IsViewComponent<T>() where T : struct, IActorComponent
+    {
+        return ActorComponentType<T>.IsView;
+    }
 
     /// <summary>
     /// Устанавливает ассет для актёра.
@@ -99,7 +112,10 @@ public static class ActorMarshal
     /// Удаляет ассет у актёра.
     /// </summary>
     /// <param name="actor">Актёр, у которого удаляется ассет.</param>
-    public static void RemoveAsset(in Actor actor) => SetAsset(in actor, Asset.Empty);
+    public static void RemoveAsset(in Actor actor)
+    {
+        SetAsset(in actor, Asset.Empty);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetDebugContext([NotNullWhen(true)] out ActorContext? actorContext)

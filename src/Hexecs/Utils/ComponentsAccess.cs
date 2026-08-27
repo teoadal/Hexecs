@@ -2,16 +2,22 @@
 
 public readonly ref struct ComponentsAccess<T>
 {
-    private readonly uint[] _sparse;
-    private readonly T[] _values;
+    public static ComponentsAccess<T> Empty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new ComponentsAccess<T>();
+    }
+
+    private readonly ReadOnlySpan<uint> _sparse;
+    private readonly Span<T> _values;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ComponentsAccess()
     {
-        _sparse = [];
-        _values = [];
+        _sparse = ReadOnlySpan<uint>.Empty;
+        _values = Span<T>.Empty;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ComponentsAccess(uint[] sparse, T[] values)
     {
@@ -22,8 +28,14 @@ public readonly ref struct ComponentsAccess<T>
     public ref T this[uint id]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Unsafe.Add(
-            ref MemoryMarshal.GetArrayDataReference(_values),
-            (int)Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_sparse), (int)id) - 1);
+        get
+        {
+            ref uint sparseStart = ref MemoryMarshal.GetReference(_sparse);
+            ref T valuesStart = ref MemoryMarshal.GetReference(_values);
+
+            int denseIndex = (int)Unsafe.Add(ref sparseStart, (nint)id) - 1;
+
+            return ref Unsafe.Add(ref valuesStart, (nint)denseIndex);
+        }
     }
 }

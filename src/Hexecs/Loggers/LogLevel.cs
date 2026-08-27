@@ -3,7 +3,7 @@
 /// <summary>
 /// Определяет различные уровни серьезности логирования.
 /// </summary>
-public enum LogLevel: byte
+public enum LogLevel : byte
 {
     /// <summary>
     /// Логи, содержащие наиболее подробные сообщения.

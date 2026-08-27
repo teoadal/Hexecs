@@ -24,15 +24,21 @@ public abstract class DrawSystem<T1, T2> : DrawSystem
     /// </summary>
     /// <param name="time">Время мира</param>
     /// <returns>Если возвращает false, то обновление не происходит</returns>
-    protected virtual bool BeforeDraw(in WorldTime time) => true;
+    protected virtual bool BeforeDraw(in WorldTime time)
+    {
+        return true;
+    }
 
     public sealed override void Draw(in WorldTime time)
     {
-        if (!Enabled) return;
+        if (!Enabled)
+        {
+            return;
+        }
 
         if (BeforeDraw(in time))
         {
-            foreach (var actor in _filter)
+            foreach (ActorRef<T1, T2> actor in _filter)
             {
                 Draw(in actor, time);
             }

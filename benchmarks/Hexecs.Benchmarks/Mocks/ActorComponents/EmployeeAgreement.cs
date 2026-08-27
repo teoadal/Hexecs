@@ -7,5 +7,8 @@ public struct EmployeeAgreement : ILinkRelation
     public Entity Target;
     public int Salary;
 
-    public Entity GetRelationKey() => Target;
+    public Entity GetRelationKey()
+    {
+        return Target;
+    }
 }

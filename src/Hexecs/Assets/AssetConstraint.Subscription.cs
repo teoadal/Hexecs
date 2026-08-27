@@ -12,13 +12,13 @@ public sealed partial class AssetConstraint
             get => _pool.Id;
         }
 
-        public readonly Func<uint, bool> Check;
+        public readonly Func<AssetId, bool> Check;
 
         private readonly bool _include;
         private readonly IAssetComponentPool _pool;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Subscription(bool include, IAssetComponentPool pool, Func<uint, bool> check)
+        public Subscription(bool include, IAssetComponentPool pool, Func<AssetId, bool> check)
         {
             Check = check;
 

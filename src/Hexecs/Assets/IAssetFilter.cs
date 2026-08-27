@@ -20,5 +20,5 @@ public interface IAssetFilter
     /// </summary>
     int Length { get; }
 
-    bool Contains(uint actorId);
+    bool Contains(AssetId assetId);
 }

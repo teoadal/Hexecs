@@ -2,7 +2,7 @@
 
 namespace Hexecs.Tests.Collections;
 
-public class BucketShould
+public sealed class BucketShould
 {
     [Fact(DisplayName = "Конструктор: должен создать пустой Bucket, если capacity = 0")]
     public void Constructor_WithZeroCapacity_ShouldCreateEmptyBucket()
@@ -76,7 +76,7 @@ public class BucketShould
         var bucket = new Bucket<object>(0);
 
         // Act
-        var memory = bucket.AsMemory();
+        Memory<object> memory = bucket.AsMemory();
 
         // Assert
         memory.IsEmpty.Should().BeTrue();
@@ -91,7 +91,7 @@ public class BucketShould
         bucket.Add(2);
 
         // Act
-        var memory = bucket.AsMemory();
+        Memory<int> memory = bucket.AsMemory();
 
         // Assert
         memory.Length.Should().BeGreaterThanOrEqualTo(bucket.Length); // ArrayPool может вернуть больший массив
@@ -105,7 +105,7 @@ public class BucketShould
         var bucket = new Bucket<Guid>(0);
 
         // Act
-        var span = bucket.AsSpan();
+        Span<Guid> span = bucket.AsSpan();
 
         // Assert
         span.IsEmpty.Should().BeTrue();
@@ -120,7 +120,7 @@ public class BucketShould
         bucket.Add("world");
 
         // Act
-        var span = bucket.AsSpan();
+        Span<string> span = bucket.AsSpan();
 
         // Assert
         span.Length.Should().Be(2);
@@ -134,7 +134,7 @@ public class BucketShould
         var bucket = new Bucket<int>(0);
 
         // Act
-        var span = bucket.AsReadOnlySpan();
+        ReadOnlySpan<int> span = bucket.AsReadOnlySpan();
 
         // Assert
         span.IsEmpty.Should().BeTrue();
@@ -149,7 +149,7 @@ public class BucketShould
         bucket.Add('b');
 
         // Act
-        var span = bucket.AsReadOnlySpan();
+        ReadOnlySpan<char> span = bucket.AsReadOnlySpan();
 
         // Assert
         span.Length.Should().Be(2);
@@ -202,7 +202,7 @@ public class BucketShould
         var actualItems = new List<int>();
 
         // Act
-        foreach (var item in bucket)
+        foreach (int item in bucket)
         {
             actualItems.Add(item);
         }
@@ -219,7 +219,7 @@ public class BucketShould
         var count = 0;
 
         // Act
-        foreach (var _ in bucket)
+        foreach (string _ in bucket)
         {
             count++;
         }
@@ -238,8 +238,8 @@ public class BucketShould
         bucket.Add("c");
 
         // Act
-        var indexB = bucket.IndexOf("b");
-        var indexC = bucket.IndexOf("c");
+        int indexB = bucket.IndexOf("b");
+        int indexC = bucket.IndexOf("c");
 
         // Assert
         indexB.Should().Be(1);
@@ -255,7 +255,7 @@ public class BucketShould
         bucket.Add("b");
 
         // Act
-        var index = bucket.IndexOf("z");
+        int index = bucket.IndexOf("z");
 
         // Assert
         index.Should().Be(-1);
@@ -268,7 +268,7 @@ public class BucketShould
         var bucket = new Bucket<int>(0);
 
         // Act
-        var index = bucket.IndexOf(123);
+        int index = bucket.IndexOf(123);
 
         // Assert
         index.Should().Be(-1);
@@ -281,11 +281,11 @@ public class BucketShould
         var bucket = new Bucket<string>(2);
         bucket.Add("apple");
         bucket.Add("APPLE");
-        var comparer = StringComparer.OrdinalIgnoreCase;
+        StringComparer comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        var index = bucket.IndexOf("apple", comparer); // Должен найти "apple"
-        var indexIgnoreCase = bucket.IndexOf("Apple", comparer); // Должен найти "APPLE" на позиции 1
+        int index = bucket.IndexOf("apple", comparer); // Должен найти "apple"
+        int indexIgnoreCase = bucket.IndexOf("Apple", comparer); // Должен найти "APPLE" на позиции 1
 
         // Assert
         index.Should().Be(0);
@@ -301,7 +301,7 @@ public class BucketShould
         bucket.Add(200);
 
         // Act
-        var has = bucket.Has(200);
+        bool has = bucket.Has(200);
 
         // Assert
         has.Should().BeTrue();
@@ -315,7 +315,7 @@ public class BucketShould
         bucket.Add(100);
 
         // Act
-        var has = bucket.Has(300);
+        bool has = bucket.Has(300);
 
         // Assert
         has.Should().BeFalse();
@@ -328,7 +328,7 @@ public class BucketShould
         var bucket = new Bucket<string>(0);
 
         // Act
-        var has = bucket.Has("any");
+        bool has = bucket.Has("any");
 
         // Assert
         has.Should().BeFalse();
@@ -340,11 +340,11 @@ public class BucketShould
         // Arrange
         var bucket = new Bucket<string>(1);
         bucket.Add("TestData");
-        var comparer = StringComparer.OrdinalIgnoreCase;
+        StringComparer comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        var hasLower = bucket.Has("testdata", comparer);
-        var hasUpper = bucket.Has("TESTDATA", comparer);
+        bool hasLower = bucket.Has("testdata", comparer);
+        bool hasUpper = bucket.Has("TESTDATA", comparer);
 
         // Assert
         hasLower.Should().BeTrue();
@@ -361,7 +361,7 @@ public class BucketShould
         bucket.Add(3);
 
         // Act
-        var result = bucket.Remove(2);
+        bool result = bucket.Remove(2);
 
         // Assert
         result.Should().BeTrue();
@@ -379,7 +379,7 @@ public class BucketShould
         bucket.Add(2);
 
         // Act
-        var result = bucket.Remove(3);
+        bool result = bucket.Remove(3);
 
         // Assert
         result.Should().BeFalse();
@@ -394,7 +394,7 @@ public class BucketShould
         var bucket = new Bucket<string>(0);
 
         // Act
-        var result = bucket.Remove("any");
+        bool result = bucket.Remove("any");
 
         // Assert
         result.Should().BeFalse();
@@ -408,10 +408,10 @@ public class BucketShould
         var bucket = new Bucket<string>(2);
         bucket.Add("ItemOne");
         bucket.Add("ItemTwo");
-        var comparer = StringComparer.OrdinalIgnoreCase;
+        StringComparer comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        var result = bucket.Remove("itemone", comparer);
+        bool result = bucket.Remove("itemone", comparer);
 
         // Assert
         result.Should().BeTrue();
@@ -427,7 +427,7 @@ public class BucketShould
         var bucket = new Bucket<int>(0);
 
         // Act
-        var array = bucket.ToArray();
+        int[] array = bucket.ToArray();
 
         // Assert
         array.Should().BeEmpty();
@@ -443,7 +443,7 @@ public class BucketShould
         bucket.Add("z");
 
         // Act
-        var array = bucket.ToArray();
+        string[] array = bucket.ToArray();
 
         // Assert
         array.Should().Equal("x", "y", "z");
@@ -459,11 +459,11 @@ public class BucketShould
         bucket.Add(9);
 
         // Act
-        // Так как Block<T> не определен в контексте, мы можем проверить, 
+        // Так как Block<T> не определен в контексте, мы можем проверить,
         // что ReadOnlySpan, используемый для его создания, корректен.
         // Если бы Block<T> имел метод ToArray() или свойство, мы бы использовали его.
         // В данном случае, проверим содержимое AsReadOnlySpan(), которое передается в конструктор Block.
-        var blockEquivalentContent = bucket.AsReadOnlySpan().ToArray();
+        int[] blockEquivalentContent = bucket.AsReadOnlySpan().ToArray();
 
         // Assert
         blockEquivalentContent.Should().Equal(7, 8, 9);
@@ -479,7 +479,7 @@ public class BucketShould
         var bucket = new Bucket<char>(0);
 
         // Act
-        var blockEquivalentContent = bucket.AsReadOnlySpan().ToArray();
+        char[] blockEquivalentContent = bucket.AsReadOnlySpan().ToArray();
 
         // Assert
         blockEquivalentContent.Should().BeEmpty();
@@ -493,7 +493,7 @@ public class BucketShould
         var bucket = new Bucket<int>(1);
 
         // Act
-        var result = bucket.TryAdd(10);
+        bool result = bucket.TryAdd(10);
 
         // Assert
         result.Should().BeTrue();
@@ -509,7 +509,7 @@ public class BucketShould
         bucket.Add(10);
 
         // Act
-        var result = bucket.TryAdd(10);
+        bool result = bucket.TryAdd(10);
 
         // Assert
         result.Should().BeFalse();
@@ -521,14 +521,14 @@ public class BucketShould
     {
         // Arrange
         var bucket = new Bucket<string>(2);
-        var comparer = StringComparer.OrdinalIgnoreCase;
+        StringComparer comparer = StringComparer.OrdinalIgnoreCase;
         bucket.Add("Example");
 
         // Act
 
         // Не должен добавить, т.к. уже есть без учета регистра
-        var resultAddDifferentCase = bucket.TryAdd("example", comparer);
-        var resultAddNew = bucket.TryAdd("NewItem", comparer); // Должен добавить
+        bool resultAddDifferentCase = bucket.TryAdd("example", comparer);
+        bool resultAddNew = bucket.TryAdd("NewItem", comparer); // Должен добавить
 
         // Assert
         resultAddDifferentCase.Should().BeFalse();

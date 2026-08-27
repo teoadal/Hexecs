@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+
 using Hexecs.Serializations;
 
 namespace Hexecs.Actors;
@@ -23,11 +24,20 @@ public sealed partial class ActorContext
 
         public void Add(ushort item)
         {
-            if (_length < InlineArraySize) _inlineArray[_length] = item;
+            if (_length < InlineArraySize)
+            {
+                _inlineArray[_length] = item;
+            }
             else
             {
-                if (_array == null) _array = ArrayPool<ushort>.Shared.Rent(InlineArraySize);
-                else ArrayUtils.Insert(ref _array, ArrayPool<ushort>.Shared, _length - InlineArraySize, item);
+                if (_array == null)
+                {
+                    _array = ArrayPool<ushort>.Shared.Rent(InlineArraySize);
+                }
+                else
+                {
+                    ArrayUtils.Insert(ref _array, ArrayPool<ushort>.Shared, _length - InlineArraySize, item);
+                }
             }
 
             _length++;
@@ -35,24 +45,33 @@ public sealed partial class ActorContext
 
         public void Dispose()
         {
-            if (_array is { Length: > 0 }) ArrayPool<ushort>.Shared.Return(_array);
+            if (_array is { Length: > 0 })
+            {
+                ArrayPool<ushort>.Shared.Return(_array);
+            }
+
             _array = null;
             _length = 0;
         }
 
         public readonly EntryComponentEnumerator GetEnumerator()
         {
-            ref var inlineRef = ref Unsafe.AsRef(in _inlineArray);
-            ref var reference = ref Unsafe.As<InlineItemArray, ushort>(ref inlineRef);
-            var span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+            ref InlineItemArray inlineRef = ref Unsafe.AsRef(in _inlineArray);
+            ref ushort reference = ref Unsafe.As<InlineItemArray, ushort>(ref inlineRef);
+            Span<ushort> span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+
             return new EntryComponentEnumerator(span, _array ?? [], _length);
         }
 
         public readonly int IndexOf(ushort item)
         {
-            if (_length == 0) return -1;
+            if (_length == 0)
+            {
+                return -1;
+            }
 
-            var inlineLength = Math.Min(_length, InlineArraySize);
+            int inlineLength = Math.Min(_length, InlineArraySize);
+
             for (var i = 0; i < inlineLength; i++)
             {
                 if (_inlineArray[i] == item)
@@ -61,12 +80,19 @@ public sealed partial class ActorContext
                 }
             }
 
-            if (_array == null || _array.Length == 0) return -1;
+            if (_array == null || _array.Length == 0)
+            {
+                return -1;
+            }
 
-            var span = _array.AsSpan(0, _length - InlineArraySize);
+            Span<ushort> span = _array.AsSpan(0, _length - InlineArraySize);
+
             for (var i = 0; i < span.Length; i++)
             {
-                if (span[i] == item) return InlineArraySize + i;
+                if (span[i] == item)
+                {
+                    return InlineArraySize + i;
+                }
             }
 
             return -1;
@@ -74,17 +100,24 @@ public sealed partial class ActorContext
 
         public bool Remove(ushort item)
         {
-            if (_length == 0) return false;
+            if (_length == 0)
+            {
+                return false;
+            }
 
-            var arraySize = _length - InlineArraySize;
-            var inlineLength = Math.Min(_length, InlineArraySize);
+            int arraySize = _length - InlineArraySize;
+            int inlineLength = Math.Min(_length, InlineArraySize);
 
             for (var index = 0; index < inlineLength; index++)
             {
-                if (_inlineArray[index] != item) continue;
+                if (_inlineArray[index] != item)
+                {
+                    continue;
+                }
 
-                var inlineEnd = inlineLength - 1;
-                for (var i = index; i < inlineEnd; i++)
+                int inlineEnd = inlineLength - 1;
+
+                for (int i = index; i < inlineEnd; i++)
                 {
                     _inlineArray[i] = _inlineArray[i + 1];
                 }
@@ -97,15 +130,24 @@ public sealed partial class ActorContext
                 }
 
                 _length--;
+
                 return true;
             }
 
-            if (_array == null || _array.Length == 0 || arraySize <= 0) return false;
+            if (_array == null || _array.Length == 0 || arraySize <= 0)
+            {
+                return false;
+            }
 
-            var span = _array.AsSpan(0, arraySize);
+            Span<ushort> span = _array.AsSpan(0, arraySize);
+
             for (var i = 0; i < span.Length; i++)
             {
-                if (span[i] != item) continue;
+                if (span[i] != item)
+                {
+                    continue;
+                }
+
                 ArrayUtils.Cut(_array, i, arraySize);
                 _length--;
 
@@ -123,7 +165,8 @@ public sealed partial class ActorContext
             writer.WritePropertyName("Components");
 
             writer.WriteStartArray();
-            foreach (var component in this)
+
+            foreach (ushort component in this)
             {
                 writer.WriteNumberValue(component);
             }
@@ -136,16 +179,21 @@ public sealed partial class ActorContext
         public readonly ushort this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => index < InlineArraySize
-                ? _inlineArray[index]
-                : _array![index - InlineArraySize];
+            get =>
+                index < InlineArraySize
+                    ? _inlineArray[index]
+                    : _array![index - InlineArraySize];
         }
 
         public readonly ushort[] ToArray()
         {
-            if (_length == 0) return [];
+            if (_length == 0)
+            {
+                return [];
+            }
 
-            var result = ArrayUtils.Create<ushort>(_length);
+            ushort[] result = ArrayUtils.Create<ushort>(_length);
+
             for (var i = 0; i < _length; i++)
             {
                 result[i] = this[i];
@@ -156,10 +204,15 @@ public sealed partial class ActorContext
 
         public bool TryAdd(ushort item)
         {
-            var has = IndexOf(item) > -1;
-            if (has) return false;
+            bool has = IndexOf(item) > -1;
+
+            if (has)
+            {
+                return false;
+            }
 
             Add(item);
+
             return true;
         }
 
@@ -168,9 +221,10 @@ public sealed partial class ActorContext
             public readonly ref ushort Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref _index < InlineArraySize
-                    ? ref _inlineArray[_index]
-                    : ref _array[_index - InlineArraySize];
+                get =>
+                    ref _index < InlineArraySize
+                        ? ref _inlineArray[_index]
+                        : ref _array[_index - InlineArraySize];
             }
 
             private readonly Span<ushort> _inlineArray;
@@ -188,7 +242,10 @@ public sealed partial class ActorContext
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext() => ++_index < _length;
+            public bool MoveNext()
+            {
+                return ++_index < _length;
+            }
         }
 
         [InlineArray(InlineArraySize)]

@@ -8,10 +8,10 @@ public sealed class TypeOfTests
     public void GetTypeName_ForNonGenericType_ShouldReturnTypeName()
     {
         // Arrange
-        var type = typeof(int);
+        Type type = typeof(int);
 
         // Act
-        var result = TypeOf.GetTypeName(type);
+        string result = TypeOf.GetTypeName(type);
 
         // Assert
         result.Should().Be("Int32");
@@ -21,10 +21,10 @@ public sealed class TypeOfTests
     public void GetTypeName_ForGenericType_ShouldReturnFormattedTypeName()
     {
         // Arrange
-        var type = typeof(List<int>);
+        Type type = typeof(List<int>);
 
         // Act
-        var result = TypeOf.GetTypeName(type);
+        string result = TypeOf.GetTypeName(type);
 
         // Assert
         result.Should().Be("List<Int32>");
@@ -34,10 +34,10 @@ public sealed class TypeOfTests
     public void GetTypeName_ForNestedGenericType_ShouldReturnFormattedTypeName()
     {
         // Arrange
-        var type = typeof(Dictionary<string, List<int>>);
+        Type type = typeof(Dictionary<string, List<int>>);
 
         // Act
-        var result = TypeOf.GetTypeName(type);
+        string result = TypeOf.GetTypeName(type);
 
         // Assert
         result.Should().Be("Dictionary<String, List<Int32>>");
@@ -47,9 +47,9 @@ public sealed class TypeOfTests
     public void TypeOf_Generic_Id_ShouldBeUnique()
     {
         // Act
-        var id1 = TypeOf<int>.Id;
-        var id2 = TypeOf<string>.Id;
-        var id3 = TypeOf<List<int>>.Id;
+        int id1 = TypeOf<int>.Id;
+        int id2 = TypeOf<string>.Id;
+        int id3 = TypeOf<List<int>>.Id;
 
         // Assert
         id1.Should().NotBe(id2);

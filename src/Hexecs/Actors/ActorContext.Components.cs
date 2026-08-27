@@ -8,9 +8,9 @@ public sealed partial class ActorContext
 {
     private IActorComponentPool?[] _componentPools;
 #if NET9_0_OR_GREATER
-    private readonly Lock _componentPoolLock = new();
+    private readonly Lock _componentPoolLock = new Lock();
 #else
-    private readonly object _componentPoolLock = new();
+    private readonly object _componentPoolLock = new object();
 #endif
     private readonly IActorComponentConfiguration?[] _componentConfigurations;
 
@@ -21,13 +21,13 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <param name="component">Компонент для добавления.</param>
     /// <returns>Ссылка на добавленный компонент в пуле.</returns>
-    public ref T AddComponent<T>(uint actorId, in T component)
+    public ref T AddComponent<T>(ActorId actorId, in T component)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
-        ref var result = ref pool.Add(actorId, in component);
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
+        ref T result = ref pool.Add(actorId, in component);
 
-        ref var entry = ref GetEntryRefExact(actorId);
+        ref Entry entry = ref GetEntryRefExact(actorId.Value);
         entry.Add(ActorComponentType<T>.Id);
 
         return ref result;
@@ -42,18 +42,24 @@ public sealed partial class ActorContext
     /// <returns>Ссылка на клонированный компонент в пуле.</returns>
     /// <exception cref="Exception">Выбрасывается, если компонент типа <typeparamref name="T"/> не найден у актёра-владельца.</exception>
     /// <exception cref="Exception">Выбрасывается, если компонент типа <typeparamref name="T"/> уже существует у того актёра, которому клонируется компонент.</exception>
-    public ref T CloneComponent<T>(uint ownerId, uint cloneId) where T : struct, IActorComponent
+    public ref T CloneComponent<T>(ActorId ownerId, ActorId cloneId) where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
-        if (pool == null) ActorError.ComponentNotFound<T>(ownerId);
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
 
-        ref var clone = ref GetEntryRefExact(cloneId);
+        if (pool == null)
+        {
+            ActorError.ComponentNotFound<T>(ownerId);
+        }
+
+        ref Entry clone = ref GetEntryRefExact(cloneId.Value);
+
         if (clone.TryAdd(ActorComponentType<T>.Id))
         {
             return ref pool.Clone(ownerId, cloneId);
         }
 
         ActorError.ComponentExists<T>(cloneId);
+
         return ref Unsafe.NullRef<T>();
     }
 
@@ -63,9 +69,10 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <remarks>Не нужно использовать этот метод в "горячих" местах кода</remarks>
     /// <returns>Перечислитель компонентов. Возвращает <see cref="ComponentEnumerator.Empty"/>, если актёр не найден.</returns>
-    public ComponentEnumerator Components(uint actorId)
+    public ComponentEnumerator Components(ActorId actorId)
     {
-        ref var entry = ref GetEntryRef(actorId);
+        ref Entry entry = ref GetEntryRef(actorId.Value);
+
         return Unsafe.IsNullRef(ref entry)
             ? ComponentEnumerator.Empty
             : new ComponentEnumerator(actorId, _componentPools, entry.ToArray());
@@ -78,22 +85,28 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <returns>Ссылка на компонент в пуле.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не имеет компонента типа <typeparamref name="T"/>.</exception>
-    public ref T GetComponent<T>(uint actorId) where T : struct, IActorComponent
+    public ref T GetComponent<T>(ActorId actorId) where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
-        if (pool == null) ActorError.ComponentNotFound<T>(actorId);
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
+
+        if (pool == null)
+        {
+            ActorError.ComponentNotFound<T>(actorId);
+        }
+
         return ref pool.Get(actorId);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ComponentsAccess<T> GetComponents<T>() where T: struct, IActorComponent
+    public ComponentsAccess<T> GetComponents<T>() where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
-        return pool != null 
-            ? pool.GetComponentAccess() 
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
+
+        return pool != null
+            ? pool.GetComponentAccess()
             : new ComponentsAccess<T>();
     }
-    
+
     /// <summary>
     /// Получает компонент указанного типа для заданного актёра или добавляет его, используя фабричный метод, если компонент отсутствует.
     /// </summary>
@@ -101,16 +114,16 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <param name="factory">Фабричный метод для создания компонента</param>
     /// <returns>Ссылка на существующий или вновь созданный компонент.</returns>
-    public ref T GetOrAddComponent<T>(uint actorId, Func<uint, T>? factory = null)
+    public ref T GetOrAddComponent<T>(ActorId actorId, Func<ActorId, T>? factory = null)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
-        ref var component = ref pool.GetOrCreate(actorId, out var added, factory);
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
+        ref T component = ref pool.GetOrCreate(actorId, out bool added, factory);
 
         // ReSharper disable once InvertIf
         if (added)
         {
-            ref var entry = ref GetEntryRefExact(actorId);
+            ref Entry entry = ref GetEntryRefExact(actorId.Value);
             entry.Add(ActorComponentType<T>.Id);
         }
 
@@ -124,9 +137,10 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <returns><c>true</c>, если актёр имеет компонент; в противном случае <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasComponent<T>(uint actorId) where T : struct, IActorComponent
+    public bool HasComponent<T>(ActorId actorId) where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
+
         return pool != null && pool.Has(actorId);
     }
 
@@ -135,10 +149,10 @@ public sealed partial class ActorContext
     /// </summary>
     /// <typeparam name="T">Тип компонента. Должен быть структурой и реализовывать <see cref="IActorComponent"/>.</typeparam>
     /// <param name="handler">Обработчик, принимающий идентификатор актёра.</param>
-    public void OnComponentAdded<T>(Action<uint> handler)
+    public void OnComponentAdded<T>(Action<ActorId> handler)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
         pool.Added += handler;
     }
 
@@ -150,7 +164,7 @@ public sealed partial class ActorContext
     public void OnComponentAdded<T>(ActorComponentAdded<T> handler)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
         pool.ComponentAdded += handler;
     }
 
@@ -159,10 +173,10 @@ public sealed partial class ActorContext
     /// </summary>
     /// <typeparam name="T">Тип компонента. Должен быть структурой и реализовывать <see cref="IActorComponent"/>.</typeparam>
     /// <param name="handler">Обработчик, принимающий идентификатор актёра.</param>
-    public void OnComponentRemoving<T>(Action<uint> handler)
+    public void OnComponentRemoving<T>(Action<ActorId> handler)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
         pool.Removing += handler;
     }
 
@@ -174,7 +188,7 @@ public sealed partial class ActorContext
     public void OnComponentRemoving<T>(ActorComponentRemoving<T> handler)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
         pool.ComponentRemoving += handler;
     }
 
@@ -186,7 +200,7 @@ public sealed partial class ActorContext
     public void OnComponentUpdating<T>(ActorComponentUpdating<T> handler)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
         pool.ComponentUpdating += handler;
     }
 
@@ -196,14 +210,16 @@ public sealed partial class ActorContext
     /// <typeparam name="T">Тип компонента. Должен быть структурой и реализовывать <see cref="IActorComponent"/>.</typeparam>
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <returns><c>true</c>, если компонент был успешно удален; в противном случае <c>false</c> (например, если компонент не найден).</returns>
-    public bool RemoveComponent<T>(uint actorId)
+    public bool RemoveComponent<T>(ActorId actorId)
         where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
+
         if (pool != null && pool.Remove(actorId))
         {
-            ref var entry = ref GetEntryRefExact(actorId);
+            ref Entry entry = ref GetEntryRefExact(actorId.Value);
             entry.Remove(ActorComponentType<T>.Id);
+
             return true;
         }
 
@@ -217,17 +233,19 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <param name="component">Удаленный компонент.</param>
     /// <returns><c>true</c>, если компонент был успешно удален; в противном случае <c>false</c>.</returns>
-    public bool RemoveComponent<T>(uint actorId, out T component)
+    public bool RemoveComponent<T>(ActorId actorId, out T component)
         where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
+
         if (pool == null || !pool.Remove(actorId, out component))
         {
             component = default;
+
             return false;
         }
 
-        ref var entry = ref GetEntryRefExact(actorId);
+        ref Entry entry = ref GetEntryRefExact(actorId.Value);
         entry.Remove(ActorComponentType<T>.Id);
 
         return true;
@@ -240,16 +258,20 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <param name="component">Компонент для добавления.</param>
     /// <returns><c>true</c>, если компонент успешно добавлен; <c>false</c>, если актёр уже имеет компонент данного типа.</returns>
-    public bool TryAdd<T>(uint actorId, in T component)
+    public bool TryAdd<T>(ActorId actorId, in T component)
         where T : struct, IActorComponent
     {
-        var pool = GetOrCreateComponentPool<T>();
-        var result = pool.TryAdd(actorId, in component);
+        ActorComponentPool<T> pool = GetOrCreateComponentPool<T>();
+        bool result = pool.TryAdd(actorId, in component);
 
-        if (!result) return false;
+        if (!result)
+        {
+            return false;
+        }
 
-        ref var entry = ref GetEntryRefExact(actorId);
+        ref Entry entry = ref GetEntryRefExact(actorId.Value);
         entry.Add(ActorComponentType<T>.Id);
+
         return true;
     }
 
@@ -260,13 +282,14 @@ public sealed partial class ActorContext
     /// <param name="actorId">Идентификатор актёра.</param>
     /// <returns>Ссылка на компонент, если он существует; в противном случае <see cref="Unsafe.NullRef{T}"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T TryGetComponentRef<T>(uint actorId)
+    public ref T TryGetComponentRef<T>(ActorId actorId)
         where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
+
         if (pool != null)
         {
-            return ref pool.TryGet(actorId);
+            return ref pool.TryGet(actorId.Value);
         }
 
         return ref Unsafe.NullRef<T>();
@@ -280,17 +303,28 @@ public sealed partial class ActorContext
     /// <param name="component">Новое значение компонента.</param>
     /// <param name="createIfNotExists">Если <c>true</c>, компонент будет добавлен, если он не существует. По умолчанию <c>true</c>.</param>
     /// <returns><c>true</c>, если компонент был обновлен или добавлен; <c>false</c>, если пул компонентов не найден или <paramref name="createIfNotExists"/> равен <c>false</c> и компонент не существует.</returns>
-    public bool UpdateComponent<T>(uint actorId, in T component, bool createIfNotExists = true)
+    public bool UpdateComponent<T>(ActorId actorId, in T component, bool createIfNotExists = true)
         where T : struct, IActorComponent
     {
-        var pool = GetComponentPool<T>();
-        if (pool == null) return false;
+        ActorComponentPool<T>? pool = GetComponentPool<T>();
 
-        if (pool.Update(actorId, in component)) return true;
+        if (pool == null)
+        {
+            return false;
+        }
 
-        if (!createIfNotExists) return false;
+        if (pool.Update(actorId, in component))
+        {
+            return true;
+        }
+
+        if (!createIfNotExists)
+        {
+            return false;
+        }
 
         AddComponent(actorId, in component);
+
         return true;
     }
 
@@ -307,12 +341,13 @@ public sealed partial class ActorContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ActorComponentPool<T>? GetComponentPool<T>() where T : struct, IActorComponent
     {
-        var id = ActorComponentType<T>.Id;
-        var pools = _componentPools;
+        ushort id = ActorComponentType<T>.Id;
+        IActorComponentPool?[] pools = _componentPools;
 
         if (id < pools.Length)
         {
-            var pool = pools[id];
+            IActorComponentPool? pool = pools[id];
+
             return pool == null
                 ? null
                 : Unsafe.As<ActorComponentPool<T>>(pool);
@@ -331,12 +366,13 @@ public sealed partial class ActorContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ActorComponentPool<T> GetOrCreateComponentPool<T>() where T : struct, IActorComponent
     {
-        var id = ActorComponentType<T>.Id;
-        var pools = _componentPools;
+        ushort id = ActorComponentType<T>.Id;
+        IActorComponentPool?[] pools = _componentPools;
 
         if ((uint)id < (uint)pools.Length)
         {
-            var existsPool = pools[id];
+            IActorComponentPool? existsPool = pools[id];
+
             if (existsPool != null)
             {
                 return Unsafe.As<ActorComponentPool<T>>(existsPool);
@@ -358,12 +394,16 @@ public sealed partial class ActorContext
             // Повторная проверка под локом (Double-Check Locking)
             if (id < _componentPools.Length)
             {
-                var existsPool = _componentPools[id];
-                if (existsPool != null) return Unsafe.As<ActorComponentPool<T>>(existsPool);
+                IActorComponentPool? existsPool = _componentPools[id];
+
+                if (existsPool != null)
+                {
+                    return Unsafe.As<ActorComponentPool<T>>(existsPool);
+                }
             }
 
             ArrayUtils.EnsureCapacity(ref _componentPools, id);
-            ref var pool = ref _componentPools[id];
+            ref IActorComponentPool? pool = ref _componentPools[id];
             pool ??= new ActorComponentPool<T>(this, GetOrCreateComponentConfiguration<T>());
 
             return Unsafe.As<ActorComponentPool<T>>(pool);
@@ -373,11 +413,15 @@ public sealed partial class ActorContext
     private ActorComponentConfiguration<T> GetOrCreateComponentConfiguration<T>()
         where T : struct, IActorComponent
     {
-        var id = ActorComponentType<T>.Id;
+        ushort id = ActorComponentType<T>.Id;
 
-        if (id >= _componentConfigurations.Length) return ActorComponentConfiguration<T>.Empty;
+        if (id >= _componentConfigurations.Length)
+        {
+            return ActorComponentConfiguration<T>.Empty;
+        }
 
-        var existsConfiguration = _componentConfigurations[id];
+        IActorComponentConfiguration? existsConfiguration = _componentConfigurations[id];
+
         return existsConfiguration == null
             ? ActorComponentConfiguration<T>.Empty
             : Unsafe.As<ActorComponentConfiguration<T>>(existsConfiguration);

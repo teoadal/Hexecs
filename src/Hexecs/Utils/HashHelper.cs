@@ -15,15 +15,20 @@ internal static class HashHelper
 
     public static int GetPrime(int min)
     {
-        foreach (var prime in Primes)
+        foreach (int prime in Primes)
         {
             if (prime >= min)
+            {
                 return prime;
+            }
         }
 
-        for (var i = min | 1; i < int.MaxValue; i += 2)
+        for (int i = min | 1; i < int.MaxValue; i += 2)
         {
-            if (IsPrime(i) && (i - 1) % HashPrime != 0) return i;
+            if (IsPrime(i) && (i - 1) % HashPrime != 0)
+            {
+                return i;
+            }
         }
 
         return min;
@@ -31,13 +36,19 @@ internal static class HashHelper
 
     private static bool IsPrime(int candidate)
     {
-        if ((candidate & 1) == 0) return candidate == 2;
+        if ((candidate & 1) == 0)
+        {
+            return candidate == 2;
+        }
 
         var limit = (int)Math.Sqrt(candidate);
+
         for (var divisor = 3; divisor <= limit; divisor += 2)
         {
             if ((candidate % divisor) == 0)
+            {
                 return false;
+            }
         }
 
         return true;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
+
 using Hexecs.Loggers;
 using Hexecs.Loggers.Sinks;
 using Hexecs.Loggers.Writers;
@@ -23,11 +24,10 @@ public sealed class TextSinkShould
             minLevel,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            mockWriter.Object
-        );
+            mockWriter.Object);
 
         // Act
-        var result = sink.IsEnabled(checkLevel);
+        bool result = sink.IsEnabled(checkLevel);
 
         // Assert
         result.Should().Be(expected);
@@ -45,15 +45,14 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            streamWriter
-        );
+            streamWriter);
 
         // Act
         sink.Write(LogLevel.Info, context, message);
         streamWriter.Flush();
 
         // Assert
-        var result = Encoding.UTF8.GetString(memoryStream.ToArray());
+        string result = Encoding.UTF8.GetString(memoryStream.ToArray());
         result.Should().Contain("[INF ");
         result.Should().Contain(context);
         result.Should().Contain(message);
@@ -77,8 +76,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [valueWriterFactory.Object],
             valueWriters,
-            streamWriter
-        );
+            streamWriter);
 
         // Act
         sink.Write(LogLevel.Info, "TestContext", "Value: {1}", 42);
@@ -103,8 +101,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            mockWriter.Object
-        );
+            mockWriter.Object);
 
         // Act
         await sink.DisposeAsync();
@@ -125,15 +122,14 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            streamWriter
-        );
+            streamWriter);
 
         // Act
         sink.Write(LogLevel.Info, "TestContext", "Test message");
         streamWriter.Flush();
 
         // Assert
-        var result = Encoding.UTF8.GetString(memoryStream.ToArray());
+        string result = Encoding.UTF8.GetString(memoryStream.ToArray());
         result.Should().MatchRegex(@"\[INF \d{2}:\d{2}:\d{2}\] TestContext: Test message");
     }
 
@@ -147,8 +143,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            traceWriter
-        );
+            traceWriter);
 
         var debugStream = new MemoryStream();
         var debugWriter = new StreamWriter(debugStream, Encoding.UTF8, 1024, true);
@@ -156,8 +151,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            debugWriter
-        );
+            debugWriter);
 
         var infoStream = new MemoryStream();
         var infoWriter = new StreamWriter(infoStream, Encoding.UTF8, 1024, true);
@@ -165,8 +159,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            infoWriter
-        );
+            infoWriter);
 
         var warnStream = new MemoryStream();
         var warnWriter = new StreamWriter(warnStream, Encoding.UTF8, 1024, true);
@@ -174,8 +167,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            warnWriter
-        );
+            warnWriter);
 
         var errorStream = new MemoryStream();
         var errorWriter = new StreamWriter(errorStream, Encoding.UTF8, 1024, true);
@@ -183,8 +175,7 @@ public sealed class TextSinkShould
             LogLevel.Trace,
             [],
             new ConcurrentDictionary<Type, ILogValueWriter>(),
-            errorWriter
-        );
+            errorWriter);
 
         // Act
         traceSink.Write(LogLevel.Trace, "Context", "Message");

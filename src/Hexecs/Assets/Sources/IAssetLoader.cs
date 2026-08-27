@@ -46,17 +46,13 @@ public interface IAssetLoader
 
     void EnsureNotDisposed();
 
-    Asset GetAsset(uint assetId);
+    Asset GetAsset(AssetId assetId);
 
     Asset GetAsset(string alias);
 
-    Asset<T1> GetAsset<T1>(uint assetId) where T1 : struct, IAssetComponent;
+    string GetAlias(AssetId assetId);
 
-    Asset<T1> GetAsset<T1>(string alias) where T1 : struct, IAssetComponent;
-
-    string GetAlias(uint assetId);
-
-    uint GetId(string assetAlias);
+    AssetId GetId(string assetAlias);
 
     AssetBlockBuilder<TArray, TItem> RentBlockBuilder<TArray, TItem>(
         Func<ReadOnlyMemory<TItem>, TArray> blockBuilder)

@@ -10,11 +10,11 @@ public sealed class ActorMarshalShould(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var expectedId = ActorComponentType<Attack>.Id;
+        ushort expectedId = ActorComponentType<Attack>.Id;
 
         // act
 
-        var actualId = ActorMarshal.GetComponentId<Attack>();
+        ushort actualId = ActorMarshal.GetComponentId<Attack>();
 
         // assert
 
@@ -28,11 +28,11 @@ public sealed class ActorMarshalShould(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        var id = ActorComponentType<Attack>.Id;
+        ushort id = ActorComponentType<Attack>.Id;
 
         // act
 
-        var actualType = ActorMarshal.GetComponentType(id);
+        Type actualType = ActorMarshal.GetComponentType(id);
 
         // assert
 
@@ -47,12 +47,12 @@ public sealed class ActorMarshalShould(ActorTestFixture fixture) : IClassFixture
         // arrange
 
         var component = fixture.CreateComponent<Attack>();
-        var actor = fixture.CreateActor<Attack>(component1: component);
-        ref var componentRef = ref actor.Get<Attack>();
+        Actor actor = fixture.CreateActor<Attack>(component1: component);
+        ref Attack componentRef = ref actor.Get<Attack>();
 
         // act
 
-        var actualActor = ActorMarshal.GetOwner(fixture.Actors, ref componentRef);
+        ActorRef<Attack> actualActor = ActorMarshal.GetOwner(fixture.Actors, ref componentRef);
 
         // assert
 

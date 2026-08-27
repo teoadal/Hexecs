@@ -5,7 +5,7 @@ namespace Hexecs.Actors.Relations;
 
 internal sealed class ActorRelationComponentConverter : IActorComponentConverter<ActorRelationComponent>
 {
-    public static readonly ActorRelationComponentConverter Instance = new();
+    public static readonly ActorRelationComponentConverter Instance = new ActorRelationComponentConverter();
 
     public ActorRelationComponent Deserialize(ActorContext context, ref Utf8JsonReader reader)
     {
@@ -16,11 +16,11 @@ internal sealed class ActorRelationComponentConverter : IActorComponentConverter
     {
         writer.WriteStartArray();
 
-        foreach (var relationId in component)
+        foreach (uint relationId in component)
         {
-            writer.WriteNumberValue(relationId);    
+            writer.WriteNumberValue(relationId);
         }
-        
+
         writer.WriteEndArray();
     }
 }

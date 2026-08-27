@@ -11,13 +11,13 @@ public sealed class ActorFilter3Should(ActorTestFixture fixture) : IClassFixture
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
         var speedComponent = fixture.CreateComponent<Speed>(); // Предполагаемый третий компонент
-        var actor = fixture.CreateActor<Attack, Defence, Speed>(
+        Actor actor = fixture.CreateActor<Attack, Defence, Speed>(
             component1: attackComponent,
             component2: defenceComponent,
             component3: speedComponent);
 
         // act
-        var filter = fixture
+        ActorFilter<Attack, Defence, Speed> filter = fixture
             .Actors
             .Filter<Attack, Defence, Speed>();
 
@@ -27,7 +27,7 @@ public sealed class ActorFilter3Should(ActorTestFixture fixture) : IClassFixture
             .Should()
             .BeTrue();
 
-        var actorRef = filter.GetRef(actor.Id);
+        ActorRef<Attack, Defence, Speed> actorRef = filter.GetRef(actor.Id);
         actorRef.Component1
             .Should()
             .Be(attackComponent);
@@ -49,19 +49,21 @@ public sealed class ActorFilter3Should(ActorTestFixture fixture) : IClassFixture
         var defenceComponent = fixture.CreateComponent<Defence>();
         var speedComponent = fixture.CreateComponent<Speed>();
 
-        var actorWithAllThree = fixture.CreateActor<Attack, Defence, Speed>(component1: attackComponent,
-            component2: defenceComponent, component3: speedComponent);
-        var actorWithAttackDefence =
+        Actor actorWithAllThree = fixture.CreateActor<Attack, Defence, Speed>(
+            component1: attackComponent,
+            component2: defenceComponent,
+            component3: speedComponent);
+        Actor actorWithAttackDefence =
             fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
-        var actorWithAttackSpeed =
-            fixture.CreateActor<Attack, Speed>(component1: attackComponent,
+        Actor actorWithAttackSpeed =
+            fixture.CreateActor<Attack, Speed>(
+                component1: attackComponent,
                 component2: speedComponent); // Используем component2 для Speed если CreateActor так работает
-        var actorWithDefenceSpeed =
+        Actor actorWithDefenceSpeed =
             fixture.CreateActor<Defence, Speed>(component1: defenceComponent, component2: speedComponent);
 
-
         // act
-        var filter = fixture
+        ActorFilter<Attack, Defence, Speed> filter = fixture
             .Actors
             .Filter<Attack, Defence, Speed>();
 
@@ -79,10 +81,12 @@ public sealed class ActorFilter3Should(ActorTestFixture fixture) : IClassFixture
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
         var speedComponent = fixture.CreateComponent<Speed>();
-        var actor = fixture.CreateActor<Attack, Defence, Speed>(component1: attackComponent,
-            component2: defenceComponent, component3: speedComponent);
+        Actor actor = fixture.CreateActor<Attack, Defence, Speed>(
+            component1: attackComponent,
+            component2: defenceComponent,
+            component3: speedComponent);
 
-        var filter = fixture
+        ActorFilter<Attack, Defence, Speed> filter = fixture
             .Actors
             .Filter<Attack, Defence, Speed>();
 
@@ -95,17 +99,18 @@ public sealed class ActorFilter3Should(ActorTestFixture fixture) : IClassFixture
         filter.Contains(actor).Should().BeFalse();
     }
 
-    [Fact(DisplayName =
-        "Добавляет актера в фильтр по трем компонентам, когда недостающий третий компонент (Speed) добавлен")]
+    [Fact(
+        DisplayName =
+            "Добавляет актера в фильтр по трем компонентам, когда недостающий третий компонент (Speed) добавлен")]
     public void AddsActorToThreeComponentFilterWhenThirdComponentIsAdded()
     {
         // arrange
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
 
-        var actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
+        Actor actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
 
-        var filter = fixture
+        ActorFilter<Attack, Defence, Speed> filter = fixture
             .Actors
             .Filter<Attack, Defence, Speed>();
 
@@ -119,7 +124,7 @@ public sealed class ActorFilter3Should(ActorTestFixture fixture) : IClassFixture
         // assert
         filter.Contains(actor).Should().BeTrue();
 
-        var actorRef = filter.GetRef(actor.Id);
+        ActorRef<Attack, Defence, Speed> actorRef = filter.GetRef(actor.Id);
         actorRef.Component1.Should().Be(attackComponent);
         actorRef.Component2.Should().Be(defenceComponent);
         actorRef.Component3.Should().Be(speedComponent);

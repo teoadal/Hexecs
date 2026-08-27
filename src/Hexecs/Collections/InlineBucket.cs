@@ -20,8 +20,14 @@ internal struct InlineBucket<T>()
 
     public void Add(T item)
     {
-        if (_length < InlineArraySize) _inlineArray[_length] = item;
-        else ArrayUtils.Insert(ref _array, ArrayPool<T>.Shared, _length - InlineArraySize, item);
+        if (_length < InlineArraySize)
+        {
+            _inlineArray[_length] = item;
+        }
+        else
+        {
+            ArrayUtils.Insert(ref _array, ArrayPool<T>.Shared, _length - InlineArraySize, item);
+        }
 
         _length++;
     }
@@ -34,7 +40,10 @@ internal struct InlineBucket<T>()
 
     public readonly void CopyTo(ref Span<T> buffer)
     {
-        if (_length == 0) return;
+        if (_length == 0)
+        {
+            return;
+        }
 
         for (var i = 0; i < _length; i++)
         {
@@ -44,34 +53,47 @@ internal struct InlineBucket<T>()
 
     public void Dispose()
     {
-        if (_array is { Length: > 0 }) ArrayPool<T>.Shared.Return(_array);
+        if (_array is { Length: > 0 })
+        {
+            ArrayPool<T>.Shared.Return(_array);
+        }
+
         _array = [];
         _length = 0;
     }
 
     public Enumerator GetEnumerator()
     {
-        ref var reference = ref Unsafe.As<InlineItemArray, T>(ref _inlineArray);
-        var span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+        ref T reference = ref Unsafe.As<InlineItemArray, T>(ref _inlineArray);
+        Span<T> span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+
         return new Enumerator(span, _array, _length);
     }
 
     public ref T GetRef(int index)
     {
-        if (index >= InlineArraySize) return ref _array[index - InlineArraySize];
+        if (index >= InlineArraySize)
+        {
+            return ref _array[index - InlineArraySize];
+        }
 
-        ref var reference = ref Unsafe.As<InlineItemArray, T>(ref _inlineArray);
-        var span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+        ref T reference = ref Unsafe.As<InlineItemArray, T>(ref _inlineArray);
+        Span<T> span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+
         return ref span[index];
     }
 
     public readonly int IndexOf(T item, EqualityComparer<T>? equalityComparer = null)
     {
-        if (_length == 0) return -1;
+        if (_length == 0)
+        {
+            return -1;
+        }
 
         equalityComparer ??= EqualityComparer<T>.Default;
 
-        var inlineLength = Math.Min(_length, InlineArraySize);
+        int inlineLength = Math.Min(_length, InlineArraySize);
+
         for (var i = 0; i < inlineLength; i++)
         {
             if (equalityComparer.Equals(_inlineArray[i], item))
@@ -80,12 +102,19 @@ internal struct InlineBucket<T>()
             }
         }
 
-        if (_array == null || _array.Length == 0) return -1;
+        if (_array == null || _array.Length == 0)
+        {
+            return -1;
+        }
 
-        var span = _array.AsSpan(0, _length - InlineArraySize);
+        Span<T> span = _array.AsSpan(0, _length - InlineArraySize);
+
         for (var i = 0; i < span.Length; i++)
         {
-            if (equalityComparer.Equals(span[i], item)) return InlineArraySize + i;
+            if (equalityComparer.Equals(span[i], item))
+            {
+                return InlineArraySize + i;
+            }
         }
 
         return -1;
@@ -93,19 +122,26 @@ internal struct InlineBucket<T>()
 
     public bool Remove(T item, EqualityComparer<T>? equalityComparer = null)
     {
-        if (_length == 0) return false;
+        if (_length == 0)
+        {
+            return false;
+        }
 
         equalityComparer ??= EqualityComparer<T>.Default;
 
-        var arraySize = _length - InlineArraySize;
-        var inlineLength = Math.Min(_length, InlineArraySize);
+        int arraySize = _length - InlineArraySize;
+        int inlineLength = Math.Min(_length, InlineArraySize);
 
         for (var index = 0; index < inlineLength; index++)
         {
-            if (!equalityComparer.Equals(_inlineArray[index], item)) continue;
+            if (!equalityComparer.Equals(_inlineArray[index], item))
+            {
+                continue;
+            }
 
-            var inlineEnd = inlineLength - 1;
-            for (var i = index; i < inlineEnd; i++)
+            int inlineEnd = inlineLength - 1;
+
+            for (int i = index; i < inlineEnd; i++)
             {
                 _inlineArray[i] = _inlineArray[i + 1];
             }
@@ -118,15 +154,24 @@ internal struct InlineBucket<T>()
             }
 
             _length--;
+
             return true;
         }
 
-        if (_array.Length == 0 || arraySize <= 0) return false;
+        if (_array.Length == 0 || arraySize <= 0)
+        {
+            return false;
+        }
 
-        var span = _array.AsSpan(0, arraySize);
+        Span<T> span = _array.AsSpan(0, arraySize);
+
         for (var i = 0; i < span.Length; i++)
         {
-            if (!equalityComparer.Equals(span[i], item)) continue;
+            if (!equalityComparer.Equals(span[i], item))
+            {
+                continue;
+            }
+
             ArrayUtils.Cut(_array, i, arraySize);
             _length--;
 
@@ -142,16 +187,26 @@ internal struct InlineBucket<T>()
         readonly get => index < InlineArraySize ? _inlineArray[index] : _array[index - InlineArraySize];
         set
         {
-            if (index < InlineArraySize) _inlineArray[index] = value;
-            else _array[index - InlineArraySize] = value;
+            if (index < InlineArraySize)
+            {
+                _inlineArray[index] = value;
+            }
+            else
+            {
+                _array[index - InlineArraySize] = value;
+            }
         }
     }
 
     public readonly T[] ToArray()
     {
-        if (_length == 0) return [];
+        if (_length == 0)
+        {
+            return [];
+        }
 
-        var result = ArrayUtils.Create<T>(_length);
+        T[] result = ArrayUtils.Create<T>(_length);
+
         for (var i = 0; i < _length; i++)
         {
             result[i] = this[i];
@@ -162,10 +217,15 @@ internal struct InlineBucket<T>()
 
     public bool TryAdd(T item, EqualityComparer<T>? equalityComparer = null)
     {
-        var has = Contains(item, equalityComparer);
-        if (has) return false;
+        bool has = Contains(item, equalityComparer);
+
+        if (has)
+        {
+            return false;
+        }
 
         Add(item);
+
         return true;
     }
 
@@ -174,9 +234,10 @@ internal struct InlineBucket<T>()
         public readonly ref T Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _index < InlineArraySize
-                ? ref _inlineArray[_index]
-                : ref _array[_index - InlineArraySize];
+            get =>
+                ref _index < InlineArraySize
+                    ? ref _inlineArray[_index]
+                    : ref _array[_index - InlineArraySize];
         }
 
         private readonly Span<T> _inlineArray;
@@ -194,7 +255,10 @@ internal struct InlineBucket<T>()
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _length;
+        public bool MoveNext()
+        {
+            return ++_index < _length;
+        }
     }
 
     [InlineArray(InlineArraySize)]

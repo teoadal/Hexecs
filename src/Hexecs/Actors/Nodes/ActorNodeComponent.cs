@@ -5,10 +5,10 @@ namespace Hexecs.Actors.Nodes;
 [StructLayout(LayoutKind.Sequential, Size = 32)]
 internal struct ActorNodeComponent : IActorComponent
 {
-    public uint NextSiblingId;
-    public uint FirstChildId;
-    public uint ParentId;
-    public uint PrevSiblingId;
+    public ActorId NextSiblingId;
+    public ActorId FirstChildId;
+    public ActorId ParentId;
+    public ActorId PrevSiblingId;
     public uint ChildCount;
 
     public static ActorComponentConfiguration<ActorNodeComponent> CreatePoolConfiguration()

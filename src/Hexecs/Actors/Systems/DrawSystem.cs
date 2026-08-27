@@ -47,9 +47,12 @@ public abstract class DrawSystem(ActorContext context) : IDrawSystem, IDisposabl
     public abstract void Draw(in WorldTime time);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType());
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType());
+    }
 
     ActorContext IDrawSystem.Context => Context;
 

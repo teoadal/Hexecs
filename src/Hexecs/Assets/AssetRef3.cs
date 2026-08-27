@@ -13,7 +13,7 @@ namespace Hexecs.Assets;
 /// <typeparam name="T3">Тип компонента ассета, должен быть структурой и реализовывать интерфейс <see cref="IAssetComponent"/>.</typeparam>
 [DebuggerDisplay("{ToString()}")]
 [DebuggerTypeProxy(typeof(AssetRefDebugProxy<,,>))]
-public readonly ref struct AssetRef<T1, T2, T3>
+public readonly ref struct AssetRef<T1, T2, T3> : IEquatable<Asset>
     where T1 : struct, IAssetComponent
     where T2 : struct, IAssetComponent
     where T3 : struct, IAssetComponent
@@ -24,7 +24,7 @@ public readonly ref struct AssetRef<T1, T2, T3>
     public static AssetRef<T1, T2, T3> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, Asset.EmptyId, ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>(), ref Unsafe.NullRef<T3>());
+        get => new AssetRef<T1, T2, T3>(null!, AssetId.Empty, ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>(), ref Unsafe.NullRef<T3>());
     }
 
     /// <summary>
@@ -61,14 +61,14 @@ public readonly ref struct AssetRef<T1, T2, T3>
     }
 
     public readonly AssetContext Context;
-    public readonly uint Id;
+    public readonly AssetId Id;
 
     private readonly ref T1 _component1;
     private readonly ref T2 _component2;
     private readonly ref T3 _component3;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetRef(AssetContext context, uint id, ref T1 component1, ref T2 component2, ref T3 component3)
+    internal AssetRef(AssetContext context, AssetId id, ref T1 component1, ref T2 component2, ref T3 component3)
     {
         Context = context;
         Id = id;
@@ -79,19 +79,22 @@ public readonly ref struct AssetRef<T1, T2, T3>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Asset<T> As<T>() where T : struct, IAssetComponent => Context.GetAsset<T>(Id);
+    public AssetRef<T> AsRef<T>() where T : struct, IAssetComponent
+    {
+        return Context.GetAssetRef<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetRef<T> AsRef<T>() where T : struct, IAssetComponent => Context.GetAssetRef<T>(Id);
+    public ref readonly T Get<T>() where T : struct, IAssetComponent
+    {
+        return ref Context.GetComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly T Get<T>() where T : struct, IAssetComponent => ref Context.GetComponent<T>(Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IAssetComponent => Context.HasComponent<T>(Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Is<T>(out Asset<T> asset) where T : struct, IAssetComponent => Context.TryGetAsset(Id, out asset);
+    public bool Has<T>() where T : struct, IAssetComponent
+    {
+        return Context.HasComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRef<T>(out AssetRef<T> asset) where T : struct, IAssetComponent
@@ -99,95 +102,127 @@ public readonly ref struct AssetRef<T1, T2, T3>
         return Context.TryGetAssetRef(Id, out asset);
     }
 
-    public override string ToString() => Context == null
-        ? StringUtils.EmptyValue
-        : Context.GetDescription(Id);
+    public override string ToString()
+    {
+        return Context == null
+            ? StringUtils.EmptyValue
+            : Context.GetDescription(Id);
+    }
 
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(AssetRef<T1, T2, T3> other) => Id == other.Id && ReferenceEquals(Context, other.Context);
-
-    public override bool Equals(object? obj) => obj is Asset other && Id == other.Id;
-
-    public override int GetHashCode() => HashCode.Combine(Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in AssetRef<T1, T2, T3> left, in AssetRef<T1, T2, T3> right) => left.Equals(right);
+    public bool Equals(Asset other)
+    {
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in AssetRef<T1, T2, T3> left, in AssetRef<T1, T2, T3> right) => !left.Equals(right);
+    public bool Equals(AssetRef<T1, T2, T3> other)
+    {
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Asset other && Id == other.Id;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(in AssetRef<T1, T2, T3> left, in AssetRef<T1, T2, T3> right)
+    {
+        return left.Equals(right);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(in AssetRef<T1, T2, T3> left, in AssetRef<T1, T2, T3> right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in AssetRef<T1, T2, T3> asset) => !asset.IsEmpty;
+    public static implicit operator bool(in AssetRef<T1, T2, T3> asset)
+    {
+        return !asset.IsEmpty;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId(in AssetRef<T1, T2, T3> asset) => new(asset.Id);
+    public static implicit operator AssetId(in AssetRef<T1, T2, T3> asset)
+    {
+        return asset.Id;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId<T1>(in AssetRef<T1, T2, T3> asset) => new(asset.Id);
+    public static implicit operator Asset(in AssetRef<T1, T2, T3> asset)
+    {
+        return new Asset(asset.Context, asset.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId<T2>(in AssetRef<T1, T2, T3> asset) => new(asset.Id);
+    public static implicit operator AssetRef<T1>(in AssetRef<T1, T2, T3> actor)
+    {
+        return new AssetRef<T1>(
+            actor.Context,
+            actor.Id,
+            ref actor._component1);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId<T3>(in AssetRef<T1, T2, T3> asset) => new(asset.Id);
+    public static implicit operator AssetRef<T2>(in AssetRef<T1, T2, T3> actor)
+    {
+        return new AssetRef<T2>(
+            actor.Context,
+            actor.Id,
+            ref actor._component2);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Asset(in AssetRef<T1, T2, T3> asset) => new(asset.Context, asset.Id);
+    public static implicit operator AssetRef<T3>(in AssetRef<T1, T2, T3> actor)
+    {
+        return new AssetRef<T3>(
+            actor.Context,
+            actor.Id,
+            ref actor._component3);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Asset<T1>(in AssetRef<T1, T2, T3> asset) => new(asset.Context, asset.Id);
+    public static implicit operator AssetRef<T1, T2>(in AssetRef<T1, T2, T3> actor)
+    {
+        return new AssetRef<T1, T2>(
+            actor.Context,
+            actor.Id,
+            ref actor._component1,
+            ref actor._component2);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Asset<T2>(in AssetRef<T1, T2, T3> asset) => new(asset.Context, asset.Id);
+    public static implicit operator AssetRef<T1, T3>(in AssetRef<T1, T2, T3> actor)
+    {
+        return new AssetRef<T1, T3>(
+            actor.Context,
+            actor.Id,
+            ref actor._component1,
+            ref actor._component3);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Asset<T3>(in AssetRef<T1, T2, T3> asset) => new(asset.Context, asset.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetRef<T1>(in AssetRef<T1, T2, T3> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component1);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetRef<T2>(in AssetRef<T1, T2, T3> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component2);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetRef<T3>(in AssetRef<T1, T2, T3> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component3);
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetRef<T1, T2>(in AssetRef<T1, T2, T3> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component1,
-        ref actor._component2);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetRef<T1, T3>(in AssetRef<T1, T2, T3> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component1,
-        ref actor._component3);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetRef<T2, T3>(in AssetRef<T1, T2, T3> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component2,
-        ref actor._component3);
+    public static implicit operator AssetRef<T2, T3>(in AssetRef<T1, T2, T3> actor)
+    {
+        return new AssetRef<T2, T3>(
+            actor.Context,
+            actor.Id,
+            ref actor._component2,
+            ref actor._component3);
+    }
 
     #endregion
 }

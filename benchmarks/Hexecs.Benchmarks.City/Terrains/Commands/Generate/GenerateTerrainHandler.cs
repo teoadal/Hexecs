@@ -18,9 +18,9 @@ internal sealed class GenerateTerrainHandler : ActorCommandHandler<GenerateTerra
 
     public override Result Handle(in GenerateTerrainCommand terrainCommand)
     {
-        var ground = Assets.GetAsset<TerrainAsset>(TerrainAsset.Ground);
-        var river = Assets.GetAsset<TerrainAsset>(TerrainAsset.River);
-        var urbanConcrete = Assets.GetAsset<TerrainAsset>(TerrainAsset.UrbanConcrete);
+        var ground = Assets.GetAsset(TerrainAsset.Ground);
+        var river = Assets.GetAsset(TerrainAsset.River);
+        var urbanConcrete = Assets.GetAsset(TerrainAsset.UrbanConcrete);
 
         var height = _settings.Height;
         var width = _settings.Width;
@@ -32,17 +32,17 @@ internal sealed class GenerateTerrainHandler : ActorCommandHandler<GenerateTerra
                 var args = Args.Rent(nameof(Point), new Point(x, y));
                 if (x is > 45 and < 55) // river
                 {
-                    Context.BuildActor<Terrain>(river,
+                    Context.BuildActor(river,
                         args.Set(nameof(Terrain.Elevation), Elevation.FromValue(-10))
                             .Set(nameof(Terrain.Moisture), Moisture.FromValue(35)));
                 }
                 else if (x < 10 && y < 10) // urban concrete
                 {
-                    Context.BuildActor<Terrain>(urbanConcrete, args);
+                    Context.BuildActor(urbanConcrete, args);
                 }
                 else // just ground
                 {
-                    Context.BuildActor<Terrain>(ground, args);
+                    Context.BuildActor(ground, args);
                 }
             }
         }

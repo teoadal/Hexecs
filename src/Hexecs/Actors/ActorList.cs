@@ -19,16 +19,23 @@ public sealed partial class ActorList<T> : IDisposable
         get => _length;
     }
 
-    private uint[] _array;
+    private readonly ArrayPool<ActorId> _arrayPool;
+
+    private ActorId[] _array;
     private bool _disposed;
     private int _length;
     private readonly ActorComponentPool<T> _pool;
 
-    public ActorList(ActorContext context, int capacity = 8)
+    public ActorList(
+        ActorContext context,
+        ArrayPool<ActorId>? arrayPool = null,
+        int capacity = 8)
     {
+        _arrayPool = arrayPool ?? ArrayPool<ActorId>.Shared;
+
         _array = capacity == 0
             ? []
-            : ArrayPool<uint>.Shared.Rent(capacity);
+            : _arrayPool.Rent(capacity);
 
         _length = 0;
         _pool = context.GetOrCreateComponentPool<T>();
@@ -37,39 +44,52 @@ public sealed partial class ActorList<T> : IDisposable
         context.Cleared += OnCleared;
     }
 
-    private void OnCleared() => Clear();
-
-    public void Add(in Actor<T> actor) => Add(actor.Id);
-
-    public void Add(in ActorRef<T> actor) => Add(actor.Id);
+    public void Add(in ActorRef<T> actor)
+    {
+        Add(actor.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add(uint actorId)
+    public void Add(ActorId actorId)
     {
-        if (_disposed) ActorError.Disposed(typeof(ActorList<T>));
+        if (_disposed)
+        {
+            ActorError.Disposed(typeof(ActorList<T>));
+        }
 
-        ArrayUtils.Insert(ref _array, ArrayPool<uint>.Shared, _length, actorId);
+        ArrayUtils.Insert(ref _array, _arrayPool, _length, actorId);
         _length++;
     }
 
     public void Clear()
     {
-        if (_array.Length > 0) ArrayPool<uint>.Shared.Return(_array);
+        if (_array.Length > 0)
+        {
+            _arrayPool.Return(_array);
+        }
 
         _array = [];
         _length = 0;
     }
 
-    public bool Contains(in Actor<T> actor) => Contains(actor.Id);
-
-    public bool Contains(in ActorRef<T> actor) => Contains(actor.Id);
+    public bool Contains(in ActorRef<T> actor)
+    {
+        return Contains(actor.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(uint actorId) => Array.IndexOf(_array, actorId, 0, _length) != -1;
+    public bool Contains(ActorId actorId)
+    {
+        return Array.IndexOf(_array, actorId, 0, _length) != -1;
+    }
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         Clear();
@@ -79,19 +99,27 @@ public sealed partial class ActorList<T> : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => _length == 0
-        ? Enumerator.Empty
-        : new Enumerator(this);
+    public Enumerator GetEnumerator()
+    {
+        return _length == 0
+            ? Enumerator.Empty
+            : new Enumerator(this);
+    }
 
-    public bool Remove(in Actor<T> actor) => Remove(actor.Id);
-
-    public bool Remove(in ActorRef<T> actor) => Remove(actor.Id);
+    public bool Remove(in ActorRef<T> actor)
+    {
+        return Remove(actor.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Remove(uint actorId)
+    public bool Remove(ActorId actorId)
     {
-        var index = Array.IndexOf(_array, actorId, 0, _length);
-        if (index == -1) return false;
+        int index = Array.IndexOf(_array, actorId, 0, _length);
+
+        if (index == -1)
+        {
+            return false;
+        }
 
         ArrayUtils.Cut(_array, index);
         _length--;
@@ -100,9 +128,20 @@ public sealed partial class ActorList<T> : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Span<uint> AsSpan() => _length == 0
-        ? Span<uint>.Empty
-        : _array.AsSpan(0, _length);
+    private Span<ActorId> AsSpan()
+    {
+        return _length == 0
+            ? Span<ActorId>.Empty
+            : _array.AsSpan(0, _length);
+    }
 
-    private void OnRemoved(uint actorId) => Remove(actorId);
+    private void OnCleared()
+    {
+        Clear();
+    }
+
+    private void OnRemoved(ActorId actorId)
+    {
+        Remove(actorId);
+    }
 }

@@ -20,10 +20,10 @@ public sealed partial class ActorContext
     public ActorFilter<T1> Filter<T1>()
         where T1 : struct, IActorComponent
     {
-        var key = typeof(ActorFilter<T1>);
+        Type key = typeof(ActorFilter<T1>);
 
         // ReSharper disable once InvertIf
-        if (!_filters.TryGetValue(key, out var collection))
+        if (!_filters.TryGetValue(key, out IActorFilter? collection))
         {
             collection = new ActorFilter<T1>(this);
             _filters.Add(key, collection);
@@ -46,21 +46,23 @@ public sealed partial class ActorContext
     public ActorFilter<T1> Filter<T1>(Action<ActorConstraint.Builder> constraint)
         where T1 : struct, IActorComponent
     {
-        var builder = ResolveConstraintBuilder();
+        ActorConstraint.Builder builder = ResolveConstraintBuilder();
         constraint(builder);
 
-        foreach (var filter in _filtersWithConstraint)
+        foreach (IActorFilter filter in _filtersWithConstraint)
         {
             // ReSharper disable once InvertIf
             if (filter is ActorFilter<T1> expected && builder.Equals(filter.Constraint))
             {
                 ReturnConstraintBuilder(builder);
+
                 return expected;
             }
         }
 
         var newFilter = new ActorFilter<T1>(this, FlushConstraintBuilder(builder));
         _filtersWithConstraint.Add(newFilter);
+
         return newFilter;
     }
 
@@ -82,10 +84,10 @@ public sealed partial class ActorContext
         where T1 : struct, IActorComponent
         where T2 : struct, IActorComponent
     {
-        var key = typeof(ActorFilter<T1, T2>);
+        Type key = typeof(ActorFilter<T1, T2>);
 
         // ReSharper disable once InvertIf
-        if (!_filters.TryGetValue(key, out var collection))
+        if (!_filters.TryGetValue(key, out IActorFilter? collection))
         {
             collection = new ActorFilter<T1, T2>(this);
             _filters.Add(key, collection);
@@ -110,21 +112,23 @@ public sealed partial class ActorContext
         where T1 : struct, IActorComponent
         where T2 : struct, IActorComponent
     {
-        var builder = ResolveConstraintBuilder();
+        ActorConstraint.Builder builder = ResolveConstraintBuilder();
         constraint(builder);
 
-        foreach (var filter in _filtersWithConstraint)
+        foreach (IActorFilter filter in _filtersWithConstraint)
         {
             // ReSharper disable once InvertIf
             if (filter is ActorFilter<T1, T2> expected && builder.Equals(filter.Constraint))
             {
                 ReturnConstraintBuilder(builder);
+
                 return expected;
             }
         }
 
         var newFilter = new ActorFilter<T1, T2>(this, FlushConstraintBuilder(builder));
         _filtersWithConstraint.Add(newFilter);
+
         return newFilter;
     }
 
@@ -148,10 +152,10 @@ public sealed partial class ActorContext
         where T2 : struct, IActorComponent
         where T3 : struct, IActorComponent
     {
-        var key = typeof(ActorFilter<T1, T2, T3>);
+        Type key = typeof(ActorFilter<T1, T2, T3>);
 
         // ReSharper disable once InvertIf
-        if (!_filters.TryGetValue(key, out var collection))
+        if (!_filters.TryGetValue(key, out IActorFilter? collection))
         {
             collection = new ActorFilter<T1, T2, T3>(this);
             _filters.Add(key, collection);
@@ -178,21 +182,23 @@ public sealed partial class ActorContext
         where T2 : struct, IActorComponent
         where T3 : struct, IActorComponent
     {
-        var builder = ResolveConstraintBuilder();
+        ActorConstraint.Builder builder = ResolveConstraintBuilder();
         constraint(builder);
 
-        foreach (var filter in _filtersWithConstraint)
+        foreach (IActorFilter filter in _filtersWithConstraint)
         {
             // ReSharper disable once InvertIf
             if (filter is ActorFilter<T1, T2, T3> expected && builder.Equals(filter.Constraint))
             {
                 ReturnConstraintBuilder(builder);
+
                 return expected;
             }
         }
 
         var newFilter = new ActorFilter<T1, T2, T3>(this, FlushConstraintBuilder(builder));
         _filtersWithConstraint.Add(newFilter);
+
         return newFilter;
     }
 
@@ -201,7 +207,7 @@ public sealed partial class ActorContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ActorConstraint FlushConstraintBuilder(ActorConstraint.Builder builder)
     {
-        var constraint = builder.Build();
+        ActorConstraint constraint = builder.Build();
         ReturnConstraintBuilder(builder);
 
         return constraint;

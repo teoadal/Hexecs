@@ -14,14 +14,14 @@ public sealed partial class AssetFilter<T1>
             get
             {
                 var filter = _filter;
-                var (actorId, entry) = _enumerator.Current;
+                var (assetId, entry) = _enumerator.Current;
                 return new AssetRef<T1>(
                     filter.Context,
-                    actorId,
+                    new AssetId(assetId),
                     ref filter._pool1.GetByIndex(entry.Index1));
             }
         }
-        
+
         public readonly int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,23 +38,10 @@ public sealed partial class AssetFilter<T1>
             _enumerator = filter._dictionary.GetEnumerator();
         }
 
-        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => _enumerator.MoveNext();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator() => this;
-        
-        public Asset[] ToArray()
-        {
-            var count = 0;
-            var assets = ArrayUtils.Create<Asset>(_filter.Length);
-            foreach (var asset in this)
-            {
-                assets[count++] = asset;
-            }
-
-            return assets;
-        }
     }
 }

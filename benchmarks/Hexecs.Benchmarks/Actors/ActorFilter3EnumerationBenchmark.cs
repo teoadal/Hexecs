@@ -1,6 +1,12 @@
-﻿using Friflo.Engine.ECS;
+﻿using DefaultEcs;
+
+using Friflo.Engine.ECS;
+
 using Hexecs.Benchmarks.Mocks.ActorComponents;
+using Hexecs.Utils;
 using Hexecs.Worlds;
+
+using Entity = DefaultEcs.Entity;
 using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
@@ -11,7 +17,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method                 | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------------- |------- |----------:|------:|----------:|------------:|
@@ -29,38 +35,40 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // ------------------------------------------------------------------------------------
 //
-// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.102
+//     .NET SDK 10.0.400
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method                 | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
 //     |----------------------- |------- |-----------:|------:|----------:|------------:|
-//     | FriFlo                 | 10000  |   9.383 us |  0.69 |      88 B |          NA |
-//     | FriFlo_Chunks          | 10000  |   9.538 us |  0.70 |         - |          NA |
-//     | Hexecs_ComponentAccess | 10000  |  12.621 us |  0.93 |         - |          NA |
-//     | DefaultEcs             | 10000  |  13.351 us |  0.99 |         - |          NA |
-//     | Hexecs                 | 10000  |  13.534 us |  1.00 |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |   8.256 us |  0.81 |         - |          NA |
+//     | FriFlo                 | 10000  |   8.398 us |  0.82 |      88 B |          NA |
+//     | FriFlo_Chunks          | 10000  |   9.560 us |  0.93 |         - |          NA |
+//     | Hexecs                 | 10000  |  10.240 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 10000  |  13.360 us |  1.30 |         - |          NA |
 //     |                        |        |            |       |           |             |
-//     | FriFlo                 | 100000 |  91.925 us |  0.65 |      88 B |          NA |
-//     | FriFlo_Chunks          | 100000 |  94.962 us |  0.67 |         - |          NA |
-//     | Hexecs_ComponentAccess | 100000 | 131.812 us |  0.93 |         - |          NA |
-//     | Hexecs                 | 100000 | 142.264 us |  1.00 |         - |          NA |
-//     | DefaultEcs             | 100000 | 158.585 us |  1.11 |         - |          NA |
+//     | FriFlo                 | 100000 |  83.226 us |  0.79 |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 100000 |  84.102 us |  0.80 |         - |          NA |
+//     | FriFlo_Chunks          | 100000 |  95.161 us |  0.91 |         - |          NA |
+//     | Hexecs                 | 100000 | 104.746 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 100000 | 162.182 us |  1.55 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class ActorFilter3EnumerationBenchmark
 {
-    [Params(10_000, 100_000)] public int Count;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorContext _context = null!;
     private ActorFilter<Attack, Defence, Speed> _filter = null!;
@@ -76,11 +84,12 @@ public class ActorFilter3EnumerationBenchmark
     public int Hexecs()
     {
         var result = 0;
-        foreach (var actor in _filter)
+
+        foreach (ActorRef<Attack, Defence, Speed> actor in _filter)
         {
             result += actor.Component1.Value +
-                      actor.Component2.Value +
-                      actor.Component3.Value;
+                actor.Component2.Value +
+                actor.Component3.Value;
         }
 
         return result;
@@ -91,15 +100,15 @@ public class ActorFilter3EnumerationBenchmark
     {
         var result = 0;
 
-        var attacks = _context.GetComponents<Attack>();
-        var defences = _context.GetComponents<Defence>();
-        var speeds = _context.GetComponents<Speed>();
+        ComponentsAccess<Attack> attacks = _context.GetComponents<Attack>();
+        ComponentsAccess<Defence> defences = _context.GetComponents<Defence>();
+        ComponentsAccess<Speed> speeds = _context.GetComponents<Speed>();
 
-        foreach (var actorId in _filter.Keys)
+        foreach (uint actorId in _filter.Keys)
         {
             result += attacks[actorId].Value +
-                      defences[actorId].Value +
-                      speeds[actorId].Value;
+                defences[actorId].Value +
+                speeds[actorId].Value;
         }
 
         return result;
@@ -108,16 +117,17 @@ public class ActorFilter3EnumerationBenchmark
     [Benchmark]
     public int DefaultEcs()
     {
-        var attacks = _defaultWorld.GetComponents<Attack>();
-        var defences = _defaultWorld.GetComponents<Defence>();
-        var speeds = _defaultWorld.GetComponents<Speed>();
+        Components<Attack> attacks = _defaultWorld.GetComponents<Attack>();
+        Components<Defence> defences = _defaultWorld.GetComponents<Defence>();
+        Components<Speed> speeds = _defaultWorld.GetComponents<Speed>();
 
         var result = 0;
-        foreach (var entity in _defaultEntitySet.GetEntities())
+
+        foreach (Entity entity in _defaultEntitySet.GetEntities())
         {
             result += attacks[entity].Value +
-                      defences[entity].Value +
-                      speeds[entity].Value;
+                defences[entity].Value +
+                speeds[entity].Value;
         }
 
         return result;
@@ -131,8 +141,8 @@ public class ActorFilter3EnumerationBenchmark
         _frifloQuery.ForEachEntity((ref attack, ref defence, ref speed, _) =>
         {
             result += attack.Value +
-                      defence.Value +
-                      speed.Value;
+                defence.Value +
+                speed.Value;
         });
 
         return result;
@@ -143,17 +153,17 @@ public class ActorFilter3EnumerationBenchmark
     {
         var result = 0;
 
-        foreach (var queryChunk in _frifloQuery.Chunks)
+        foreach (Chunks<Attack, Defence, Speed> queryChunk in _frifloQuery.Chunks)
         {
-            var attacks = queryChunk.Chunk1;
-            var defences = queryChunk.Chunk2;
-            var speeds = queryChunk.Chunk3;
+            Chunk<Attack> attacks = queryChunk.Chunk1;
+            Chunk<Defence> defences = queryChunk.Chunk2;
+            Chunk<Speed> speeds = queryChunk.Chunk3;
 
             for (var i = 0; i < queryChunk.Length; i++)
             {
                 result += attacks[i].Value +
-                          defences[i].Value +
-                          speeds[i].Value;
+                    defences[i].Value +
+                    speeds[i].Value;
             }
         }
 
@@ -182,17 +192,18 @@ public class ActorFilter3EnumerationBenchmark
         _filter = _world.Actors.Filter<Attack, Defence, Speed>();
         _frifloQuery = _frifloWorld.Query<Attack, Defence, Speed>();
 
-        var context = _world.Actors;
+        ActorContext context = _world.Actors;
+
         for (var i = 0; i < Count; i++)
         {
             var attack = new Attack { Value = i };
 
-            var actor = context.CreateActor();
+            Actor actor = context.CreateActor();
             actor.Add(in attack);
             actor.Add(new Defence());
             actor.Add(new Speed());
 
-            var defaultEntity = _defaultWorld.CreateEntity();
+            Entity defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set(in attack);
             defaultEntity.Set<Defence>();
             defaultEntity.Set<Speed>();

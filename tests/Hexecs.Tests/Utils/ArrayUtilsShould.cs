@@ -2,7 +2,7 @@
 
 namespace Hexecs.Tests.Utils;
 
-public sealed class ArrayUtilsShould 
+public sealed class ArrayUtilsShould
 {
     /// <summary>
     /// Проверяет, что метод Clear не вызывает ошибок при очистке пустого массива
@@ -11,11 +11,11 @@ public sealed class ArrayUtilsShould
     public void Clear_EmptyArray_ShouldDoNothing()
     {
         // Arrange
-        var array = Array.Empty<int>();
-        
-        // Act 
+        int[] array = [];
+
+        // Act
         ArrayUtils.Clear(array);
-        
+
         // Assert
         array
             .Should()
@@ -25,15 +25,15 @@ public sealed class ArrayUtilsShould
     /// <summary>
     /// Проверяет, что метод Clear корректно очищает все элементы заполненного массива
     /// </summary>
-    [Fact(DisplayName = "Очистка заполненного массива должна обнулить все элементы")] 
+    [Fact(DisplayName = "Очистка заполненного массива должна обнулить все элементы")]
     public void Clear_FilledArray_ShouldClearAllElements()
     {
         // Arrange
         var array = new[] { 1, 2, 3, 4, 5 };
-        
+
         // Act
         ArrayUtils.Clear(array);
-        
+
         // Assert
         array
             .Should()
@@ -48,10 +48,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3, 4, 5 };
-        
+
         // Act
         ArrayUtils.Clear(array, 3);
-        
+
         // Assert
         array.Take(3).Should().OnlyContain(x => x == 0);
         array.Skip(3).Should().BeEquivalentTo([4, 5]);
@@ -65,10 +65,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3, 4, 5 };
-        
+
         // Act
         ArrayUtils.Cut(array, 1);
-        
+
         // Assert
         array.Take(4).Should().BeEquivalentTo([1, 3, 4, 5]);
         array[4].Should().Be(0);
@@ -82,10 +82,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3, 4, 5 };
-        
+
         // Act
         ArrayUtils.Cut(array, 4);
-        
+
         // Assert
         array.Take(4).Should().BeEquivalentTo([1, 2, 3, 4]);
         array[4].Should().Be(0);
@@ -99,11 +99,11 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new int[5];
-        var originalReference = array;
-        
+        int[] originalReference = array;
+
         // Act
         ArrayUtils.EnsureCapacity(ref array, 3);
-        
+
         // Assert
         array.Should().BeSameAs(originalReference);
         array.Length.Should().Be(5);
@@ -117,10 +117,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3 };
-        
+
         // Act
         ArrayUtils.EnsureCapacity(ref array, 5);
-        
+
         // Assert
         array.Length.Should().Be(5);
         array.Take(3).Should().BeEquivalentTo([1, 2, 3]);
@@ -134,10 +134,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3 };
-        
+
         // Act
         ArrayUtils.Insert(ref array, 1, 10);
-        
+
         // Assert
         array[1].Should().Be(10);
     }
@@ -150,10 +150,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3 };
-        
+
         // Act
         ArrayUtils.Insert(ref array, 5, 10);
-        
+
         // Assert
         array.Length.Should().BeGreaterThan(5);
         array[5].Should().Be(10);
@@ -167,10 +167,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3, 4, 5 };
-        
+
         // Act
-        var result = ArrayUtils.Remove(array, 3);
-        
+        bool result = ArrayUtils.Remove(array, 3);
+
         // Assert
         result.Should().BeTrue();
         array.Take(4).Should().BeEquivalentTo([1, 2, 4, 5]);
@@ -185,10 +185,10 @@ public sealed class ArrayUtilsShould
     {
         // Arrange
         var array = new[] { 1, 2, 3, 4, 5 };
-        
+
         // Act
-        var result = ArrayUtils.Remove(array, 10);
-        
+        bool result = ArrayUtils.Remove(array, 10);
+
         // Assert
         result.Should().BeFalse();
         array.Should().BeEquivalentTo([1, 2, 3, 4, 5]);

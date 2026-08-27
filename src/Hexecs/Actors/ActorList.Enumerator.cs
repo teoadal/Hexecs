@@ -9,15 +9,19 @@ public sealed partial class ActorList<T>
         public static Enumerator Empty
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new();
+            get => new Enumerator();
         }
 
         public readonly ActorRef<T> Current
         {
             get
             {
-                var id = _ids[_index];
-                return new ActorRef<T>(_pool.Context, id, ref _pool.Get(id));
+                ActorId id = _ids[_index];
+
+                return new ActorRef<T>(
+                    context: _pool.Context,
+                    id: id,
+                    component1: ref _pool.Get(id));
             }
         }
 
@@ -26,9 +30,9 @@ public sealed partial class ActorList<T>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _ids.Length;
         }
-        
+
         private readonly ActorComponentPool<T> _pool;
-        private readonly Span<uint> _ids;
+        private readonly Span<ActorId> _ids;
         private int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +40,7 @@ public sealed partial class ActorList<T>
         {
             _index = -1;
             _pool = null!;
-            _ids = Span<uint>.Empty;
+            _ids = Span<ActorId>.Empty;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,20 +52,27 @@ public sealed partial class ActorList<T>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _ids.Length;
+        public bool MoveNext()
+        {
+            return ++_index < _ids.Length;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
-        
-        public Actor<T>[] ToArray()
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
+
+        public Actor[] ToArray()
         {
             var count = 0;
-            var actors = ArrayUtils.Create<Actor<T>>(_ids.Length);
-            foreach (var actor in this)
+            Actor[] actors = ArrayUtils.Create<Actor>(_ids.Length);
+
+            foreach (ActorRef<T> actor in this)
             {
                 actors[count++] = actor;
             }
-            
+
             return actors;
         }
     }

@@ -9,13 +9,13 @@ public sealed partial class ActorContext
         public static ChildrenEnumerator Empty
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new();
+            get => new ChildrenEnumerator();
         }
 
         public readonly Actor Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, _currentId);
+            get => new Actor(_context, _currentId);
         }
 
         public readonly int Length
@@ -25,15 +25,15 @@ public sealed partial class ActorContext
         }
 
         private readonly ActorContext _context;
-        private uint _currentId;
-        private uint _nextId;
+        private ActorId _currentId;
+        private ActorId _nextId;
         private readonly uint _count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ChildrenEnumerator(ActorContext context, uint firstChildId, uint count)
+        internal ChildrenEnumerator(ActorContext context, ActorId firstChildId, uint count)
         {
             _context = context;
-            _currentId = 0;
+            _currentId = ActorId.Empty;
             _nextId = firstChildId;
             _count = count;
         }
@@ -41,26 +41,35 @@ public sealed partial class ActorContext
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (_nextId == 0) return false;
+            if (_nextId.IsEmpty)
+            {
+                return false;
+            }
 
             _currentId = _nextId;
-            ref var node = ref _context.GetComponent<ActorNodeComponent>(_currentId);
+            ref ActorNodeComponent node = ref _context.GetComponent<ActorNodeComponent>(_currentId);
             _nextId = node.NextSiblingId;
 
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly ChildrenEnumerator GetEnumerator() => this;
+        public readonly ChildrenEnumerator GetEnumerator()
+        {
+            return this;
+        }
 
         public Actor[] ToArray()
         {
-            if (_count == 0) return [];
+            if (_count == 0)
+            {
+                return [];
+            }
 
             var result = new Actor[_count];
             var index = 0;
 
-            foreach (var actor in this)
+            foreach (Actor actor in this)
             {
                 result[index++] = actor;
             }

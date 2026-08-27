@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+
 using Hexecs.Actors.Serializations;
 using Hexecs.Serializations;
 
@@ -6,8 +7,8 @@ namespace Hexecs.Actors.Bounds;
 
 internal sealed class BoundComponentConverter : IActorComponentConverter<BoundComponent>
 {
-    public static readonly BoundComponentConverter Instance = new();
-    
+    public static readonly BoundComponentConverter Instance = new BoundComponentConverter();
+
     public BoundComponent Deserialize(ActorContext context, ref Utf8JsonReader reader)
     {
         throw new NotImplementedException();

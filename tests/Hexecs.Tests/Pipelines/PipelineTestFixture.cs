@@ -32,21 +32,30 @@ public sealed class PipelineTestFixture : BaseFixture, IDisposable
         : ICommandHandler<TCommand, TResult>
         where TCommand : struct, ICommand<TResult>
     {
-        public TResult Handle(in TCommand command) => handler(command);
+        public TResult Handle(in TCommand command)
+        {
+            return handler(command);
+        }
     }
 
     private sealed class QueryHandler<TQuery, TResult>(Func<TQuery, TResult> handler)
         : IQueryHandler<TQuery, TResult>
         where TQuery : struct, IQuery<TResult>
     {
-        public TResult Handle(in TQuery query) => handler(query);
+        public TResult Handle(in TQuery query)
+        {
+            return handler(query);
+        }
     }
 
     private sealed class NotificationHandler<TNotification>(Action<TNotification> handler)
         : INotificationHandler<TNotification>
         where TNotification : struct, INotification
     {
-        public void Handle(in TNotification notification) => handler(notification);
+        public void Handle(in TNotification notification)
+        {
+            handler(notification);
+        }
     }
 
     public void Dispose()

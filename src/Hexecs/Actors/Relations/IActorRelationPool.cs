@@ -12,11 +12,11 @@ internal interface IActorRelationPool
 
     void Clear();
 
-    int Count(uint subject);
+    int Count(ActorId subject);
 
-    bool Has(uint subject, uint relative);
+    bool Has(ActorId subject, ActorId relative);
 
-    bool Remove(uint subject);
+    bool Remove(ActorId subject);
 
     /// <summary>
     /// Сериализует содержимое пула отношений в формат JSON.

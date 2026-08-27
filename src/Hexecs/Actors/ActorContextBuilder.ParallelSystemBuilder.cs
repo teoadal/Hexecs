@@ -13,22 +13,23 @@ public sealed partial class ActorContextBuilder
         public ParallelSystemBuilder Add(IUpdateSystem system)
         {
             _systems.Add(new Entry<IUpdateSystem>(system));
+
             return this;
         }
 
         public ParallelSystemBuilder Add(params Span<IUpdateSystem> systems)
         {
-            foreach (var updateSystem in systems)
+            foreach (IUpdateSystem updateSystem in systems)
             {
                 Add(updateSystem);
             }
 
             return this;
         }
-        
+
         public ParallelSystemBuilder Add(IEnumerable<IUpdateSystem> systems)
         {
-            foreach (var updateSystem in systems)
+            foreach (IUpdateSystem updateSystem in systems)
             {
                 Add(updateSystem);
             }
@@ -39,29 +40,38 @@ public sealed partial class ActorContextBuilder
         public ParallelSystemBuilder Create(Func<ActorContext, IUpdateSystem> system)
         {
             _systems.Add(new Entry<IUpdateSystem>(system));
+
             return this;
         }
 
         public ParallelSystemBuilder Worker(IParallelWorker worker)
         {
             _worker = worker;
+
             return this;
         }
 
-        internal Func<ActorContext, IUpdateSystem> Build() => actorContext =>
+        internal Func<ActorContext, IUpdateSystem> Build()
         {
-            var parallelSystems = _systems.ToArray(
-                static (builder, ctx) => builder.Invoke(ctx),
-                actorContext);
+            return actorContext =>
+            {
+                IUpdateSystem[] parallelSystems = _systems.ToArray(
+                    static (builder, ctx) => builder.Invoke(ctx),
+                    actorContext);
 
-            var worker = _worker ?? actorContext.GetService<IParallelWorker>();
-            if (worker == null) ActorError.ParallelWorkerNotRegistered();
+                IParallelWorker? worker = _worker ?? actorContext.GetService<IParallelWorker>();
 
-            var result = new ParallelSystem(actorContext, order, parallelSystems, worker);
+                if (worker == null)
+                {
+                    ActorError.ParallelWorkerNotRegistered();
+                }
 
-            _systems.Clear();
+                var result = new ParallelSystem(actorContext, order, parallelSystems, worker);
 
-            return result;
-        };
+                _systems.Clear();
+
+                return result;
+            };
+        }
     }
 }

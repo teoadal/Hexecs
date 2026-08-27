@@ -11,7 +11,7 @@ public sealed partial class AssetContext
         public readonly Asset Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, _enumerator.Current);
+            get => new(_context, new AssetId(_enumerator.Current));
         }
 
         public readonly int Length

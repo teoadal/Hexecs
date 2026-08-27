@@ -11,9 +11,9 @@ public sealed class ActorSystemShould1(ActorTestFixture fixture) : IClassFixture
     [Fact(DisplayName = "Параллельные системы должны быть вызваны параллельно")]
     public void ConfigureAndRunSystemsInParallel()
     {
-        var systems = fixture.CreateArray(_ => new Mock<IUpdateSystem>());
+        Mock<IUpdateSystem>[] systems = fixture.CreateArray(_ => new Mock<IUpdateSystem>());
 
-        using var world = new WorldBuilder()
+        using World world = new WorldBuilder()
             .UseDefaultParallelWorker(degreeOfParallelism: 4)
             .UseDefaultActorContext(cfg => cfg
                 .CreateParallelUpdateSystem(systems.Select(mock => mock.Object)))
@@ -39,7 +39,7 @@ public sealed class ActorSystemShould1(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
 
-        using var world = new WorldBuilder()
+        using World world = new WorldBuilder()
             .UseDefaultParallelWorker(degreeOfParallelism)
             .UseDefaultActorContext(cfg => cfg
                 .CreateUpdateSystem(ctx => new ParallelUpdateSystem(
@@ -47,10 +47,10 @@ public sealed class ActorSystemShould1(ActorTestFixture fixture) : IClassFixture
                     ctx.GetRequiredService<IParallelWorker>())))
             .Build();
 
-        var actorContext = world.Actors;
+        ActorContext actorContext = world.Actors;
         for (uint i = 1; i <= actorCount; i++)
         {
-            var actor = actorContext.CreateActor(i);
+            Actor actor = actorContext.CreateActor(i);
             actor.Add(new Attack { Value = 0 });
         }
 
@@ -61,13 +61,13 @@ public sealed class ActorSystemShould1(ActorTestFixture fixture) : IClassFixture
         // assert
 
 
-        var actorFilter = actorContext.Filter<Attack>();
+        ActorFilter<Attack> actorFilter = actorContext.Filter<Attack>();
 
         actorFilter.Length
             .Should()
             .Be(actorCount);
         
-        foreach (var actor in actorFilter)
+        foreach (ActorRef<Attack> actor in actorFilter)
         {
             actor.Component1.Value
                 .Should()

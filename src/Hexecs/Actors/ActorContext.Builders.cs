@@ -20,16 +20,20 @@ public sealed partial class ActorContext
     /// </remarks>
     public Actor BuildActor(in Asset asset, Args? args = null)
     {
-        var actorId = GetNextActorId();
+        uint actorIdRaw = GetNextActorId();
 
-        AddEntry(actorId);
+        AddEntry(actorIdRaw);
 
-        var actor = new Actor(this, actorId);
+        var actor = new Actor(this, new ActorId(actorIdRaw));
 
-        if (asset.IsEmpty) return actor;
-        
+        if (asset.IsEmpty)
+        {
+            return actor;
+        }
+
         args ??= Args.Rent();
-        foreach (var builder in _builders)
+
+        foreach (IActorBuilder builder in _builders)
         {
             builder.Build(in actor, in asset, args);
         }
@@ -40,25 +44,8 @@ public sealed partial class ActorContext
         return actor;
     }
 
-    /// <summary>
-    /// Создает типизированного актёра с компонентом указанного типа на основе ассета.
-    /// </summary>
-    /// <typeparam name="TComponent">Тип компонента, который будет иметь актёр.</typeparam>
-    /// <param name="asset">Ассет, используемый для построения актёра.</param>
-    /// <param name="args">Дополнительные аргументы для построения актёра. Если не указаны, будут арендованы пустые аргументы.</param>
-    /// <returns>Типизированный актёр с компонентом указанного типа.</returns>
-    /// <remarks>
-    /// Метод создает обычного актёра с помощью <see cref="BuildActor"/>, а затем преобразует его в типизированного актёра.
-    /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<TComponent> BuildActor<TComponent>(in Asset asset, Args? args = null)
-        where TComponent : struct, IActorComponent
-    {
-        return BuildActor(in asset, args).As<TComponent>();
-    }
-
     internal void LoadBuilders(IEnumerable<IActorBuilder> builders)
     {
-        _builders = builders.ToArray();
+        _builders = [.. builders];
     }
 }

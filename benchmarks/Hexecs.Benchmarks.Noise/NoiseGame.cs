@@ -59,8 +59,7 @@ public class NoiseGame : Game
                 .ConfigureComponentPool<CircleColor>(color => color.Capacity(InitialEntityCount))
                 .ConfigureComponentPool<Position>(position => position.Capacity(InitialEntityCount))
                 .ConfigureComponentPool<Velocity>(velocity => velocity.Capacity(InitialEntityCount))
-                .CreateUpdateSystem(ctx =>
-                    new MovementSystem(ctx, ctx.GetRequiredService<IParallelWorker>(), width, height))
+                .CreateUpdateSystem(ctx => new MovementSystem(ctx, ctx.GetRequiredService<IParallelWorker>(), width, height))
                 .CreateDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2)))
             .Build();
 

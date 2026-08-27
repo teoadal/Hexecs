@@ -1,3 +1,4 @@
+using Hexecs.Actors.Relations;
 using Hexecs.Tests.Mocks;
 using Hexecs.Tests.Mocks.ActorComponents;
 
@@ -10,8 +11,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     {
         // arrange
 
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
 
         // act
 
@@ -37,20 +38,20 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
 
         var expectedRelation = new RelationMock { Value = 123 };
 
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
 
         actor1.AddRelation(actor2, in expectedRelation);
 
         // act
 
-        var relationEnumerator = actor1.Relations<RelationMock>();
+        ActorRelationEnumerator<RelationMock> relationEnumerator = actor1.Relations<RelationMock>();
 
         // assert
 
-        foreach (var relation in relationEnumerator)
+        foreach (ActorRelation<RelationMock> relation in relationEnumerator)
         {
-            var actualRelation = relation.Relation;
+            RelationMock actualRelation = relation.Relation;
             actualRelation
                 .Should()
                 .Be(expectedRelation);
@@ -64,8 +65,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
 
         var expectedRelation = new RelationMock { Value = 123 };
 
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
 
         actor1.AddRelation(actor2, in expectedRelation);
 
@@ -85,8 +86,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     {
         // arrange
 
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
         actor1.AddRelation(actor2, new RelationMock());
 
         // act
@@ -109,8 +110,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void NotRemoveNonExistentRelation()
     {
         // arrange
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
 
         // act & assert
         actor1.Invoking(a => a.RemoveRelation<RelationMock>(actor2))
@@ -122,8 +123,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void ReturnFalseForNonExistentRelation()
     {
         // arrange
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
 
         // act & assert
         actor1.HasRelation<RelationMock>(actor2)
@@ -135,10 +136,10 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void ReturnEmptyEnumeratorWhenNoRelations()
     {
         // arrange
-        var actor = fixture.CreateActor<Attack>();
+        Actor actor = fixture.CreateActor<Attack>();
 
         // act
-        var relations = actor.Relations<RelationMock>();
+        ActorRelationEnumerator<RelationMock> relations = actor.Relations<RelationMock>();
 
         // assert
         relations.Length.Should().Be(0);
@@ -148,15 +149,15 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void OverwriteExistingRelation()
     {
         // arrange
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
         var initialRelation = new RelationMock { Value = 100 };
         var newRelation = new RelationMock { Value = 200 };
 
         actor1.AddRelation(actor2, in initialRelation);
 
         // act
-        ref var existsRelation = ref actor1.GetRelation<RelationMock>(actor2);
+        ref RelationMock existsRelation = ref actor1.GetRelation<RelationMock>(actor2);
         existsRelation = newRelation;
 
         // assert
@@ -168,9 +169,9 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void SupportMultipleRelationsWithDifferentActors()
     {
         // arrange
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
-        var actor3 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
+        Actor actor3 = fixture.CreateActor<Attack>();
 
         var relation12 = new RelationMock { Value = 100 };
         var relation13 = new RelationMock { Value = 200 };
@@ -188,8 +189,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void ThrowWhenAddingExistingRelation()
     {
         // arrange
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
         var relation = new RelationMock { Value = 100 };
 
         actor1.AddRelation(actor2, in relation);
@@ -204,8 +205,8 @@ public sealed class ActorRelationShould(ActorTestFixture fixture) : IClassFixtur
     public void ThrowWhenGettingNonExistentRelation()
     {
         // arrange
-        var actor1 = fixture.CreateActor<Attack>();
-        var actor2 = fixture.CreateActor<Attack>();
+        Actor actor1 = fixture.CreateActor<Attack>();
+        Actor actor2 = fixture.CreateActor<Attack>();
 
         // act & assert
         actor1.Invoking(a => a.GetRelation<RelationMock>(actor2))

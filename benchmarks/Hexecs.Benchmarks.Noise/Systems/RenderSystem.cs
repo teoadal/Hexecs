@@ -62,7 +62,6 @@ public sealed class RenderSystem : DrawSystem
         var count = _filter.Length;
         if (count <= 0) return;
 
-        // Наполняем буфер инстансов данными из HexECS
         var i = 0;
         foreach (var actor in _filter)
         {

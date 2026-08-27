@@ -100,7 +100,7 @@ public sealed class BlockShould
     {
         // Arrange
         var array = new[] { 1, 2, 3 };
-        var length = -1;
+        int length = -1;
 
         // Act
         var block = new Block<int>(array, length);
@@ -188,7 +188,7 @@ public sealed class BlockShould
     public void EnumerableConstructor_ShouldCreateBlockWithEnumerableElements()
     {
         // Arrange
-        var enumerable = Enumerable.Range(1, 3);
+        IEnumerable<int> enumerable = Enumerable.Range(1, 3);
 
         // Act
         var block = new Block<int>(enumerable);
@@ -202,7 +202,7 @@ public sealed class BlockShould
     public void EnumerableConstructor_WithEmptyEnumerable_ShouldCreateEmptyBlock()
     {
         // Arrange
-        var enumerable = Enumerable.Empty<int>();
+        IEnumerable<int> enumerable = Enumerable.Empty<int>();
 
         // Act
         var block = new Block<int>(enumerable);
@@ -216,7 +216,7 @@ public sealed class BlockShould
     public void EnumerableAndLengthConstructor_ShouldCreateBlockWithSpecifiedLength()
     {
         // Arrange
-        var enumerable = Enumerable.Range(1, 5); // 1, 2, 3, 4, 5
+        IEnumerable<int> enumerable = Enumerable.Range(1, 5); // 1, 2, 3, 4, 5
         var length = 3;
 
         // Act
@@ -231,7 +231,7 @@ public sealed class BlockShould
     public void EnumerableAndLengthConstructor_WithZeroLength_ShouldCreateEmptyBlock()
     {
         // Arrange
-        var enumerable = Enumerable.Range(1, 5);
+        IEnumerable<int> enumerable = Enumerable.Range(1, 5);
         var length = 0;
 
         // Act
@@ -273,7 +273,7 @@ public sealed class BlockShould
         var block = new Block<int>();
 
         // Act
-        var memory = block.AsMemory();
+        Memory<int> memory = block.AsMemory();
 
         // Assert
         memory.IsEmpty.Should().BeTrue();
@@ -287,7 +287,7 @@ public sealed class BlockShould
         var block = new Block<int>(array);
 
         // Act
-        var memory = block.AsMemory();
+        Memory<int> memory = block.AsMemory();
 
         // Assert
         memory.Length.Should().Be(array.Length);
@@ -301,7 +301,7 @@ public sealed class BlockShould
         var block = new Block<double>();
 
         // Act
-        var span = block.AsSpan();
+        Span<double> span = block.AsSpan();
 
         // Assert
         span.IsEmpty.Should().BeTrue();
@@ -315,7 +315,7 @@ public sealed class BlockShould
         var block = new Block<string>(array);
 
         // Act
-        var span = block.AsSpan();
+        Span<string> span = block.AsSpan();
 
         // Assert
         span.Length.Should().Be(array.Length);
@@ -343,10 +343,17 @@ public sealed class BlockShould
         block.Contains("a").Should().BeFalse();
     }
 
-    private class CaseInsensitiveComparer : IEqualityComparer<string>
+    private sealed class CaseInsensitiveComparer : IEqualityComparer<string>
     {
-        public bool Equals(string? x, string? y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
-        public int GetHashCode(string obj) => obj.ToLowerInvariant().GetHashCode();
+        public bool Equals(string? x, string? y)
+        {
+            return string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public int GetHashCode(string obj)
+        {
+            return obj.ToLowerInvariant().GetHashCode();
+        }
     }
 
     [Fact(DisplayName = "Contains с пользовательским компаратором должен использовать компаратор")]
@@ -365,7 +372,7 @@ public sealed class BlockShould
         var block = new Block<int>(array); // Block uses this array instance
 
         // Act
-        ref var itemRef = ref block.GetRef(1);
+        ref int itemRef = ref block.GetRef(1);
 
         // Assert
         itemRef.Should().Be(20);
@@ -399,10 +406,10 @@ public sealed class BlockShould
         // If index is 0 for an empty array, it will throw IndexOutOfRangeException.
 
         // Let's test with _array explicitly null using the constructor that takes T[]
-        Block<int> blockWithNullArray = new Block<int>((int[]?)null!);
+        var blockWithNullArray = new Block<int>((int[]?)null!);
         Action act = () =>
         {
-            ref var _ = ref blockWithNullArray.GetRef(0);
+            ref int _ = ref blockWithNullArray.GetRef(0);
             // Попытка использования ref Unsafe.NullRef<T>() приведет к NullReferenceException
             // Console.WriteLine(_); // Это вызовет исключение
         };
@@ -433,7 +440,7 @@ public sealed class BlockShould
         var defaultBlock = new Block<int>();
         Action actDefault = () =>
         {
-            ref var _ = ref defaultBlock.GetRef(0);
+            ref int _ = ref defaultBlock.GetRef(0);
         };
         actDefault.Should().Throw<IndexOutOfRangeException>();
     }
@@ -444,13 +451,13 @@ public sealed class BlockShould
         var block = new Block<int>(new[] { 1 });
         Action act = () =>
         {
-            ref var _ = ref block.GetRef(1);
+            ref int _ = ref block.GetRef(1);
         };
         act.Should().Throw<IndexOutOfRangeException>();
 
         Action actNegative = () =>
         {
-            ref var _ = ref block.GetRef(-1);
+            ref int _ = ref block.GetRef(-1);
         };
         actNegative.Should().Throw<IndexOutOfRangeException>();
     }
@@ -461,7 +468,7 @@ public sealed class BlockShould
     {
         var block = new Block<decimal>();
         var count = 0;
-        foreach (var _ in block)
+        foreach (decimal _ in block)
         {
             count++;
         }
@@ -476,7 +483,7 @@ public sealed class BlockShould
         var block = new Block<string>(array);
         var iteratedItems = new List<string>();
 
-        foreach (var item in block)
+        foreach (string item in block)
         {
             iteratedItems.Add(item);
         }
@@ -504,7 +511,7 @@ public sealed class BlockShould
     {
         var array = new[] { 1, 2 };
         var block = new Block<int>(array); // This constructor assigns the reference
-        var underlyingArray = block.GetUnderlyingArray();
+        int[] underlyingArray = block.GetUnderlyingArray();
 
         underlyingArray.Should().BeSameAs(array); // Checks if it's the exact same instance
     }
@@ -516,7 +523,7 @@ public sealed class BlockShould
         IEnumerable<int> enumerable = sourceArray;
         var block = new Block<int>(enumerable); // Uses CollectionUtils.ToArray
 
-        var underlyingArray = block.GetUnderlyingArray();
+        int[] underlyingArray = block.GetUnderlyingArray();
         underlyingArray.Should().NotBeSameAs(sourceArray); // CollectionUtils.ToArray likely creates a new array
         underlyingArray.Should().Equal(sourceArray);
     }
@@ -570,7 +577,7 @@ public sealed class BlockShould
         var block = new Block<char>(new[] { 'a' });
         Action act = () =>
         {
-            var _ = block[1];
+            char _ = block[1];
         };
         act.Should().Throw<IndexOutOfRangeException>();
     }
@@ -601,7 +608,7 @@ public sealed class BlockShould
         // This test demonstrates behavior of value types (structs)
         var array = new[] { 1, 2, 3 };
         var block1 = new Block<int>(array);
-        var block2 = block1; // Value type copy
+        Block<int> block2 = block1; // Value type copy
 
         block2[0] = 100; // Modifies the array referenced by block2._array
 
@@ -629,7 +636,7 @@ public sealed class BlockShould
         IEnumerable<int> enumerable = block; // Explicitly use IEnumerable<T>
 
         var iteratedItems = new List<int>();
-        foreach (var item in enumerable)
+        foreach (int item in enumerable)
         {
             iteratedItems.Add(item);
         }
@@ -645,7 +652,7 @@ public sealed class BlockShould
         System.Collections.IEnumerable enumerable = block; // Explicitly use IEnumerable
 
         var iteratedItems = new List<object>(); // IEnumerator returns object
-        foreach (var item in enumerable)
+        foreach (object item in enumerable)
         {
             iteratedItems.Add(item);
         }

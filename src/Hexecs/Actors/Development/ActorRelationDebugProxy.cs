@@ -11,7 +11,7 @@ internal sealed class ActorRelationDebugProxy<T1>(ActorRelation<T1> relation)
         ? _context.Components(_actorId).ToArray()
         : [];
 
-    private readonly uint _actorId = relation.Id;
+    private readonly ActorId _actorId = relation.Id;
     private readonly ActorContext _context = relation.Context;
     private IActorComponent[]? _components;
 }

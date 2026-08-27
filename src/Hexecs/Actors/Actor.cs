@@ -16,17 +16,12 @@ namespace Hexecs.Actors;
 public readonly struct Actor : IEquatable<Actor>
 {
     /// <summary>
-    /// Константа, представляющая собой пустой идентификатор актёра.
-    /// </summary>
-    internal const uint EmptyId = 0;
-
-    /// <summary>
     /// Пустой актёр, используемый по умолчанию.
     /// </summary>
     public static Actor Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, EmptyId);
+        get => new Actor(null!, ActorId.Empty);
     }
 
     /// <summary>
@@ -55,7 +50,7 @@ public readonly struct Actor : IEquatable<Actor>
     /// <summary>
     /// Уникальный идентификатор актёра.
     /// </summary>
-    public readonly uint Id;
+    public readonly ActorId Id;
 
     /// <summary>
     /// Внутренний конструктор для создания актёра.
@@ -63,7 +58,7 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="context">Контекст актёра.</param>
     /// <param name="id">Идентификатор актёра.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal Actor(ActorContext context, uint id)
+    internal Actor(ActorContext context, ActorId id)
     {
         Context = context;
         Id = id;
@@ -76,7 +71,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="component">Компонент для добавления.</param>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден в контексте или компонент уже существует.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add<T>(in T component) where T : struct, IActorComponent => Context.AddComponent(Id, in component);
+    public void Add<T>(in T component) where T : struct, IActorComponent
+    {
+        Context.AddComponent(Id, in component);
+    }
 
     /// <summary>
     /// Добавляет дочернего актёра к текущему.
@@ -84,7 +82,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="child">Дочерний актёр.</param>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден или дочерний актёр уже добавлен.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddChild(in Actor child) => Context.AddChild(Id, child.Id);
+    public void AddChild(in Actor child)
+    {
+        Context.AddChild(Id, child.Id);
+    }
 
     /// <summary>
     /// Добавляет отношение между текущим актёром и указанным родственным актёром.
@@ -107,16 +108,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Типизированный актёр с указанным компонентом.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Actor<T> As<T>() where T : struct, IActorComponent => Context.GetActor<T>(Id);
-
-    /// <summary>
-    /// Преобразует актёра в ссылку на типизированного актёра.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <returns>Ссылка на типизированного актёра.</returns>
-    /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRef<T> AsRef<T>() where T : struct, IActorComponent => Context.GetActorRef<T>(Id);
+    public ActorRef<T> AsRef<T>()
+        where T : struct, IActorComponent
+    {
+        return Context.GetActorRef<T>(Id);
+    }
 
     /// <summary>
     /// Возвращает перечислитель дочерних актёров.
@@ -124,14 +120,20 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Перечислитель дочерних актёров.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorContext.ChildrenEnumerator Children() => Context.Children(Id);
+    public ActorContext.ChildrenEnumerator Children()
+    {
+        return Context.Children(Id);
+    }
 
     /// <summary>
     /// Уничтожает актёра.
     /// </summary>
     /// <returns>Возвращает true, если актёр был успешно уничтожен; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Destroy() => Context.DestroyActor(Id);
+    public bool Destroy()
+    {
+        return Context.DestroyActor(Id);
+    }
 
     /// <summary>
     /// Получает компонент актёра указанного типа.
@@ -140,7 +142,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Ссылка на компонент.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get<T>() where T : struct, IActorComponent => ref Context.GetComponent<T>(Id);
+    public ref T Get<T>()
+        where T : struct, IActorComponent
+    {
+        return ref Context.GetComponent<T>(Id);
+    }
 
     /// <summary>
     /// Получает ассет, связанный с актёром.
@@ -148,7 +154,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Ассет, связанный с актёром.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или с ним не связан ассет.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Asset GetAsset() => Context.GetBoundAsset(Id);
+    public Asset GetAsset()
+    {
+        return Context.GetBoundAsset(Id);
+    }
 
     /// <summary>
     /// Получает отношение между текущим актёром и указанным родственным актёром.
@@ -158,7 +167,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Ссылка на отношение.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или отношение не существует.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetRelation<T>(in Actor relative) where T : struct => ref Context.GetRelation<T>(Id, relative.Id);
+    public ref T GetRelation<T>(in Actor relative)
+        where T : struct
+    {
+        return ref Context.GetRelation<T>(Id, relative.Id);
+    }
 
     /// <summary>
     /// Проверяет, содержит ли актёр компонент указанного типа.
@@ -167,11 +180,17 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если актёр содержит компонент; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IActorComponent => Context.HasComponent<T>(Id);
+    public bool Has<T>() where T : struct, IActorComponent
+    {
+        return Context.HasComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasChild(in Actor child) => Context.HasChild(Id, child.Id);
-    
+    public bool HasChild(in Actor child)
+    {
+        return Context.HasChild(Id, child.Id);
+    }
+
     /// <summary>
     /// Проверяет, существует ли отношение между текущим актёром и указанным родственным актёром.
     /// </summary>
@@ -180,22 +199,17 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если отношение существует; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
+    public bool HasRelation<T>(in Actor relative)
+        where T : struct
+    {
+        return Context.HasRelation<T>(Id, relative.Id);
+    }
 
     /// <summary>
     /// Проверяет, можно ли преобразовать актёра в типизированного актёра с указанным компонентом.
     /// </summary>
     /// <typeparam name="T">Тип компонента.</typeparam>
     /// <param name="actor">Результирующий типизированный актёр.</param>
-    /// <returns>Возвращает true, если преобразование успешно; иначе false.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Is<T>(out Actor<T> actor) where T : struct, IActorComponent => Context.TryGetActor(Id, out actor);
-
-    /// <summary>
-    /// Проверяет, можно ли преобразовать актёра в ссылку на типизированного актёра.
-    /// </summary>
-    /// <typeparam name="T">Тип компонента.</typeparam>
-    /// <param name="actor">Результирующая ссылка на типизированного актёра.</param>
     /// <returns>Возвращает true, если преобразование успешно; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRef<T>(out ActorRef<T> actor) where T : struct, IActorComponent
@@ -213,7 +227,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// Метод достаточно медленный, не рекомендуется применять его в "горячих" местах.
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRelationEnumerator<T> Relations<T>() where T : struct => Context.Relations<T>(Id);
+    public ActorRelationEnumerator<T> Relations<T>()
+        where T : struct
+    {
+        return Context.Relations<T>(Id);
+    }
 
     /// <summary>
     /// Удаляет компонент указанного типа из актёра.
@@ -222,7 +240,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если компонент был успешно удален; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Remove<T>() where T : struct, IActorComponent => Context.RemoveComponent<T>(Id);
+    public bool Remove<T>()
+        where T : struct, IActorComponent
+    {
+        return Context.RemoveComponent<T>(Id);
+    }
 
     /// <summary>
     /// Удаляет компонент указанного типа из актёра и возвращает его значение.
@@ -232,7 +254,8 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если компонент был успешно удален; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Remove<T>(out T component) where T : struct, IActorComponent
+    public bool Remove<T>(out T component)
+        where T : struct, IActorComponent
     {
         return Context.RemoveComponent(Id, out component);
     }
@@ -244,7 +267,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если дочерний актёр был успешно удален; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveChild(in Actor child) => Context.RemoveChild(Id, child.Id);
+    public bool RemoveChild(in Actor child)
+    {
+        return Context.RemoveChild(Id, child.Id);
+    }
 
     /// <summary>
     /// Удаляет отношение указанного типа между текущим актёром и указанным родственным актёром.
@@ -254,7 +280,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если отношение было успешно удалено; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveRelation<T>(in Actor relative) where T : struct => Context.RemoveRelation<T>(Id, relative.Id);
+    public bool RemoveRelation<T>(in Actor relative)
+        where T : struct
+    {
+        return Context.RemoveRelation<T>(Id, relative.Id);
+    }
 
     /// <summary>
     /// Удаляет отношение указанного типа между текущим актёром и указанным родственным актёром и возвращает его значение.
@@ -274,9 +304,12 @@ public readonly struct Actor : IEquatable<Actor>
     /// Возвращает строковое представление актёра.
     /// </summary>
     /// <returns>Строковое представление актёра.</returns>
-    public override string ToString() => Context == null 
-        ? StringUtils.EmptyValue 
-        : Context.GetDescription(Id);
+    public override string ToString()
+    {
+        return Context == null
+            ? StringUtils.EmptyValue
+            : Context.GetDescription(Id);
+    }
 
     /// <summary>
     /// Пытается добавить компонент к актёру, если он еще не существует.
@@ -286,7 +319,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если компонент был успешно добавлен; иначе false, если он уже существует.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAdd<T>(in T component) where T : struct, IActorComponent => Context.TryAdd(Id, in component);
+    public bool TryAdd<T>(in T component)
+        where T : struct, IActorComponent
+    {
+        return Context.TryAdd(Id, in component);
+    }
 
     /// <summary>
     /// Пытается получить ассет, связанный с актёром.
@@ -295,7 +332,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если ассет был успешно получен; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetAsset(out Asset asset) => Context.TryGetBoundAsset(Id, out asset);
+    public bool TryGetAsset(out Asset asset)
+    {
+        return Context.TryGetBoundAsset(Id, out asset);
+    }
 
     /// <summary>
     /// Пытается получить ссылку на компонент актёра указанного типа.
@@ -304,7 +344,11 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Ссылка на компонент или на пустой компонент <see cref="Unsafe.NullRef{T}()"/> , если он не существует.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T TryGetRef<T>() where T : struct, IActorComponent => ref Context.TryGetComponentRef<T>(Id);
+    public ref T TryGetRef<T>()
+        where T : struct, IActorComponent
+    {
+        return ref Context.TryGetComponentRef<T>(Id);
+    }
 
     /// <summary>
     /// Пытается получить родительского актёра для текущего.
@@ -313,23 +357,27 @@ public readonly struct Actor : IEquatable<Actor>
     /// <returns>Возвращает true, если родительский актёр существует; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetParent(out Actor parent) => Context.TryGetParent(Id, out parent);
+    public bool TryGetParent(out Actor parent)
+    {
+        return Context.TryGetParent(Id, out parent);
+    }
 
     /// <summary>
     /// Обновляет существующий компонент или создает новый, если он не существует.
     /// </summary>
+    /// <remarks>Вызывает событие обновления</remarks>
     /// <typeparam name="T">Тип компонента.</typeparam>
     /// <param name="component">Компонент для обновления.</param>
     /// <param name="createIfNotExists">Возвращает true, чтобы создать компонент, если он не существует; иначе false.</param>
     /// <returns>Возвращает true, если компонент был успешно обновлен или создан; иначе false.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Update<T>(in T component, bool createIfNotExists = true) 
+    public bool Update<T>(in T component, bool createIfNotExists = true)
         where T : struct, IActorComponent
     {
         return Context.UpdateComponent(Id, in component, createIfNotExists);
     }
-    
+
     #region Equality
 
     /// <summary>
@@ -338,20 +386,29 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="other">Актёр для сравнения.</param>
     /// <returns>Возвращает true, если актёры равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(Actor other) => Id == other.Id && ReferenceEquals(Context, other.Context);
+    public bool Equals(Actor other)
+    {
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
 
     /// <summary>
     /// Проверяет равенство с другим объектом.
     /// </summary>
     /// <param name="obj">Объект для сравнения.</param>
     /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
-    public override bool Equals(object? obj) => obj is Actor other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        return obj is Actor other && Equals(other);
+    }
 
     /// <summary>
     /// Возвращает хеш-код для актёра.
     /// </summary>
     /// <returns>Хеш-код актёра.</returns>
-    public override int GetHashCode() => HashCode.Combine(Id);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
 
     /// <summary>
     /// Сравнивает двух актёров на равенство.
@@ -360,7 +417,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="right">Правый актёр.</param>
     /// <returns>Возвращает true, если актёры равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in Actor left, in Actor right) => left.Equals(right);
+    public static bool operator ==(in Actor left, in Actor right)
+    {
+        return left.Equals(right);
+    }
 
     /// <summary>
     /// Сравнивает двух актёров на неравенство.
@@ -369,7 +429,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="right">Правый актёр.</param>
     /// <returns>Возвращает true, если актёры не равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in Actor left, in Actor right) => !left.Equals(right);
+    public static bool operator !=(in Actor left, in Actor right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
@@ -381,7 +444,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="actor">Актёр для преобразования.</param>
     /// <returns>Возвращает true, если актёр не пустой; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in Actor actor) => !actor.IsEmpty;
+    public static implicit operator bool(in Actor actor)
+    {
+        return !actor.IsEmpty;
+    }
 
     /// <summary>
     /// Неявное преобразование актёра в ActorId.
@@ -389,7 +455,10 @@ public readonly struct Actor : IEquatable<Actor>
     /// <param name="actor">Актёр для преобразования.</param>
     /// <returns>Идентификатор актёра.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId(in Actor actor) => new(actor.Id);
+    public static implicit operator ActorId(in Actor actor)
+    {
+        return actor.Id;
+    }
 
     #endregion
 }

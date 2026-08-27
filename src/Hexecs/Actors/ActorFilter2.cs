@@ -10,9 +10,9 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     where T1 : struct, IActorComponent
     where T2 : struct, IActorComponent
 {
-    public event Action<uint>? Added;
+    public event Action<ActorId>? Added;
     public event Action? Cleared;
-    public event Action<uint>? Removed;
+    public event Action<ActorId>? Removed;
 
     public readonly ActorConstraint? Constraint;
     public readonly ActorContext Context;
@@ -20,9 +20,9 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     private readonly ConcurrentQueue<Operation> _postponedUpdates;
     private int _postponedReadersCount;
 #if NET9_0_OR_GREATER
-    private readonly Lock _postponedSyncLock = new();
+    private readonly Lock _postponedSyncLock = new Lock();
 #else
-    private readonly object _postponedSyncLock = new();
+    private readonly object _postponedSyncLock = new object();
 #endif
 
     private readonly ActorComponentPool<T1> _pool1;
@@ -57,7 +57,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         _pool2.ComponentAdded += OnAddedComponent2;
         _pool2.ComponentRemoving += OnRemovingComponent2;
 
-        foreach (var actor in context)
+        foreach (Actor actor in context)
         {
             OnAdded(actor.Id);
         }
@@ -68,34 +68,32 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     #region Contains
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(uint actorId) => ContainsEntry(actorId);
+    public bool Contains(ActorId actorId)
+    {
+        return ContainsEntry(actorId.Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in ActorId actorId) => ContainsEntry(actorId.Value);
+    public bool Contains(in Actor actor)
+    {
+        return ContainsEntry(actor.Id.Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in ActorId<T1> actorId) => ContainsEntry(actorId.Value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in ActorId<T2> actorId) => ContainsEntry(actorId.Value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in Actor actor) => ContainsEntry(actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in Actor<T1> actor) => ContainsEntry(actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in Actor<T2> actor) => ContainsEntry(actor.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in ActorRef<T1, T2> actor) => ContainsEntry(actor.Id);
+    public bool Contains(in ActorRef<T1, T2> actor)
+    {
+        return ContainsEntry(actor.Id.Value);
+    }
 
     #endregion
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         ClearEntries();
@@ -115,9 +113,12 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRef<T1, T2> GetRef(uint actorId)
+    public ActorRef<T1, T2> GetRef(ActorId actorId)
     {
-        if (!ContainsEntry(actorId)) ActorError.NotFound(actorId);
+        if (!ContainsEntry(actorId.Value))
+        {
+            ActorError.NotFound(actorId);
+        }
 
         return new ActorRef<T1, T2>(
             Context,
@@ -128,9 +129,12 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
     public ActorRef<T1, T2> GetRef(ActorPredicate<T1, T2> predicate)
     {
-        foreach (var actor in this)
+        foreach (ActorRef<T1, T2> actor in this)
         {
-            if (predicate(in actor)) return actor;
+            if (predicate(in actor))
+            {
+                return actor;
+            }
         }
 
         ActorError.ApplicableNotFound();
@@ -150,16 +154,19 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
         try
         {
-            var count = _count;
-            if (count == 0) return [];
+            int count = _count;
+            if (count == 0)
+            {
+                return [];
+            }
 
             var actors = new Actor[count];
-            var keys = _dense;
-            var ctx = Context;
+            uint[] keys = _dense;
+            ActorContext ctx = Context;
 
             for (var i = 0; i < count; i++)
             {
-                actors[i] = new Actor(ctx, keys[i]);
+                actors[i] = new Actor(ctx, new ActorId(keys[i]));
             }
 
             return actors;
@@ -170,7 +177,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         }
     }
 
-    private void OnAdded(uint actorId)
+    private void OnAdded(ActorId actorId)
     {
         if (_pool1.Has(actorId) && _pool2.Has(actorId))
         {
@@ -178,7 +185,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         }
     }
 
-    private void OnAddedComponent1(uint actorId, ref T1 component)
+    private void OnAddedComponent1(ActorId actorId, ref T1 component)
     {
         if (_pool2.Has(actorId))
         {
@@ -186,7 +193,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         }
     }
 
-    private void OnAddedComponent2(uint actorId, ref T2 component)
+    private void OnAddedComponent2(ActorId actorId, ref T2 component)
     {
         if (_pool1.Has(actorId))
         {
@@ -216,15 +223,27 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         _postponedUpdates.Enqueue(Operation.Clear());
     }
 
-    private void OnRemoving(uint actorId) => Remove(actorId);
-
-    private void OnRemovingComponent1(uint actorId, ref T1 component) => Remove(actorId);
-
-    private void OnRemovingComponent2(uint actorId, ref T2 component) => Remove(actorId);
-
-    private void Add(uint actorId)
+    private void OnRemoving(ActorId actorId)
     {
-        if (Constraint != null && !Constraint.Applicable(actorId)) return;
+        Remove(actorId);
+    }
+
+    private void OnRemovingComponent1(ActorId actorId, ref T1 component)
+    {
+        Remove(actorId);
+    }
+
+    private void OnRemovingComponent2(ActorId actorId, ref T2 component)
+    {
+        Remove(actorId);
+    }
+
+    private void Add(ActorId actorId)
+    {
+        if (Constraint != null && !Constraint.Applicable(actorId))
+        {
+            return;
+        }
 
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
@@ -236,7 +255,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
             {
                 if (Volatile.Read(ref _postponedReadersCount) == 0)
                 {
-                    AddEntry(actorId);
+                    AddEntry(actorId.Value);
                 }
             }
         }
@@ -248,7 +267,10 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
 
     private void ProcessPostponedUpdates()
     {
-        if (Interlocked.Decrement(ref _postponedReadersCount) > 0) return;
+        if (Interlocked.Decrement(ref _postponedReadersCount) > 0)
+        {
+            return;
+        }
 
         var isClear = false;
 #if NET9_0_OR_GREATER
@@ -257,9 +279,12 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
         lock (_postponedSyncLock)
 #endif
         {
-            if (Volatile.Read(ref _postponedReadersCount) > 0) return;
+            if (Volatile.Read(ref _postponedReadersCount) > 0)
+            {
+                return;
+            }
 
-            while (_postponedUpdates.TryDequeue(out var operation))
+            while (_postponedUpdates.TryDequeue(out Operation operation))
             {
                 if (operation.IsClear)
                 {
@@ -269,20 +294,23 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
                 }
                 else if (operation.IsAdd)
                 {
-                    AddEntry(operation.Id);
+                    AddEntry(operation.Id.Value);
                 }
                 else
                 {
-                    RemoveEntry(operation.Id);
+                    RemoveEntry(operation.Id.Value);
                 }
             }
         }
 
         // Вызываем событие вне лока, чтобы избежать дедлоков
-        if (isClear) Cleared?.Invoke();
+        if (isClear)
+        {
+            Cleared?.Invoke();
+        }
     }
 
-    private void Remove(uint actorId)
+    private void Remove(ActorId actorId)
     {
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
@@ -294,7 +322,7 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
             {
                 if (Volatile.Read(ref _postponedReadersCount) == 0)
                 {
-                    RemoveEntry(actorId);
+                    RemoveEntry(actorId.Value);
                 }
             }
         }

@@ -10,7 +10,7 @@ public sealed class ArgsShould
         // Arrange
 
         // Act
-        var args = Args.Rent();
+        Args args = Args.Rent();
 
         // Assert
         args.Should().NotBeNull();
@@ -24,7 +24,7 @@ public sealed class ArgsShould
         // Arrange
 
         // Act
-        var args = Args.Rent(name, value);
+        Args args = Args.Rent(name, value);
 
         // Assert
         args.Should().NotBeNull();
@@ -36,7 +36,7 @@ public sealed class ArgsShould
     public void Get_ShouldReturnSetValue(string name, string value)
     {
         // Arrange
-        var args = Args.Rent().Set(name, value);
+        Args args = Args.Rent().Set(name, value);
 
         // Act
         var result = args.Get<string>(name);
@@ -50,7 +50,7 @@ public sealed class ArgsShould
     public void Get_ShouldThrowException_WhenValueNotFound(string name)
     {
         // Arrange
-        var args = Args.Rent();
+        Args args = Args.Rent();
 
         // Act
         Action act = () => args.Get<int>(name);
@@ -66,7 +66,7 @@ public sealed class ArgsShould
     public void Return_ShouldClearAllValueStorages()
     {
         // Arrange
-        var args = Args.Rent()
+        Args args = Args.Rent()
             .Set("intValue", 42)
             .Set("stringValue", "test")
             .Set("boolValue", true);
@@ -81,16 +81,17 @@ public sealed class ArgsShould
         args.TryGet<bool>("boolValue", out _).Should().BeFalse();
     }
 
-    [Theory(DisplayName =
-        "Метод TryGet<TValue>(name, out value) должен возвращать true и значение, если значение найдено")]
+    [Theory(
+        DisplayName =
+            "Метод TryGet<TValue>(name, out value) должен возвращать true и значение, если значение найдено")]
     [AutoData]
     public void TryGet_ShouldReturnTrueAndValue_WhenValueExists(string name, double value)
     {
         // Arrange
-        var args = Args.Rent().Set(name, value);
+        Args args = Args.Rent().Set(name, value);
 
         // Act
-        var result = args.TryGet<double>(name, out var outValue);
+        bool result = args.TryGet<double>(name, out double outValue);
 
         // Assert
         result.Should().BeTrue();
@@ -102,10 +103,10 @@ public sealed class ArgsShould
     public void TryGet_ShouldReturnFalse_WhenValueNotFound(string name)
     {
         // Arrange
-        var args = Args.Rent();
+        Args args = Args.Rent();
 
         // Act
-        var result = args.TryGet<DateTime>(name, out var outValue);
+        bool result = args.TryGet<DateTime>(name, out DateTime outValue);
 
         // Assert
         result.Should().BeFalse();
@@ -117,10 +118,10 @@ public sealed class ArgsShould
     public void TryGet_ShouldReturnFalse_WhenTypeDoesNotMatch(string name, int value)
     {
         // Arrange
-        var args = Args.Rent().Set(name, value);
+        Args args = Args.Rent().Set(name, value);
 
         // Act
-        var result = args.TryGet<string>(name, out var outValue);
+        bool result = args.TryGet<string>(name, out string outValue);
 
         // Assert
         result.Should().BeFalse();
@@ -132,14 +133,14 @@ public sealed class ArgsShould
     public void Set_ShouldAddNewValue(string name, Guid value)
     {
         // Arrange
-        var args = Args.Rent();
+        Args args = Args.Rent();
 
         // Act
-        var result = args.Set(name, value);
+        Args result = args.Set(name, value);
 
         // Assert
         result.Should().BeSameAs(args);
-        args.TryGet<Guid>(name, out var outValue).Should().BeTrue();
+        args.TryGet<Guid>(name, out Guid outValue).Should().BeTrue();
         outValue.Should().Be(value);
     }
 
@@ -148,10 +149,10 @@ public sealed class ArgsShould
     public void Set_ShouldUpdateExistingValue(string name, int initialValue, int newValue)
     {
         // Arrange
-        var args = Args.Rent().Set(name, initialValue);
+        Args args = Args.Rent().Set(name, initialValue);
 
         // Act
-        var result = args.Set(name, newValue);
+        Args result = args.Set(name, newValue);
 
         // Assert
         result.Should().BeSameAs(args);
@@ -162,7 +163,7 @@ public sealed class ArgsShould
     public void GetEnumerator_ShouldEnumerateAllAddedValues()
     {
         // Arrange
-        var args = Args.Rent()
+        Args args = Args.Rent()
             .Set("intValue", 42)
             .Set("stringValue", "test")
             .Set("boolValue", true);
@@ -175,23 +176,24 @@ public sealed class ArgsShould
         };
 
         // Act
-        var result = args.ToDictionary(kv => kv.Key, kv => kv.Value);
+        Dictionary<string, object> result = args.ToDictionary(kv => kv.Key, kv => kv.Value);
 
         // Assert
         result.Should().BeEquivalentTo(expected);
     }
 
-    [Theory(DisplayName =
-        "Метод Rent должен возвращать существующий экземпляр из пула, если он был возвращен методом Return")]
+    [Theory(
+        DisplayName =
+            "Метод Rent должен возвращать существующий экземпляр из пула, если он был возвращен методом Return")]
     [AutoData]
     public void Rent_ShouldReturnExistingInstanceFromPool(string name, int value)
     {
         // Arrange
-        var args1 = Args.Rent().Set(name, value);
+        Args args1 = Args.Rent().Set(name, value);
         args1.Return(); // Возвращаем в пул
 
         // Act
-        var args2 = Args.Rent();
+        Args args2 = Args.Rent();
 
         // Assert
         args2.Should().NotBeNull();
@@ -211,7 +213,7 @@ public sealed class ArgsShould
         var customValue = new CustomValue { Value = "custom" };
 
         // Act - заполнение объекта Args всеми тестовыми значениями
-        var args = Args
+        Args args = Args
             .Rent()
             .Set("intValue", intValue)
             .Set("doubleValue", doubleValue)
@@ -236,7 +238,7 @@ public sealed class ArgsShould
     public void AfterReturn_AllValuesOfTypeShouldBeUnavailable()
     {
         // Arrange
-        var args = Args.Rent()
+        Args args = Args.Rent()
             .Set("value1", 1)
             .Set("value2", 2)
             .Set("value3", 3);

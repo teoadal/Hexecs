@@ -13,7 +13,7 @@ public interface IActorFilter : IDisposable
     /// Событие, вызываемое при добавлении актёра в фильтр.
     /// Параметр содержит идентификатор добавленного актёра.
     /// </summary>
-    event Action<uint>? Added;
+    event Action<ActorId>? Added;
 
     /// <summary>
     /// Событие, вызываемое при очистке всего фильтра.
@@ -25,7 +25,7 @@ public interface IActorFilter : IDisposable
     /// Событие, вызываемое при удалении актёра из фильтра.
     /// Параметр содержит идентификатор удаленного актёра.
     /// </summary>
-    event Action<uint>? Removed;
+    event Action<ActorId>? Removed;
 
     /// <summary>
     /// Ограничение, определяющее критерии фильтрации актёров.
@@ -49,14 +49,7 @@ public interface IActorFilter : IDisposable
     /// </summary>
     /// <param name="actorId">Числовой идентификатор актёра.</param>
     /// <returns>Возвращает true, если актёр удовлетворяет условиям фильтра; иначе false.</returns>
-    bool Contains(uint actorId);
-
-    /// <summary>
-    /// Проверяет, содержится ли актёр с указанным структурным идентификатором в фильтре.
-    /// </summary>
-    /// <param name="actorId">Структурный идентификатор актёра.</param>
-    /// <returns>Возвращает true, если актёр удовлетворяет условиям фильтра; иначе false.</returns>
-    bool Contains(in ActorId actorId);
+    bool Contains(ActorId actorId);
 
     /// <summary>
     /// Проверяет, содержится ли указанный актёр в фильтре.

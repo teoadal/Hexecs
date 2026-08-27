@@ -1,4 +1,6 @@
-﻿using Hexecs.Tests.Mocks.Assets;
+﻿using Hexecs.Assets;
+using Hexecs.Assets.Sources;
+using Hexecs.Tests.Mocks.Assets;
 
 namespace Hexecs.Tests.Assets;
 
@@ -7,26 +9,29 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
     [Fact(DisplayName = "Фильтр ассетов должен содержать все созданные ассеты")]
     public void ContainsAllAssets()
     {
-        // arrange 
-        var assetIds = new List<uint>();
+        // arrange
 
-        var context = fixture.CreateAssetContext(loader =>
+        var assetIds = new List<AssetId>();
+
+        AssetContext context = fixture.CreateAssetContext(loader =>
         {
-            for (int i = 1; i < 100; i++)
+            for (var i = 1; i < 100; i++)
             {
-                var asset = loader.CreateAsset(
+                AssetConfigurator asset = loader.CreateAsset(
                     new CarAsset(i, i),
                     new UnitAsset(i, i));
                 assetIds.Add(asset.Id);
             }
         });
 
-        var expectedAssets = assetIds.Select(id => context.GetAsset(id)).ToArray();
+        Asset[] expectedAssets = assetIds
+            .Select(context.GetAsset)
+            .ToArray();
 
         // act
 
-        var filter = context.Filter<CarAsset, UnitAsset>();
-        var actualActors = filter.ToArray();
+        AssetFilter<CarAsset, UnitAsset> filter = context.Filter<CarAsset, UnitAsset>();
+        Asset[] actualActors = filter.ToArray();
 
         // assert
 
@@ -38,16 +43,17 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
     [Fact(DisplayName = "Фильтр ассетов можно перебирать как AssetRef")]
     public void AssetFilterShouldEnumerable()
     {
-        // arrange 
-        var expectedIds = new Dictionary<uint, (CarAsset, UnitAsset)>();
+        // arrange
 
-        var context = fixture.CreateAssetContext(loader =>
+        var expectedIds = new Dictionary<AssetId, (CarAsset, UnitAsset)>();
+
+        AssetContext context = fixture.CreateAssetContext(loader =>
         {
             for (var i = 1; i < 100; i++)
             {
                 var component1 = new CarAsset(i, i);
                 var component2 = new UnitAsset(i, i);
-                var asset = loader.CreateAsset(component1, component2);
+                AssetConfigurator asset = loader.CreateAsset(component1, component2);
 
                 expectedIds.Add(asset.Id, (component1, component2));
             }
@@ -55,25 +61,29 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
 
         // act
 
-        var filter = context.Filter<CarAsset, UnitAsset>();
+        AssetFilter<CarAsset, UnitAsset> filter = context.Filter<CarAsset, UnitAsset>();
 
         // assert
 
-        var actualIds = new List<uint>();
-        foreach (var asset in filter)
+        var actualIds = new List<AssetId>();
+
+        foreach (AssetRef<CarAsset, UnitAsset> asset in filter)
         {
             actualIds.Add(asset.Id);
             asset
                 .Component1
-                .Should().Be(expectedIds[asset.Id].Item1);
+                .Should()
+                .Be(expectedIds[asset.Id].Item1);
 
             asset
                 .Component2
-                .Should().Be(expectedIds[asset.Id].Item2);
+                .Should()
+                .Be(expectedIds[asset.Id].Item2);
         }
 
         filter.Length
-            .Should().Be(expectedIds.Count);
+            .Should()
+            .Be(expectedIds.Count);
 
         actualIds
             .Should()
@@ -88,10 +98,10 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
     public void EmptyFilterWhenNoComponentsExist()
     {
         // arrange
-        var context = fixture.CreateAssetContext();
+        AssetContext context = fixture.CreateAssetContext();
 
         // act
-        var filter = context.Filter<CarAsset, UnitAsset>();
+        AssetFilter<CarAsset, UnitAsset> filter = context.Filter<CarAsset, UnitAsset>();
 
         // assert
         filter.Length
@@ -102,31 +112,36 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
     [Fact(DisplayName = "Фильтр должен учитывать constraint")]
     public void FilterWithConstraint()
     {
-        var notExpectedIds = new List<uint>();
-        uint expectedId = 0;
+        var notExpectedIds = new List<AssetId>();
+        var expectedId = AssetId.Empty;
 
         // arrange
-        var context = fixture.CreateAssetContext(loader =>
+        AssetContext context = fixture.CreateAssetContext(loader =>
         {
-            notExpectedIds.Add(loader.CreateAsset(
-                new CarAsset(10, 10),
-                new UnitAsset(),
-                new BuildingAsset()).Id);
-            
-            notExpectedIds.Add(loader.CreateAsset(
-                new CarAsset(10, 10),
-                new UnitAsset(),
-                new NonExistentAsset()).Id);
+            notExpectedIds.Add(
+                loader.CreateAsset(
+                        new CarAsset(10, 10),
+                        new UnitAsset(),
+                        new BuildingAsset())
+                    .Id);
+
+            notExpectedIds.Add(
+                loader.CreateAsset(
+                        new CarAsset(10, 10),
+                        new UnitAsset(),
+                        new NonExistentAsset())
+                    .Id);
 
             expectedId = loader.CreateAsset(
-                new CarAsset(20, 20),
-                new UnitAsset(),
-                new SubjectAsset()).Id;
+                    new CarAsset(20, 20),
+                    new UnitAsset(),
+                    new SubjectAsset())
+                .Id;
         });
 
         // act
 
-        var filter = context.Filter<CarAsset, UnitAsset>(constraint => constraint
+        AssetFilter<CarAsset, UnitAsset> filter = context.Filter<CarAsset, UnitAsset>(constraint => constraint
             .Exclude<BuildingAsset>()
             .Include<SubjectAsset>());
 
@@ -139,7 +154,7 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
             .Should()
             .BeTrue();
 
-        foreach (var notExpectedId in notExpectedIds)
+        foreach (AssetId notExpectedId in notExpectedIds)
         {
             filter.Contains(notExpectedId)
                 .Should()
@@ -151,14 +166,14 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
     public void GetThrowsExceptionWhenNotFound()
     {
         // arrange
-        var context = fixture.CreateAssetContext(loader => loader
+        AssetContext context = fixture.CreateAssetContext(loader => loader
             .CreateAsset(new CarAsset(1, 1), new UnitAsset()));
 
-        var filter = context.Filter<CarAsset, UnitAsset>();
+        AssetFilter<CarAsset, UnitAsset> filter = context.Filter<CarAsset, UnitAsset>();
 
         // act
 
-        Action act = () => filter.Get(999); // Несуществующий ID
+        Action act = () => filter.Get(new AssetId(999)); // Несуществующий ID
 
         // assert
         act
@@ -170,14 +185,16 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
     public void ContainsReturnsCorrectStatus()
     {
         // arrange
-        uint existingId = 0;
-        var context = fixture.CreateAssetContext(loader =>
+
+        var existingId = AssetId.Empty;
+
+        AssetContext context = fixture.CreateAssetContext(loader =>
         {
-            var asset = loader.CreateAsset(new CarAsset(1, 1), new UnitAsset());
+            AssetConfigurator asset = loader.CreateAsset(new CarAsset(1, 1), new UnitAsset());
             existingId = asset.Id;
         });
 
-        var filter = context.Filter<CarAsset, UnitAsset>();
+        AssetFilter<CarAsset, UnitAsset> filter = context.Filter<CarAsset, UnitAsset>();
 
         // act & assert
         filter
@@ -186,7 +203,7 @@ public sealed class AssetFilter2Should(AssetTestFixture fixture) : IClassFixture
             .BeTrue();
 
         filter
-            .Contains(existingId + 100)
+            .Contains(new AssetId(existingId.Value + 100))
             .Should()
             .BeFalse();
     }

@@ -24,11 +24,14 @@ internal sealed class DependencyProvider : Dictionary<DependencyKey, object?>, I
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         _disposed = true; // self-disposing protection
 
-        foreach (var disposable in _disposables)
+        foreach (IDisposable disposable in _disposables)
         {
             disposable.Dispose();
         }
@@ -48,56 +51,75 @@ internal sealed class DependencyProvider : Dictionary<DependencyKey, object?>, I
     {
         EnsureNotDisposed();
 
-        var collectionType = typeof(TService[]);
-        var serviceType = typeof(TService);
+        Type collectionType = typeof(TService[]);
+        Type serviceType = typeof(TService);
 
-        var collectionKey = DependencyKey.First(collectionType);
-        if (TryGetValue(collectionKey, out var exists))
+        DependencyKey collectionKey = DependencyKey.First(collectionType);
+
+        if (TryGetValue(collectionKey, out object? exists))
         {
             return exists == null
                 ? []
                 : (TService[])exists;
         }
 
-        if (!_progress.Add(collectionType)) DependencyError.CircularDependency(serviceType, _progress);
+        if (!_progress.Add(collectionType))
+        {
+            DependencyError.CircularDependency(serviceType, _progress);
+        }
 
-        var buffer = RentArrayBuffer();
+        List<object> buffer = RentArrayBuffer();
         var storeArray = true;
 
-        if (_dependencies.TryGetValue(serviceType, out var dependencies))
+        if (_dependencies.TryGetValue(serviceType, out Dependency[]? dependencies))
         {
             for (var i = 0; i < dependencies.Length; i++)
             {
                 var key = new DependencyKey(serviceType, i);
-                if (TryGetValue(key, out var resolved) && resolved != null)
+
+                if (TryGetValue(key, out object? resolved) && resolved != null)
                 {
                     buffer.Add(resolved);
+
                     continue;
                 }
 
-                var dependency = dependencies[i];
-                var instance = ResolveInstance(in dependency);
+                Dependency dependency = dependencies[i];
+                object? instance = ResolveInstance(in dependency);
 
-                if (instance == null) TryAdd(key, null);
+                if (instance == null)
+                {
+                    TryAdd(key, null);
+                }
                 else
                 {
-                    var isCached = TryCache(dependency.Lifetime, in key, instance);
-                    if (storeArray) storeArray = isCached;
+                    bool isCached = TryCache(dependency.Lifetime, in key, instance);
+
+                    if (storeArray)
+                    {
+                        storeArray = isCached;
+                    }
                 }
             }
         }
 
-        var array = buffer.Cast<TService>().ToArray();
+        TService[] array = buffer.Cast<TService>().ToArray();
 
         ReturnArrayBuffer(buffer);
 
-        if (storeArray) TryAdd(collectionKey, array);
+        if (storeArray)
+        {
+            TryAdd(collectionKey, array);
+        }
 
         return array;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public object? GetService(Type contract) => GetService(DependencyKey.First(contract));
+    public object? GetService(Type contract)
+    {
+        return GetService(DependencyKey.First(contract));
+    }
 
     public DependencyProvider GetScopeProvider()
     {
@@ -105,6 +127,7 @@ internal sealed class DependencyProvider : Dictionary<DependencyKey, object?>, I
 
         var provider = new DependencyProvider(_dependencies, _root ?? this);
         provider.Add(DependencyKey.First(typeof(IDependencyProvider)), provider);
+
         return provider;
     }
 
@@ -137,27 +160,43 @@ internal sealed class DependencyProvider : Dictionary<DependencyKey, object?>, I
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureNotDisposed()
     {
-        if (_disposed) DependencyError.Disposed();
+        if (_disposed)
+        {
+            DependencyError.Disposed();
+        }
     }
 
     private object? GetService(in DependencyKey key)
     {
         EnsureNotDisposed();
 
-        var contract = key.ServiceType;
+        Type contract = key.ServiceType;
 
-        if (TryGetValue(key, out var exists)) return exists;
-        if (!_progress.Add(contract)) DependencyError.CircularDependency(contract, _progress);
+        if (TryGetValue(key, out object? exists))
+        {
+            return exists;
+        }
+
+        if (!_progress.Add(contract))
+        {
+            DependencyError.CircularDependency(contract, _progress);
+        }
 
         object? instance;
 
-        if (_dependencies.TryGetValue(contract, out var dependencies))
+        if (_dependencies.TryGetValue(contract, out Dependency[]? dependencies))
         {
-            var dependency = dependencies[key.Index];
+            Dependency dependency = dependencies[key.Index];
             instance = ResolveInstance(in dependency);
 
-            if (instance == null) TryAdd(key, null);
-            else TryCache(dependency.Lifetime, in key, instance);
+            if (instance == null)
+            {
+                TryAdd(key, null);
+            }
+            else
+            {
+                TryCache(dependency.Lifetime, in key, instance);
+            }
         }
         else
         {
@@ -173,6 +212,7 @@ internal sealed class DependencyProvider : Dictionary<DependencyKey, object?>, I
     private bool TryCache(DependencyLifetime lifetime, in DependencyKey key, object instance)
     {
         var isCached = false;
+
         if (lifetime != DependencyLifetime.Transient)
         {
             TryAdd(key, instance);

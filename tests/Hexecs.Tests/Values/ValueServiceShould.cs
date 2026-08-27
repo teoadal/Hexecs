@@ -24,7 +24,7 @@ public sealed class ValueServiceShould
         var service = new ValueService([table]);
 
         // Act
-        var result = service.HasTable(tableName);
+        bool result = service.HasTable(tableName);
 
         // Assert
         result.Should().BeTrue();
@@ -37,7 +37,7 @@ public sealed class ValueServiceShould
         var service = ValueService.Empty;
 
         // Act
-        var result = service.HasTable("NonExistingTable");
+        bool result = service.HasTable("NonExistingTable");
 
         // Assert
         result.Should().BeFalse();
@@ -52,7 +52,7 @@ public sealed class ValueServiceShould
         var service = new ValueService([table]);
 
         // Act
-        var result = service.GetTable(tableName);
+        IValueTable result = service.GetTable(tableName);
 
         // Assert
         result.Should().NotBeNull();
@@ -84,7 +84,7 @@ public sealed class ValueServiceShould
         var service = new ValueService([table]);
 
         // Act
-        var result = service.GetTable<int>(tableName);
+        IValueTable<int> result = service.GetTable<int>(tableName);
 
         // Assert
         result.Should().NotBeNull();
@@ -116,7 +116,7 @@ public sealed class ValueServiceShould
         var service = new ValueService([table]);
 
         // Act
-        var result = service.GetTable<int, double>(tableName);
+        IValueTable<int, double> result = service.GetTable<int, double>(tableName);
 
         // Assert
         result.Should().NotBeNull();
@@ -171,7 +171,7 @@ public sealed class ValueServiceShould
         table.Set(key, value);
 
         // Act
-        var result = service.GetValue<int, int>(tableName, key);
+        int result = service.GetValue<int, int>(tableName, key);
 
         // Assert
         result.Should().Be(value);
@@ -222,7 +222,7 @@ public sealed class ValueServiceShould
         table.Set(key, value);
 
         // Act
-        var result = service.RemoveValue(tableName, key);
+        bool result = service.RemoveValue(tableName, key);
 
         // Assert
         result.Should().BeTrue();
@@ -241,7 +241,7 @@ public sealed class ValueServiceShould
         table.Set(key, value);
 
         // Act
-        var result = service.RemoveValue<int, int>(tableName, key, out var removedValue);
+        bool result = service.RemoveValue<int, int>(tableName, key, out int removedValue);
 
         // Assert
         result.Should().BeTrue();
@@ -261,7 +261,7 @@ public sealed class ValueServiceShould
         table.Set(key, value);
 
         // Act
-        var result = service.TryGetValue<int, int>(tableName, key, out var retrievedValue);
+        bool result = service.TryGetValue<int, int>(tableName, key, out int retrievedValue);
 
         // Assert
         result.Should().BeTrue();
@@ -277,7 +277,7 @@ public sealed class ValueServiceShould
         var service = new ValueService([table]);
 
         // Act
-        var result = service.TryGetValue<int, int>(tableName, 999, out var retrievedValue);
+        bool result = service.TryGetValue<int, int>(tableName, 999, out int retrievedValue);
 
         // Assert
         result.Should().BeFalse();
@@ -298,13 +298,13 @@ public sealed class ValueServiceShould
             { 3, 30 }
         };
 
-        foreach (var kvp in data)
+        foreach (KeyValuePair<int, int> kvp in data)
         {
             table.Set(kvp.Key, kvp.Value);
         }
 
         // Act
-        var values = service.GetValues<int, int>(tableName).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        Dictionary<int, int> values = service.GetValues<int, int>(tableName).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         // Assert
         values.Should().BeEquivalentTo(data);
@@ -317,7 +317,7 @@ public sealed class ValueServiceShould
         var table1 = new ValueTable<int, int>("Table1");
         var table2 = new ValueTable<string, double>("Table2");
         var service = new ValueService([table1, table2]);
-            
+
         table1.Set(1, 10);
         table2.Set("test", 20.5);
 
@@ -336,12 +336,12 @@ public sealed class ValueServiceShould
         var table1 = new ValueTable<int, int>("Table1");
         var table2 = new ValueTable<string, double>("Table2");
         var service = new ValueService([table1, table2]);
-            
+
         table1.Set(1, 10);
         table2.Set("test", 20.5);
 
         // Act
-        var result = service.ClearTable("Table1");
+        bool result = service.ClearTable("Table1");
 
         // Assert
         result.Should().BeTrue();
@@ -356,7 +356,7 @@ public sealed class ValueServiceShould
         var service = ValueService.Empty;
 
         // Act
-        var result = service.ClearTable("NonExistingTable");
+        bool result = service.ClearTable("NonExistingTable");
 
         // Assert
         result.Should().BeFalse();

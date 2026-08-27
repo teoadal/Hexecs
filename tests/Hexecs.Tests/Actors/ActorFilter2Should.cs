@@ -9,15 +9,15 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
     {
         // arrange
         
-        var expected = fixture.CreateActor<Defence>(); // Создаем актера с другим компонентом, чтобы убедиться, что он не попадет в фильтр
+        Actor expected = fixture.CreateActor<Defence>(); // Создаем актера с другим компонентом, чтобы убедиться, что он не попадет в фильтр
         
         // act
-        var filter = fixture
+        ActorFilter<Attack> filter = fixture
             .Actors
             .Filter<Attack>(); // Фильтруем по Attack
 
         // assert
-        var actors = filter.ToArray();
+        Actor[] actors = filter.ToArray();
         actors
             .Should()
             .NotContain(actor => actor.Id == expected.Id);
@@ -29,10 +29,10 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         // arrange
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
-        var actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
+        Actor actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
 
         // act
-        var filter = fixture
+        ActorFilter<Attack, Defence> filter = fixture
             .Actors
             .Filter<Attack, Defence>();
 
@@ -42,7 +42,7 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
             .Should()
             .BeTrue();
 
-        var actorRef = filter.GetRef(actor.Id);
+        ActorRef<Attack, Defence> actorRef = filter.GetRef(actor.Id);
         actorRef.Component1.Should().Be(attackComponent);
         actorRef.Component2.Should().Be(defenceComponent);
     }
@@ -54,12 +54,12 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
 
-        var actorWithBoth = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
-        var actorWithAttackOnly = fixture.CreateActor<Attack>(component1: attackComponent);
-        var actorWithDefenceOnly = fixture.CreateActor<Defence>(component1: defenceComponent);
+        Actor actorWithBoth = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
+        Actor actorWithAttackOnly = fixture.CreateActor<Attack>(component1: attackComponent);
+        Actor actorWithDefenceOnly = fixture.CreateActor<Defence>(component1: defenceComponent);
         
         // act
-        var filter = fixture
+        ActorFilter<Attack, Defence> filter = fixture
             .Actors
             .Filter<Attack, Defence>();
 
@@ -75,9 +75,9 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         // arrange
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
-        var actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
+        Actor actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
 
-        var filter = fixture
+        ActorFilter<Attack, Defence> filter = fixture
             .Actors
             .Filter<Attack, Defence>();
 
@@ -96,9 +96,9 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         // arrange
         var attackComponent = fixture.CreateComponent<Attack>();
         var defenceComponent = fixture.CreateComponent<Defence>();
-        var actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
+        Actor actor = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
 
-        var filter = fixture
+        ActorFilter<Attack, Defence> filter = fixture
             .Actors
             .Filter<Attack, Defence>();
 

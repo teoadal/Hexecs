@@ -13,14 +13,14 @@ public sealed class MessageShould(PipelineTestFixture fixture) : IClassFixture<P
         var handler = new Mock<IMessageHandler<MessageMock>>();
         handler.Setup(h => h.Handle(It.IsAny<MessageMock>()));
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddMessageHandler(handler.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddMessageHandler(handler.Object));
         var message = new MessageMock(25);
 
         context.Invoking(ctx => ctx.Send(message))
             .Should()
             .NotThrow();
 
-        var queue = context.GetMessageQueue<MessageMock>();
+        IMessageQueue<MessageMock> queue = context.GetMessageQueue<MessageMock>();
 
         // act
 
@@ -39,7 +39,7 @@ public sealed class MessageShould(PipelineTestFixture fixture) : IClassFixture<P
         var handler = new Mock<IMessageHandler<MessageMock>>();
         handler.Setup(h => h.Handle(It.IsAny<MessageMock>()));
 
-        var context = fixture.World.CreateActorContext(ctx => ctx.AddMessageHandler(handler.Object));
+        ActorContext context = fixture.World.CreateActorContext(ctx => ctx.AddMessageHandler(handler.Object));
         var message = new MessageMockNotRegistered(25);
 
         // act

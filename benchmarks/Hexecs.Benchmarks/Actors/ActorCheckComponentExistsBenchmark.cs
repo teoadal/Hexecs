@@ -1,6 +1,9 @@
 ﻿using Friflo.Engine.ECS;
+
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
+
+using Entity = DefaultEcs.Entity;
 using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
@@ -11,7 +14,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------- |------- |----------:|------:|----------:|------------:|
@@ -29,38 +32,40 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // ------------------------------------------------------------------------------------
 //
-// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.102
+//     .NET SDK 10.0.400
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
-//     | Method           | Count  | Mean       | Ratio | Allocated | Alloc Ratio |
-//     |----------------- |------- |-----------:|------:|----------:|------------:|
-//     | Hexecs_Is        | 10000  |   9.916 us |  0.90 |         - |          NA |
-//     | Hexecs_Has       | 10000  |  10.960 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 10000  |  11.301 us |  1.03 |         - |          NA |
-//     | FriFlo_Has       | 10000  |  16.540 us |  1.51 |         - |          NA |
-//     | DefaultEcs_Has   | 10000  |  25.877 us |  2.36 |         - |          NA |
-//     |                  |        |            |       |           |             |
-//     | Hexecs_Is        | 100000 |  98.966 us |  0.90 |         - |          NA |
-//     | Hexecs_Has       | 100000 | 110.039 us |  1.00 |         - |          NA |
-//     | Hexecs_Reference | 100000 | 112.981 us |  1.03 |         - |          NA |
-//     | FriFlo_Has       | 100000 | 159.346 us |  1.45 |         - |          NA |
-//     | DefaultEcs_Has   | 100000 | 256.135 us |  2.33 |         - |          NA |
+//     | Method           | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |----------------- |------- |----------:|------:|----------:|------------:|
+//     | Hexecs_Has       | 10000  |  10.95 us |  1.00 |         - |          NA |
+//     | Hexecs_Is        | 10000  |  11.30 us |  1.03 |         - |          NA |
+//     | Hexecs_Reference | 10000  |  11.30 us |  1.03 |         - |          NA |
+//     | FriFlo_Has       | 10000  |  16.38 us |  1.50 |         - |          NA |
+//     | DefaultEcs_Has   | 10000  |  25.62 us |  2.34 |         - |          NA |
+//     |                  |        |           |       |           |             |
+//     | Hexecs_Has       | 100000 | 110.84 us |  1.00 |         - |          NA |
+//     | Hexecs_Reference | 100000 | 113.48 us |  1.02 |         - |          NA |
+//     | Hexecs_Is        | 100000 | 113.51 us |  1.02 |         - |          NA |
+//     | FriFlo_Has       | 100000 | 159.75 us |  1.44 |         - |          NA |
+//     | DefaultEcs_Has   | 100000 | 254.32 us |  2.29 |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class ActorCheckComponentExistsBenchmark
 {
-    [Params(10_000, 100_000)] public int Count;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorContext _context = null!;
     private DefaultEcs.World _defaultWorld = null!;
@@ -74,9 +79,12 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var actor in _context)
+        foreach (Actor actor in _context)
         {
-            if (actor.Has<Speed>()) result++;
+            if (actor.Has<Speed>())
+            {
+                result++;
+            }
         }
 
         return result;
@@ -88,7 +96,7 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var entity in _defaultWorld)
+        foreach (Entity entity in _defaultWorld)
         {
             if (entity.Has<Speed>())
             {
@@ -105,7 +113,7 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var entity in _frifloAllEntitiesQuery.Entities)
+        foreach (Friflo.Engine.ECS.Entity entity in _frifloAllEntitiesQuery.Entities)
         {
             if (entity.HasComponent<Speed>())
             {
@@ -122,9 +130,9 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var actor in _context)
+        foreach (Actor actor in _context)
         {
-            if (actor.Is<Speed>(out _))
+            if (actor.IsRef<Speed>(out _))
             {
                 result++;
             }
@@ -139,9 +147,10 @@ public class ActorCheckComponentExistsBenchmark
         var result = 0;
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var actor in _context)
+        foreach (Actor actor in _context)
         {
-            ref var reference = ref actor.TryGetRef<Speed>();
+            ref Speed reference = ref actor.TryGetRef<Speed>();
+
             if (!Unsafe.IsNullRef(ref reference))
             {
                 result++;
@@ -174,17 +183,20 @@ public class ActorCheckComponentExistsBenchmark
 
         for (var i = 0; i < Count; i++)
         {
-            var actor = _context.CreateActor();
+            Actor actor = _context.CreateActor();
             actor.Add(new Attack());
             actor.Add(new Defence());
 
-            var defaultEntity = _defaultWorld.CreateEntity();
+            Entity defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set<Attack>();
             defaultEntity.Set<Defence>();
 
-            var frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence());
+            Friflo.Engine.ECS.Entity frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence());
 
-            if (i % 10 != 0) continue;
+            if (i % 10 != 0)
+            {
+                continue;
+            }
 
             actor.Add(new Speed());
 

@@ -27,35 +27,39 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
     private AssetContext? _assets;
     private World? _world;
 
-    public Asset<T> CreateAsset<T>() where T : struct, IAssetComponent
+    public Asset CreateAsset<T>() where T : struct, IAssetComponent
     {
-        var assetId = Asset.EmptyId;
+        var assetId = AssetId.Empty;
+
         _world = new WorldBuilder()
             .CreateAssetData(CreateAssets)
             .CreateAssetData(loader => { assetId = loader.CreateAsset(CreateComponent<T>()).Id; })
             .Build();
 
         _assets = _world.Assets;
-        return Assets.GetAsset<T>(assetId);
+
+        return Assets.GetAsset(assetId);
     }
 
-    public Asset<T1> CreateAsset<T1, T2>()
+    public Asset CreateAsset<T1, T2>()
         where T1 : struct, IAssetComponent
         where T2 : struct, IAssetComponent
     {
-        var assetId = Asset.EmptyId;
+        var assetId = AssetId.Empty;
+
         _world = new WorldBuilder()
             .CreateAssetData(CreateAssets)
             .CreateAssetData(loader =>
             {
-                var asset = loader.CreateAsset(CreateComponent<T1>());
+                AssetConfigurator asset = loader.CreateAsset(CreateComponent<T1>());
                 asset.Set(CreateComponent<T2>());
                 assetId = asset.Id;
             })
             .Build();
 
         _assets = _world.Assets;
-        return Assets.GetAsset<T1>(assetId);
+
+        return Assets.GetAssetRef<T1>(assetId);
     }
 
     public AssetContext CreateAssetContext(Action<IAssetLoader>? assets = null)
@@ -63,7 +67,10 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
         var worldBuilder = new WorldBuilder();
         worldBuilder.CreateAssetData(CreateAssets);
 
-        if (assets != null) worldBuilder.CreateAssetData(assets);
+        if (assets != null)
+        {
+            worldBuilder.CreateAssetData(assets);
+        }
 
         _world = worldBuilder.Build();
         _assets = _world.Assets;
@@ -75,8 +82,15 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
     {
         object? result = null;
 
-        if (typeof(T) == typeof(CarAsset)) result = new CarAsset(RandomInt(1, 10), RandomInt(11, 20));
-        if (typeof(T) == typeof(UnitAsset)) result = new UnitAsset(RandomInt(1, 10), RandomInt(11, 20));
+        if (typeof(T) == typeof(CarAsset))
+        {
+            result = new CarAsset(RandomInt(1, 10), RandomInt(11, 20));
+        }
+
+        if (typeof(T) == typeof(UnitAsset))
+        {
+            result = new UnitAsset(RandomInt(1, 10), RandomInt(11, 20));
+        }
 
         return result == null
             ? throw new NotSupportedException()
@@ -85,10 +99,10 @@ public sealed class AssetTestFixture : BaseFixture, IDisposable
 
     private void CreateAssets(IAssetLoader loader)
     {
-        var unit1 = loader.CreateAsset(UnitAsset.Alias1);
+        AssetConfigurator unit1 = loader.CreateAsset(UnitAsset.Alias1);
         unit1.Set(new UnitAsset(RandomInt(1, 10), RandomInt(11, 20)));
 
-        var unit2 = loader.CreateAsset(UnitAsset.Alias2);
+        AssetConfigurator unit2 = loader.CreateAsset(UnitAsset.Alias2);
         unit2.Set(new UnitAsset(RandomInt(1, 10), RandomInt(11, 20)));
     }
 

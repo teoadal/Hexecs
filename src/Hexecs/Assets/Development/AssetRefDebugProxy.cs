@@ -15,7 +15,7 @@ internal sealed class AssetRefDebugProxy<T1>(AssetRef<T1> asset)
         ? _context.Components(_assetId).ToArray()
         : [];
 
-    private readonly uint _assetId = asset.Id;
+    private readonly AssetId _assetId = asset.Id;
     private readonly AssetContext _context = asset.Context;
     private IAssetComponent[]? _components;
 }
@@ -42,7 +42,7 @@ internal sealed class AssetRefDebugProxy<T1, T2>(AssetRef<T1, T2> asset)
         ? _context.Components(_assetId).ToArray()
         : [];
 
-    private readonly uint _assetId = asset.Id;
+    private readonly AssetId _assetId = asset.Id;
     private readonly AssetContext _context = asset.Context;
     private IAssetComponent[]? _components;
 }
@@ -76,7 +76,7 @@ internal sealed class AssetRefDebugProxy<T1, T2, T3>(AssetRef<T1, T2, T3> asset)
         ? _context.Components(_assetId).ToArray()
         : [];
 
-    private readonly uint _assetId = asset.Id;
+    private readonly AssetId _assetId = asset.Id;
     private readonly AssetContext _context = asset.Context;
     private IAssetComponent[]? _components;
 }

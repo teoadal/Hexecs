@@ -3,19 +3,28 @@
 public sealed partial class ActorContext
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
 
-    IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator() => GetEnumerator();
+    IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
     [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass")]
     public struct Enumerator : IEnumerator<Actor>, IEnumerable<Actor>
     {
         public readonly Actor Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, _dense[_index]);
+            get => new Actor(_context, new ActorId(_dense[_index]));
         }
 
         public readonly int Length
@@ -23,12 +32,12 @@ public sealed partial class ActorContext
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _count;
         }
-        
+
         private int _index;
         private readonly ActorContext _context;
         private readonly uint[] _dense;
         private readonly int _count;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal Enumerator(ActorContext context)
         {
@@ -39,10 +48,16 @@ public sealed partial class ActorContext
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _count;
+        public bool MoveNext()
+        {
+            return ++_index < _count;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
 
         #region Interfaces
 
@@ -56,9 +71,15 @@ public sealed partial class ActorContext
         {
         }
 
-        readonly IEnumerator IEnumerable.GetEnumerator() => this;
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this;
+        }
 
-        readonly IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator() => this;
+        readonly IEnumerator<Actor> IEnumerable<Actor>.GetEnumerator()
+        {
+            return this;
+        }
 
         void IEnumerator.Reset()
         {

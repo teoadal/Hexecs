@@ -12,9 +12,9 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
     private readonly ThreadLocal<LocalBuffer> _localStack;
     private readonly Stack<T> _globalStack;
 #if NET9_0_OR_GREATER
-    private readonly Lock _globalLock = new();
+    private readonly Lock _globalLock = new Lock();
 #else
-    private readonly object _globalLock = new();
+    private readonly object _globalLock = new object();
 #endif
     private bool _isDisposed;
 
@@ -35,7 +35,7 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
             _globalStack.Clear();
         }
 
-        foreach (var local in _localStack.Values)
+        foreach (LocalBuffer local in _localStack.Values)
         {
             local.Count = 0;
         }
@@ -43,7 +43,10 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
 
     public void Dispose()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+        {
+            return;
+        }
 
         // Сначала ставим флаг, чтобы другие потоки перестали работать со стеком
         _isDisposed = true;
@@ -54,7 +57,7 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
             // Проверяем буферы только если ThreadLocal еще жив
             try
             {
-                foreach (var local in _localStack.Values)
+                foreach (LocalBuffer local in _localStack.Values)
                 {
                     while (local.Count > 0)
                     {
@@ -75,10 +78,12 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Push(T item)
     {
-        var local = _localStack.Value!;
+        LocalBuffer local = _localStack.Value!;
+
         if (local.Count < LocalCapacity)
         {
             local.Data[local.Count++] = item;
+
             return;
         }
 
@@ -89,20 +94,24 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryPop(out T result)
     {
-        var local = _localStack.Value!;
+        LocalBuffer local = _localStack.Value!;
+
         if (local.Count > 0)
         {
             result = local.Data[--local.Count];
+
             return true;
         }
 
         if (TryPopFromGlobal(local) && local.Count > 0)
         {
             result = local.Data[--local.Count];
+
             return true;
         }
 
         result = default;
+
         return false;
     }
 
@@ -114,7 +123,8 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
     {
         if (_localStack.IsValueCreated)
         {
-            var local = _localStack.Value!;
+            LocalBuffer local = _localStack.Value!;
+
             if (local.Count > 0)
             {
 #if NET9_0_OR_GREATER
@@ -157,9 +167,13 @@ internal sealed class ThreadLocalStack<T> : IDisposable where T : struct
         lock (_globalLock)
 #endif
         {
-            if (_globalStack.Count == 0) return false;
+            if (_globalStack.Count == 0)
+            {
+                return false;
+            }
 
-            var toFetch = Math.Min(_globalStack.Count, BatchSize);
+            int toFetch = Math.Min(_globalStack.Count, BatchSize);
+
             // Проверяем свободное место (на всякий случай)
             toFetch = Math.Min(toFetch, LocalCapacity - local.Count);
 

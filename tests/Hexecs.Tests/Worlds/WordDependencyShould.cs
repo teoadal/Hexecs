@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+
 using Hexecs.Tests.Mocks;
 using Hexecs.Worlds;
 
@@ -16,7 +17,7 @@ public sealed class WordDependencyShould
     [Fact]
     public void NotThrowWhenDependencyNotRegistered()
     {
-        var dependency = _world
+        Process? dependency = _world
             .Invoking(w => w.GetService<Process>())
             .Should()
             .NotThrow()
@@ -26,11 +27,11 @@ public sealed class WordDependencyShould
             .Should()
             .BeNull();
     }
-    
+
     [Fact]
     public void ResolveSingleton()
     {
-        var dependency = _world.Invoking(w => w.GetService<Singleton>())
+        Singleton? dependency = _world.Invoking(w => w.GetService<Singleton>())
             .Should()
             .NotThrow()
             .Which;
@@ -39,11 +40,11 @@ public sealed class WordDependencyShould
             .Should()
             .NotBeNull();
     }
-    
+
     [Fact]
     public void ResolveSingletonArray()
     {
-        var array = _world.Invoking(w => w.GetServices<Singleton>())
+        Singleton[] array = _world.Invoking(w => w.GetServices<Singleton>())
             .Should()
             .NotThrow()
             .Which;
@@ -52,18 +53,18 @@ public sealed class WordDependencyShould
             .Should()
             .OnlyHaveUniqueItems();
     }
-    
+
     [Fact]
     public void ResolveSameSingletonArray()
     {
-        var array1 = _world.GetServices<Singleton>();
-        var array2 = _world.GetServices<Singleton>();
+        Singleton[] array1 = _world.GetServices<Singleton>();
+        Singleton[] array2 = _world.GetServices<Singleton>();
 
         array1
             .Should()
             .BeSameAs(array2);
     }
-    
+
     [Fact]
     public void ResolveSameSingleton()
     {
@@ -74,7 +75,7 @@ public sealed class WordDependencyShould
             .Should()
             .Be(dependency2);
     }
-    
+
     [Fact]
     public void ResolveSameScoped()
     {
@@ -85,11 +86,11 @@ public sealed class WordDependencyShould
             .Should()
             .Be(dependency2);
     }
-    
+
     [Fact]
     public void ResolveScoped()
     {
-        var dependency = _world.Invoking(w => w.GetService<Scoped>())
+        Scoped? dependency = _world.Invoking(w => w.GetService<Scoped>())
             .Should()
             .NotThrow()
             .Which;
@@ -98,11 +99,11 @@ public sealed class WordDependencyShould
             .Should()
             .NotBeNull();
     }
-    
+
     [Fact]
     public void ResolveTransient()
     {
-        var dependency = _world.Invoking(w => w.GetService<Transient>())
+        Transient? dependency = _world.Invoking(w => w.GetService<Transient>())
             .Should()
             .NotThrow()
             .Which;
@@ -111,7 +112,7 @@ public sealed class WordDependencyShould
             .Should()
             .NotBeNull();
     }
-    
+
     [Fact]
     public void ResolveNotSameTransient()
     {

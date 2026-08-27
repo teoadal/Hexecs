@@ -22,11 +22,7 @@ internal sealed class ActorComponentConfiguration<T>(
     /// <summary>
     /// Пустая конфигурация без каких-либо настроек
     /// </summary>
-    public static readonly ActorComponentConfiguration<T> Empty = new(
-        null,
-        null,
-        null,
-        null);
+    public static readonly ActorComponentConfiguration<T> Empty = new ActorComponentConfiguration<T>(null, null, null, null);
 
     /// <summary>
     /// Начальная емкость пула компонентов. Null означает использование емкости по умолчанию.

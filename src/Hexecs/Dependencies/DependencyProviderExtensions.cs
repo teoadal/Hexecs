@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Hexecs.Dependencies;
 
 public static class DependencyProviderExtensions
@@ -7,9 +9,9 @@ public static class DependencyProviderExtensions
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
         Type implementation)
     {
-        var constructor = DependencyUtils.GetInjectableConstructor(implementation);
-        var parameters = constructor.GetParameters();
-        var parametersLength = parameters.Length;
+        ConstructorInfo constructor = DependencyUtils.GetInjectableConstructor(implementation);
+        ParameterInfo[] parameters = constructor.GetParameters();
+        int parametersLength = parameters.Length;
 
         if (parametersLength == 0)
         {
@@ -17,13 +19,18 @@ public static class DependencyProviderExtensions
         }
 
         var dependencies = new object?[parametersLength];
-        for (var i = parametersLength - 1; i >= 0; i--)
-        {
-            var parameter = parameters[i];
-            var parameterType = parameter.ParameterType;
 
-            var dependency = provider.GetService(parameterType);
-            if (dependency != null) dependencies[i] = dependency;
+        for (int i = parametersLength - 1; i >= 0; i--)
+        {
+            ParameterInfo parameter = parameters[i];
+            Type parameterType = parameter.ParameterType;
+
+            object? dependency = provider.GetService(parameterType);
+
+            if (dependency != null)
+            {
+                dependencies[i] = dependency;
+            }
             else
             {
                 dependencies[i] = parameter.HasDefaultValue
@@ -39,7 +46,11 @@ public static class DependencyProviderExtensions
         where TService : class
     {
         var service = provider.GetService<TService>();
-        if (service == null) DependencyError.ServiceNotRegistered(typeof(TService));
+
+        if (service == null)
+        {
+            DependencyError.ServiceNotRegistered(typeof(TService));
+        }
 
         return service;
     }

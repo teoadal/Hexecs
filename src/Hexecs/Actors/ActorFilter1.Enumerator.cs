@@ -19,23 +19,16 @@ public sealed partial class ActorFilter<T1>
 
     public ref struct Enumerator
     {
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1> _filter;
-        private readonly ComponentsAccess<T1> _pool1;
-
-        private readonly ReadOnlySpan<uint> _ids;
-        private int _index;
-
         public readonly ActorRef<T1> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var id = _ids[_index];
+                uint id = _ids[_index];
 
                 return new ActorRef<T1>(
                     _context,
-                    id,
+                    new ActorId(id),
                     ref _pool1[id]);
             }
         }
@@ -46,6 +39,13 @@ public sealed partial class ActorFilter<T1>
             get => _ids.Length;
         }
 
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1> _filter;
+        private readonly ComponentsAccess<T1> _pool1;
+
+        private readonly ReadOnlySpan<uint> _ids;
+        private int _index;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal Enumerator(ActorFilter<T1> filter)
         {
@@ -53,19 +53,28 @@ public sealed partial class ActorFilter<T1>
             _filter = filter;
             _pool1 = filter._pool1.GetComponentAccess();
 
-            var count = filter._count;
+            int count = filter._count;
             _ids = filter._dense.AsSpan(0, count);
 
             _index = -1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose() => _filter.ProcessPostponedUpdates();
+        public void Dispose()
+        {
+            _filter.ProcessPostponedUpdates();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _ids.Length;
+        public bool MoveNext()
+        {
+            return ++_index < _ids.Length;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
     }
 }

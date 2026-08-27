@@ -18,10 +18,10 @@ public interface IActorBuilder
 }
 
 /// <summary>
-/// Типизированный интерфейс строителя актёров, специализированный для работы 
+/// Типизированный интерфейс строителя актёров, специализированный для работы
 /// с определённым типом компонента ассета.
 /// </summary>
-/// <typeparam name="TAsset">Тип компонента ассета, который используется 
+/// <typeparam name="TAsset">Тип компонента ассета, который используется
 /// для построения актёра. Должен быть структурой и реализовывать интерфейс IAssetComponent.</typeparam>
 public interface IActorBuilder<TAsset> : IActorBuilder
     where TAsset : struct, IAssetComponent
@@ -36,7 +36,7 @@ public interface IActorBuilder<TAsset> : IActorBuilder
 
     void IActorBuilder.Build(in Actor actor, in Asset asset, Args args)
     {
-        if (asset.IsRef<TAsset>(out var expected))
+        if (asset.IsRef(out AssetRef<TAsset> expected))
         {
             Build(in actor, in expected, args);
         }

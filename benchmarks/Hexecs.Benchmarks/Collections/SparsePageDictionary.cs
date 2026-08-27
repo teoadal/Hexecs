@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Hexecs.Utils;
 
 namespace Hexecs.Benchmarks.Collections;
 
@@ -44,11 +43,12 @@ public sealed class SparsePageDictionary<TValue>
     public bool Contains(uint key)
     {
         var pageIndex = (int)(key >> PageBits);
-        var pages = _sparsePages;
+        uint[]?[] pages = _sparsePages;
 
         if ((uint)pageIndex < (uint)pages.Length)
         {
-            var page = pages[pageIndex];
+            uint[]? page = pages[pageIndex];
+
             if (page != null)
             {
                 return page[key & PageMask] != 0;
@@ -62,28 +62,37 @@ public sealed class SparsePageDictionary<TValue>
     public bool TryGetValue(uint key, out TValue value)
     {
         var pageIndex = (int)(key >> PageBits);
+
         if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
-            var page = _sparsePages[pageIndex];
+            uint[]? page = _sparsePages[pageIndex];
+
             if (page != null)
             {
-                var denseIndexPlusOne = page[key & PageMask];
+                uint denseIndexPlusOne = page[key & PageMask];
+
                 if (denseIndexPlusOne != 0)
                 {
                     value = _values[denseIndexPlusOne - 1];
+
                     return true;
                 }
             }
         }
 
         value = default;
+
         return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(uint key, TValue value)
     {
-        if (TryAdd(key, value)) return;
+        if (TryAdd(key, value))
+        {
+            return;
+        }
+
         Throw("Key already exists");
     }
 
@@ -91,15 +100,17 @@ public sealed class SparsePageDictionary<TValue>
     public bool TryAdd(uint key, TValue value)
     {
         var pageIndex = (int)(key >> PageBits);
-        var pages = _sparsePages;
+        uint[]?[] pages = _sparsePages;
 
         // Максимально компактная проверка на готовность страницы и места
         if ((uint)pageIndex < (uint)pages.Length)
         {
-            var page = pages[pageIndex];
+            uint[]? page = pages[pageIndex];
+
             if (page != null && (uint)_count < (uint)_dense.Length)
             {
-                ref var slot = ref page[key & PageMask];
+                ref uint slot = ref page[key & PageMask];
+
                 if (slot == 0) // Чистая вставка (самый частый случай в ECS)
                 {
                     var idx = (uint)_count;
@@ -107,11 +118,15 @@ public sealed class SparsePageDictionary<TValue>
                     _dense[idx] = key;
                     _values[idx] = value;
                     _count++;
+
                     return true;
                 }
 
                 // Если не 0, проверяем на дубликат (чуть медленнее)
-                if (_dense[slot - 1] == key) return false;
+                if (_dense[slot - 1] == key)
+                {
+                    return false;
+                }
             }
         }
 
@@ -121,23 +136,40 @@ public sealed class SparsePageDictionary<TValue>
     public bool Remove(uint key)
     {
         var pageIndex = (int)(key >> PageBits);
-        // Используем вашу оригинальную "плоскую" логику из коммита
-        if ((uint)pageIndex >= (uint)_sparsePages.Length) return false;
 
-        var page = _sparsePages[pageIndex];
-        if (page == null) return false;
+        // Используем вашу оригинальную "плоскую" логику из коммита
+        if ((uint)pageIndex >= (uint)_sparsePages.Length)
+        {
+            return false;
+        }
+
+        uint[]? page = _sparsePages[pageIndex];
+
+        if (page == null)
+        {
+            return false;
+        }
 
         var offset = (int)(key & PageMask);
-        var denseIndexPlusOne = page[offset];
-        if (denseIndexPlusOne == 0) return false;
+        uint denseIndexPlusOne = page[offset];
 
-        var denseIndex = (int)denseIndexPlusOne - 1;
-        if (_dense[denseIndex] != key) return false;
+        if (denseIndexPlusOne == 0)
+        {
+            return false;
+        }
 
-        var lastIndex = _count - 1;
+        int denseIndex = (int)denseIndexPlusOne - 1;
+
+        if (_dense[denseIndex] != key)
+        {
+            return false;
+        }
+
+        int lastIndex = _count - 1;
+
         if (denseIndex != lastIndex)
         {
-            var lastKey = _dense[lastIndex];
+            uint lastKey = _dense[lastIndex];
             _dense[denseIndex] = lastKey;
             _values[denseIndex] = _values[lastIndex];
 
@@ -147,18 +179,19 @@ public sealed class SparsePageDictionary<TValue>
 
         page[offset] = 0;
         _count = lastIndex; // Используем вычисленный lastIndex
+
         return true;
     }
 
     public void Clear()
     {
-        var dense = _dense;
-        var sparsePages = _sparsePages;
+        uint[] dense = _dense;
+        uint[]?[] sparsePages = _sparsePages;
 
         // Очищаем только занятые ячейки в разреженных страницах за O(Count)
         for (var i = 0; i < _count; i++)
         {
-            var key = dense[i];
+            uint key = dense[i];
             var pageIndex = (int)(key >> PageBits);
             sparsePages[pageIndex]![key & PageMask] = 0;
         }
@@ -170,7 +203,7 @@ public sealed class SparsePageDictionary<TValue>
     {
         if (pageIndex >= _sparsePages.Length)
         {
-            var newSize = Math.Max(_sparsePages.Length * 2, pageIndex + 1);
+            int newSize = Math.Max(_sparsePages.Length * 2, pageIndex + 1);
             Array.Resize(ref _sparsePages, newSize);
         }
     }
@@ -179,7 +212,7 @@ public sealed class SparsePageDictionary<TValue>
     {
         if (_count >= _dense.Length)
         {
-            var newSize = _dense.Length * 2;
+            int newSize = _dense.Length * 2;
             Array.Resize(ref _dense, newSize);
             Array.Resize(ref _values, newSize);
         }
@@ -192,16 +225,21 @@ public sealed class SparsePageDictionary<TValue>
         var pageIndex = (int)(key >> PageBits);
         EnsurePageArraySize(pageIndex);
 
-        ref var page = ref _sparsePages[pageIndex];
+        ref uint[]? page = ref _sparsePages[pageIndex];
+
         if (page == null)
         {
             page = new uint[PageSize];
         }
 
-        ref var denseIndexPlusOne = ref page[key & PageMask];
+        ref uint denseIndexPlusOne = ref page[key & PageMask];
+
         if (denseIndexPlusOne != 0)
         {
-            if (_dense[denseIndexPlusOne - 1] == key) return false;
+            if (_dense[denseIndexPlusOne - 1] == key)
+            {
+                return false;
+            }
         }
 
         var denseIndex = (uint)_count;
@@ -209,11 +247,15 @@ public sealed class SparsePageDictionary<TValue>
         _dense[denseIndex] = key;
         _values[denseIndex] = value;
         _count++;
+
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(_values.AsSpan(0, _count));
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(_values.AsSpan(0, _count));
+    }
 
     public ref struct Enumerator
     {
@@ -228,10 +270,11 @@ public sealed class SparsePageDictionary<TValue>
             if (_remaining == 0)
             {
                 _current = ref Unsafe.NullRef<TValue>();
+
                 return;
             }
 
-            ref var first = ref MemoryMarshal.GetReference(values);
+            ref TValue first = ref MemoryMarshal.GetReference(values);
             _current = ref Unsafe.Subtract(ref first, 1);
         }
 
@@ -244,13 +287,21 @@ public sealed class SparsePageDictionary<TValue>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (--_remaining < 0) return false;
+            if (--_remaining < 0)
+            {
+                return false;
+            }
+
             _current = ref Unsafe.Add(ref _current, 1);
+
             return true;
         }
     }
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void Throw(string message) => throw new InvalidOperationException(message);
+    private static void Throw(string message)
+    {
+        throw new InvalidOperationException(message);
+    }
 }

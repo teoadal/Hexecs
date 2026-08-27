@@ -6,7 +6,10 @@ namespace Hexecs.Actors.Relations;
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposable
 {
-    public static ActorRelationComponent Create(uint actorId) => new(4);
+    public static ActorRelationComponent Create(ActorId _)
+    {
+        return new ActorRelationComponent(4);
+    }
 
     public static ActorComponentConfiguration<ActorRelationComponent> CreatePoolConfiguration()
     {
@@ -32,13 +35,17 @@ internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposa
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ReadOnlySpan<uint> AsReadOnlySpan() => _array == null
-        ? ReadOnlySpan<uint>.Empty
-        : _array.AsSpan(0, _length);
+    public readonly ReadOnlySpan<uint> AsReadOnlySpan()
+    {
+        return _array == null
+            ? ReadOnlySpan<uint>.Empty
+            : _array.AsSpan(0, _length);
+    }
 
     public void Dispose()
     {
-        var arr = _array;
+        uint[]? arr = _array;
+
         if (arr != null)
         {
             _array = null; // Защита от двойного Dispose
@@ -49,22 +56,33 @@ internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposa
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ArrayEnumerator<uint> GetEnumerator() => _array == null
-        ? ArrayEnumerator<uint>.Empty
-        : new ArrayEnumerator<uint>(_array, _length);
+    public readonly ArrayEnumerator<uint> GetEnumerator()
+    {
+        return _array == null
+            ? ArrayEnumerator<uint>.Empty
+            : new ArrayEnumerator<uint>(_array, _length);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Has(uint relationId) => _length != 0 && AsReadOnlySpan().Contains(relationId);
+    public readonly bool Has(uint relationId)
+    {
+        return _length != 0 && AsReadOnlySpan().Contains(relationId);
+    }
 
     public bool Remove(uint relationId)
     {
-        var span = AsReadOnlySpan();
+        ReadOnlySpan<uint> span = AsReadOnlySpan();
+
         for (var i = 0; i < span.Length; i++)
         {
-            if (span[i] != relationId) continue;
+            if (span[i] != relationId)
+            {
+                continue;
+            }
 
             // Swap-Back: $O(1)$
-            var lastIndex = --_length;
+            int lastIndex = --_length;
+
             if (i < lastIndex)
             {
                 _array![i] = _array[lastIndex];
@@ -78,10 +96,15 @@ internal struct ActorRelationComponent(int capacity) : IActorComponent, IDisposa
 
     public bool TryAdd(uint relationId)
     {
-        var has = Has(relationId);
-        if (has) return false;
+        bool has = Has(relationId);
+
+        if (has)
+        {
+            return false;
+        }
 
         Add(relationId);
+
         return true;
     }
 }

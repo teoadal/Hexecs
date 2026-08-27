@@ -9,7 +9,7 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
 
         // Act
         list.Add(actor);
@@ -24,10 +24,10 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        uint fakeId = 999;
+        var fakeId = new ActorId(999);
 
         // Act
-        var result = list.Remove(fakeId);
+        bool result = list.Remove(fakeId);
 
         // Assert
         result.Should().BeFalse();
@@ -54,15 +54,21 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
         list.Add(actor);
 
         // Act
+
         actor.Remove<Defence>(); // Это вызывает событие Removing в пуле
 
         // Assert
-        list.Contains(actor).Should().BeFalse();
-        list.Length.Should().Be(0);
+        list.Contains(actor)
+            .Should()
+            .BeFalse();
+
+        list.Length
+            .Should()
+            .Be(0);
     }
 
     [Fact(DisplayName = "Должен корректно итерироваться по добавленным акторам")]
@@ -70,14 +76,15 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor1 = fixture.CreateActor<Defence>();
-        var actor2 = fixture.CreateActor<Defence>();
+        Actor actor1 = fixture.CreateActor<Defence>();
+        Actor actor2 = fixture.CreateActor<Defence>();
         list.Add(actor1);
         list.Add(actor2);
 
         // Act
-        var resultIds = new List<uint>();
-        foreach (var actor in list)
+        var resultIds = new List<ActorId>();
+
+        foreach (ActorRef<Defence> actor in list)
         {
             resultIds.Add(actor.Id);
         }
@@ -95,13 +102,17 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
         // Arrange
         var list = new ActorList<Defence>(fixture.Actors);
         list.Dispose();
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
 
         // Act
-        var action = () => list.Add(actor);
+
+        Action action = () => list.Add(actor);
 
         // Assert
-        action.Should().Throw<Exception>()
+
+        action
+            .Should()
+            .Throw<Exception>()
             .WithMessage("*disposed*");
     }
 
@@ -112,15 +123,23 @@ public sealed class ActorListShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
         using var list = new ActorList<Defence>(fixture.Actors);
-        var actor = fixture.CreateActor<Defence>();
+        Actor actor = fixture.CreateActor<Defence>();
 
         // Act
+
         if (useActorRef)
-            list.Add(actor.AsRef());
+        {
+            list.Add(actor.AsRef<Defence>());
+        }
         else
+        {
             list.Add(actor);
+        }
 
         // Assert
-        list.Contains(actor.Id).Should().BeTrue();
+        list
+            .Contains(actor.Id)
+            .Should()
+            .BeTrue();
     }
 }

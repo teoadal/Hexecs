@@ -10,7 +10,6 @@ public class ActorMethodsConsistencyTests
     private static readonly Type[] ActorTypes =
     [
         typeof(Actor),
-        typeof(Actor<>),
         typeof(ActorRef<>),
         typeof(ActorRef<,>),
         typeof(ActorRef<,,>)
@@ -33,27 +32,28 @@ public class ActorMethodsConsistencyTests
         "GetHashCode"
     ];
 
-    private static IEnumerable<string> CommonMethodNames =>
-        ReferenceType
-            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            .Select(m => m.Name)
-            .Where(name => !ExcludedMethods.Contains(name))
-            .Distinct();
+    private static IEnumerable<string> CommonMethodNames => ReferenceType
+        .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+        .Select(m => m.Name)
+        .Where(name => !ExcludedMethods.Contains(name))
+        .Distinct();
 
     [Fact(DisplayName = "Все типы акторов должны иметь общие методы")]
     public void AllActorTypes_ShouldHaveCommonMethods()
     {
-        var expectedMethods = CommonMethodNames.ToList();
+        List<string> expectedMethods = CommonMethodNames.ToList();
 
-        foreach (var type in ActorTypes.Where(t => t != ReferenceType))
+        foreach (Type type in ActorTypes.Where(t => t != ReferenceType))
         {
-            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-            var methodNames = methods.Select(m => m.Name).Distinct().ToHashSet();
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            HashSet<string> methodNames = methods.Select(m => m.Name).Distinct().ToHashSet();
 
-            foreach (var expectedMethod in expectedMethods)
+            foreach (string expectedMethod in expectedMethods)
             {
-                methodNames.Should().Contain(expectedMethod,
-                    because: $"тип {type.Name} должен содержать метод {expectedMethod} (как в {ReferenceType.Name})");
+                methodNames.Should()
+                    .Contain(
+                        expectedMethod,
+                        because: $"тип {type.Name} должен содержать метод {expectedMethod} (как в {ReferenceType.Name})");
             }
         }
     }
@@ -61,17 +61,19 @@ public class ActorMethodsConsistencyTests
     [Fact(DisplayName = "Все общие методы должны иметь одинаковые сигнатуры")]
     public void CommonMethods_ShouldHaveIdenticalSignatures()
     {
-        foreach (var methodName in CommonMethodNames)
+        foreach (string methodName in CommonMethodNames)
         {
-            var referenceMethods = GetMethodSignatures(ReferenceType, methodName);
+            List<MethodSignature> referenceMethods = GetMethodSignatures(ReferenceType, methodName);
 
-            foreach (var type in ActorTypes.Where(t => t != ReferenceType))
+            foreach (Type type in ActorTypes.Where(t => t != ReferenceType))
             {
-                var typeMethods = GetMethodSignatures(type, methodName);
+                List<MethodSignature> typeMethods = GetMethodSignatures(type, methodName);
 
-                typeMethods.Should().BeEquivalentTo(referenceMethods,
-                    because:
-                    $"метод {methodName} в {type.Name} должен иметь такую же сигнатуру как в {ReferenceType.Name}");
+                typeMethods.Should()
+                    .BeEquivalentTo(
+                        referenceMethods,
+                        because:
+                        $"метод {methodName} в {type.Name} должен иметь такую же сигнатуру как в {ReferenceType.Name}");
             }
         }
     }
@@ -79,18 +81,20 @@ public class ActorMethodsConsistencyTests
     [Fact(DisplayName = "Все общие методы должны иметь AggressiveInlining-атрибут")]
     public void CommonMethods_ShouldHaveAggressiveInlining()
     {
-        foreach (var type in ActorTypes)
+        foreach (Type type in ActorTypes)
         {
-            var methods = type
+            IEnumerable<MethodInfo> methods = type
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(m => CommonMethodNames.Contains(m.Name));
 
-            foreach (var method in methods)
+            foreach (MethodInfo method in methods)
             {
-                var implFlags = method.MethodImplementationFlags;
+                MethodImplAttributes implFlags = method.MethodImplementationFlags;
 
-                implFlags.Should().HaveFlag(MethodImplAttributes.AggressiveInlining,
-                    because: $"метод {type.Name}.{method.Name} должен иметь атрибут AggressiveInlining");
+                implFlags.Should()
+                    .HaveFlag(
+                        MethodImplAttributes.AggressiveInlining,
+                        because: $"метод {type.Name}.{method.Name} должен иметь атрибут AggressiveInlining");
             }
         }
     }
@@ -107,9 +111,13 @@ public class ActorMethodsConsistencyTests
     private sealed class MethodSignature
     {
         public string Name { get; }
+
         public string ReturnType { get; }
+
         public string[] ParameterTypes { get; }
+
         public string[] GenericConstraints { get; }
+
         public int GenericArgumentCount { get; }
 
         public MethodSignature(MethodInfo method)
@@ -130,34 +138,48 @@ public class ActorMethodsConsistencyTests
         private static string NormalizeTypeName(Type type)
         {
             if (type.IsGenericParameter)
+            {
                 return "T";
+            }
 
             if (type.IsGenericType)
             {
-                var baseName = type.GetGenericTypeDefinition().Name;
-                var args = string.Join(",", type.GetGenericArguments().Select(NormalizeTypeName));
+                string baseName = type.GetGenericTypeDefinition().Name;
+                string args = string.Join(",", type.GetGenericArguments().Select(NormalizeTypeName));
+
                 return $"{baseName}[{args}]";
             }
 
             if (type.IsByRef)
+            {
                 return $"ref {NormalizeTypeName(type.GetElementType()!)}";
+            }
 
             return type.Name;
         }
 
         public override bool Equals(object? obj)
         {
-            if (obj is not MethodSignature other) return false;
+            if (obj is not MethodSignature other)
+            {
+                return false;
+            }
+
             return Name == other.Name
-                   && ReturnType == other.ReturnType
-                   && GenericArgumentCount == other.GenericArgumentCount
-                   && ParameterTypes.SequenceEqual(other.ParameterTypes)
-                   && GenericConstraints.SequenceEqual(other.GenericConstraints);
+                && ReturnType == other.ReturnType
+                && GenericArgumentCount == other.GenericArgumentCount
+                && ParameterTypes.SequenceEqual(other.ParameterTypes)
+                && GenericConstraints.SequenceEqual(other.GenericConstraints);
         }
 
-        public override int GetHashCode() => HashCode.Combine(Name, ReturnType, GenericArgumentCount);
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, ReturnType, GenericArgumentCount);
+        }
 
-        public override string ToString() =>
-            $"{ReturnType} {Name}<{GenericArgumentCount}>({string.Join(", ", ParameterTypes)})";
+        public override string ToString()
+        {
+            return $"{ReturnType} {Name}<{GenericArgumentCount}>({string.Join(", ", ParameterTypes)})";
+        }
     }
 }

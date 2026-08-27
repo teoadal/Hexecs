@@ -5,10 +5,16 @@ internal sealed partial class ActorComponentPool<T>
     private readonly ref struct AddResult
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static AddResult Failure() => new(-1, ref Unsafe.NullRef<T>());
+        public static AddResult Failure()
+        {
+            return new AddResult(-1, ref Unsafe.NullRef<T>());
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static AddResult Success(int index, ref T component) => new(index, ref component);
+        public static AddResult Success(int index, ref T component)
+        {
+            return new AddResult(index, ref component);
+        }
 
         public readonly ref T Component;
         public readonly int Index;

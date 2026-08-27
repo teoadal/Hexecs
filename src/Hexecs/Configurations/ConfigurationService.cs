@@ -4,7 +4,7 @@ namespace Hexecs.Configurations;
 
 public sealed class ConfigurationService
 {
-    public static ConfigurationService Empty => new([], []);
+    public static ConfigurationService Empty => new ConfigurationService([], []);
 
     private readonly IConfigurationSource[] _sources;
     private readonly ConcurrentDictionary<string, object?> _values;
@@ -20,18 +20,31 @@ public sealed class ConfigurationService
     public T GetRequiredValue<T>(string key)
     {
         var result = GetValue<T>(key);
-        if (result == null) ConfigurationError.KeyNotFound(key);
+
+        if (result == null)
+        {
+            ConfigurationError.KeyNotFound(key);
+        }
 
         return result;
     }
 
-    public T? GetValue<T>(string key) => (T?)_values.GetOrAdd(key, static (k, sources) =>
+    public T? GetValue<T>(string key)
     {
-        foreach (var source in sources)
-        {
-            if (source.TryGetValue<T>(k, out var exists)) return exists;
-        }
+        return (T?)_values.GetOrAdd(
+            key,
+            static (k, sources) =>
+            {
+                foreach (IConfigurationSource source in sources)
+                {
+                    if (source.TryGetValue(k, out T? exists))
+                    {
+                        return exists;
+                    }
+                }
 
-        return null;
-    }, _sources);
+                return null;
+            },
+            _sources);
+    }
 }

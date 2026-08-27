@@ -12,7 +12,7 @@ public struct ArrayEnumerator<T> : IEnumerator<T>
     public static ArrayEnumerator<T> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new();
+        get => new ArrayEnumerator<T>();
     }
 
     /// <summary>
@@ -73,7 +73,10 @@ public struct ArrayEnumerator<T> : IEnumerator<T>
     /// </summary>
     /// <returns>Возвращает true, если перечислитель успешно перемещен к следующему элементу; false, если перечислитель достиг конца последовательности.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext() => ++_index < _length;
+    public bool MoveNext()
+    {
+        return ++_index < _length;
+    }
 
     /// <summary>
     /// Устанавливает перечислитель в его начальное положение.

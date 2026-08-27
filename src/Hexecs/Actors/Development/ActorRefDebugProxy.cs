@@ -15,7 +15,7 @@ internal sealed class ActorRefDebugProxy<T1>(ActorRef<T1> actor)
         ? _context.Components(_actorId).ToArray()
         : [];
 
-    private readonly uint _actorId = actor.Id;
+    private readonly ActorId _actorId = actor.Id;
     private readonly ActorContext _context = actor.Context;
     private IActorComponent[]? _components;
 }
@@ -42,7 +42,7 @@ internal sealed class ActorRefDebugProxy<T1, T2>(ActorRef<T1, T2> actor)
         ? _context.Components(_actorId).ToArray()
         : [];
 
-    private readonly uint _actorId = actor.Id;
+    private readonly ActorId _actorId = actor.Id;
     private readonly ActorContext _context = actor.Context;
     private IActorComponent[]? _components;
 }
@@ -76,7 +76,7 @@ internal sealed class ActorRefDebugProxy<T1, T2, T3>(ActorRef<T1, T2, T3> actor)
         ? _context.Components(_actorId).ToArray()
         : [];
 
-    private readonly uint _actorId = actor.Id;
+    private readonly ActorId _actorId = actor.Id;
     private readonly ActorContext _context = actor.Context;
     private IActorComponent[]? _components;
 }

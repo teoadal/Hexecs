@@ -1,6 +1,4 @@
-﻿using Hexecs.Actors.Components;
-
-namespace Hexecs.Actors;
+﻿namespace Hexecs.Actors;
 
 public sealed partial class ActorFilter<T1>
 {
@@ -21,24 +19,17 @@ public sealed partial class ActorFilter<T1>
 
     public ref struct SkipTakeEnumerator
     {
-        private readonly ActorContext _context;
-        private readonly ActorFilter<T1> _filter;
-        private readonly ActorComponentPool<T1> _pool1;
-        
-        private readonly ReadOnlySpan<uint> _ids;
-        private int _index;
-        
         public readonly ActorRef<T1> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var id = _ids[_index];
+                uint id = _ids[_index];
 
                 return new ActorRef<T1>(
                     _context,
-                    id,
-                    ref _pool1.Get(id));
+                    new ActorId(id),
+                    ref _pool1[id]);
             }
         }
 
@@ -48,28 +39,44 @@ public sealed partial class ActorFilter<T1>
             get => _filter.Length;
         }
 
+        private readonly ActorContext _context;
+        private readonly ActorFilter<T1> _filter;
+        private readonly ComponentsAccess<T1> _pool1;
+
+        private readonly ReadOnlySpan<uint> _ids;
+        private int _index;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal SkipTakeEnumerator(ActorFilter<T1> filter, int skip, int take = int.MaxValue)
         {
-            _filter = filter;
             _context = filter.Context;
-            _pool1 = filter._pool1;
+            _filter = filter;
+            _pool1 = filter._pool1.GetComponentAccess();
 
-            var count = filter._count;
-            var actualSkip = Math.Min(skip, count);
-            var actualTake = Math.Min(take, count - actualSkip);
+            int count = filter._count;
+            int actualSkip = Math.Min(skip, count);
+            int actualTake = Math.Min(take, count - actualSkip);
 
             _ids = filter._dense.AsSpan(actualSkip, actualTake);
             _index = -1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose() => _filter.ProcessPostponedUpdates();
+        public void Dispose()
+        {
+            _filter.ProcessPostponedUpdates();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _ids.Length;
+        public bool MoveNext()
+        {
+            return ++_index < _ids.Length;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly SkipTakeEnumerator GetEnumerator() => this;
+        public readonly SkipTakeEnumerator GetEnumerator()
+        {
+            return this;
+        }
     }
 }

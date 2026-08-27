@@ -52,9 +52,12 @@ public abstract class ActorCommandHandler<TCommand>(ActorContext context) : ICom
     public abstract Result Handle(in TCommand command);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType().Name);
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType().Name);
+    }
 }
 
 /// <summary>
@@ -103,7 +106,10 @@ public abstract class ActorCommandHandler<TCommand, TResult>(ActorContext contex
     public abstract TResult Handle(in TCommand command);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType().Name);
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType().Name);
+    }
 }

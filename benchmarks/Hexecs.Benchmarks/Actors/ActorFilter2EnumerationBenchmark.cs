@@ -1,6 +1,13 @@
-﻿using Friflo.Engine.ECS;
+﻿using DefaultEcs;
+
+using Friflo.Engine.ECS;
+
 using Hexecs.Benchmarks.Mocks.ActorComponents;
+using Hexecs.Utils;
 using Hexecs.Worlds;
+
+using Entity = DefaultEcs.Entity;
+using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
 
@@ -10,7 +17,7 @@ namespace Hexecs.Benchmarks.Actors;
 //     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method                 | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------------- |------- |----------:|------:|----------:|------------:|
@@ -28,38 +35,40 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // ------------------------------------------------------------------------------------
 //
-// BenchmarkDotNet v0.15.8, macOS Tahoe 26.2 (25C56) [Darwin 25.2.0]
+// BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 // Apple M3 Max, 1 CPU, 16 logical and 16 physical cores
-//     .NET SDK 10.0.102
+//     .NET SDK 10.0.400
 //     [Host]    : .NET 10.0.1 (10.0.1, 10.0.125.57005), Arm64 RyuJIT armv8.0-a
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), Arm64 RyuJIT armv8.0-a
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), Arm64 RyuJIT armv8.0-a
 //
-// Job=.NET 10.0  Runtime=.NET 10.0  
+// Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method                 | Count  | Mean      | Ratio | Gen0   | Allocated | Alloc Ratio |
 //     |----------------------- |------- |----------:|------:|-------:|----------:|------------:|
-//     | FriFlo                 | 10000  |  6.614 us |  0.66 | 0.0076 |      88 B |          NA |
-//     | FriFlo_Chunks          | 10000  |  6.716 us |  0.67 |      - |         - |          NA |
-//     | Hexecs_ComponentAccess | 10000  |  8.878 us |  0.88 |      - |         - |          NA |
-//     | DefaultEcs             | 10000  |  9.770 us |  0.97 |      - |         - |          NA |
-//     | Hexecs                 | 10000  | 10.078 us |  1.00 |      - |         - |          NA |
+//     | FriFlo                 | 10000  |  6.061 us |  0.71 | 0.0076 |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  6.241 us |  0.73 |      - |         - |          NA |
+//     | FriFlo_Chunks          | 10000  |  6.732 us |  0.79 |      - |         - |          NA |
+//     | Hexecs                 | 10000  |  8.534 us |  1.00 |      - |         - |          NA |
+//     | DefaultEcs             | 10000  |  9.906 us |  1.16 |      - |         - |          NA |
 //     |                        |        |           |       |        |           |             |
-//     | FriFlo                 | 100000 | 65.792 us |  0.70 |      - |      88 B |          NA |
-//     | FriFlo_Chunks          | 100000 | 67.258 us |  0.72 |      - |         - |          NA |
-//     | Hexecs_ComponentAccess | 100000 | 84.009 us |  0.90 |      - |         - |          NA |
-//     | DefaultEcs             | 100000 | 92.408 us |  0.98 |      - |         - |          NA |
-//     | Hexecs                 | 100000 | 93.853 us |  1.00 |      - |         - |          NA |
+//     | FriFlo                 | 100000 | 56.486 us |  0.77 |      - |      88 B |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 56.937 us |  0.77 |      - |         - |          NA |
+//     | FriFlo_Chunks          | 100000 | 67.463 us |  0.92 |      - |         - |          NA |
+//     | Hexecs                 | 100000 | 73.653 us |  1.00 |      - |         - |          NA |
+//     | DefaultEcs             | 100000 | 93.593 us |  1.27 |      - |         - |          NA |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[MeanColumn, MemoryDiagnoser]
+[MeanColumn]
+[MemoryDiagnoser]
 [HideColumns("Job", "Error", "StdDev", "Median", "RatioSD")]
 [JsonExporterAttribute.Full]
 [JsonExporterAttribute.FullCompressed]
 [BenchmarkCategory("Actors")]
 public class ActorFilter2EnumerationBenchmark
 {
-    [Params(10_000, 100_000)] public int Count;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorContext _context = null!;
     private ActorFilter<Attack, Defence> _filter = null!;
@@ -75,10 +84,11 @@ public class ActorFilter2EnumerationBenchmark
     public int Hexecs()
     {
         var result = 0;
-        foreach (var actor in _filter)
+
+        foreach (ActorRef<Attack, Defence> actor in _filter)
         {
             result += actor.Component1.Value +
-                      actor.Component2.Value;
+                actor.Component2.Value;
         }
 
         return result;
@@ -89,13 +99,13 @@ public class ActorFilter2EnumerationBenchmark
     {
         var result = 0;
 
-        var attacks = _context.GetComponents<Attack>();
-        var defences = _context.GetComponents<Defence>();
+        ComponentsAccess<Attack> attacks = _context.GetComponents<Attack>();
+        ComponentsAccess<Defence> defences = _context.GetComponents<Defence>();
 
-        foreach (var actorId in _filter.Keys)
+        foreach (uint actorId in _filter.Keys)
         {
             result += attacks[actorId].Value +
-                      defences[actorId].Value;
+                defences[actorId].Value;
         }
 
         return result;
@@ -104,14 +114,15 @@ public class ActorFilter2EnumerationBenchmark
     [Benchmark]
     public int DefaultEcs()
     {
-        var attacks = _defaultWorld.GetComponents<Attack>();
-        var defences = _defaultWorld.GetComponents<Defence>();
+        Components<Attack> attacks = _defaultWorld.GetComponents<Attack>();
+        Components<Defence> defences = _defaultWorld.GetComponents<Defence>();
 
         var result = 0;
-        foreach (var entity in _defaultEntitySet.GetEntities())
+
+        foreach (Entity entity in _defaultEntitySet.GetEntities())
         {
             result += attacks[entity].Value +
-                      defences[entity].Value;
+                defences[entity].Value;
         }
 
         return result;
@@ -125,7 +136,7 @@ public class ActorFilter2EnumerationBenchmark
         _frifloQuery.ForEachEntity((ref attack, ref defence, _) =>
         {
             result += attack.Value +
-                      defence.Value;
+                defence.Value;
         });
 
         return result;
@@ -136,15 +147,15 @@ public class ActorFilter2EnumerationBenchmark
     {
         var result = 0;
 
-        foreach (var queryChunk in _frifloQuery.Chunks)
+        foreach (Chunks<Attack, Defence> queryChunk in _frifloQuery.Chunks)
         {
-            var attacks = queryChunk.Chunk1;
-            var defences = queryChunk.Chunk2;
+            Chunk<Attack> attacks = queryChunk.Chunk1;
+            Chunk<Defence> defences = queryChunk.Chunk2;
 
             for (var i = 0; i < queryChunk.Length; i++)
             {
                 result += attacks[i].Value +
-                          defences[i].Value;
+                    defences[i].Value;
             }
         }
 
@@ -173,16 +184,17 @@ public class ActorFilter2EnumerationBenchmark
         _filter = _world.Actors.Filter<Attack, Defence>();
         _frifloQuery = _frifloWorld.Query<Attack, Defence>();
 
-        var context = _world.Actors;
+        ActorContext context = _world.Actors;
+
         for (var i = 0; i < Count; i++)
         {
             var attack = new Attack { Value = i };
 
-            var actor = context.CreateActor();
+            Actor actor = context.CreateActor();
             actor.Add(in attack);
             actor.Add(new Defence());
 
-            var defaultEntity = _defaultWorld.CreateEntity();
+            Entity defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set(in attack);
             defaultEntity.Set<Defence>();
 

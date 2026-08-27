@@ -14,10 +14,10 @@ public sealed partial class AssetFilter<T1, T2>
             get
             {
                 var filter = _filter;
-                var (actorId, entry) = _enumerator.Current;
+                var (assetId, entry) = _enumerator.Current;
                 return new AssetRef<T1, T2>(
                     filter.Context,
-                    actorId,
+                    new AssetId(assetId),
                     ref filter._pool1.GetByIndex(entry.Index1),
                     ref filter._pool2.GetByIndex(entry.Index2));
             }

@@ -3,7 +3,10 @@ namespace Hexecs.Actors.Components;
 internal sealed partial class ActorComponentPool<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
 
     public ref struct Enumerator
     {
@@ -12,14 +15,15 @@ internal sealed partial class ActorComponentPool<T>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var index = _index;
+                int index = _index;
+
                 return new ActorRef<T>(
-                    _context, 
-                    _dense[index], 
+                    _context,
+                    new ActorId(_dense[index]),
                     ref _values[index]);
             }
         }
-        
+
         public readonly int Index
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,7 +35,7 @@ internal sealed partial class ActorComponentPool<T>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _count;
         }
-        
+
         // Сначала ссылки (8 байт)
         private readonly ActorContext _context;
         private readonly uint[] _dense;
@@ -52,9 +56,15 @@ internal sealed partial class ActorComponentPool<T>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _count;
+        public bool MoveNext()
+        {
+            return ++_index < _count;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
     }
 }

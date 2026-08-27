@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+
 using Hexecs.Configurations;
 
 namespace Hexecs.Tests.Configurations;
@@ -14,7 +15,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue!))
             .Returns(true);
 
-        var sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -34,7 +35,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue!))
             .Returns(true);
 
-        var sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -57,7 +58,7 @@ public sealed class ConfigurationServiceShould
         mockSource.Setup(s => s.TryGetValue(It.IsAny<string>(), out outValue))
             .Returns(false);
 
-        var sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -84,7 +85,7 @@ public sealed class ConfigurationServiceShould
             .Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue2!))
             .Returns(true);
 
-        var sources = new[] { mockSource1.Object, mockSource2.Object };
+        IConfigurationSource[] sources = [mockSource1.Object, mockSource2.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -102,11 +103,11 @@ public sealed class ConfigurationServiceShould
     {
         // Arrange
         var mockSource = new Mock<IConfigurationSource>();
-        int outValue = 42;
+        var outValue = 42;
         mockSource.Setup(s => s.TryGetValue(It.Is<string>(k => k == "test-key"), out outValue))
             .Returns(true);
 
-        var sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
@@ -122,16 +123,16 @@ public sealed class ConfigurationServiceShould
     {
         // Arrange
         var mockSource = new Mock<IConfigurationSource>();
-        int outValue = 0;
+        var outValue = 0;
         mockSource.Setup(s => s.TryGetValue(It.IsAny<string>(), out outValue))
             .Returns(false);
 
-        var sources = new[] { mockSource.Object };
+        IConfigurationSource[] sources = [mockSource.Object];
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
 
         // Act & Assert
-        var act = () => service.GetRequiredValue<int>("non-existent-key");
+        Func<int> act = () => service.GetRequiredValue<int>("non-existent-key");
         act.Should().Throw<Exception>();
     }
 
@@ -154,10 +155,10 @@ public sealed class ConfigurationServiceShould
     {
         // Arrange
         var mockSource = new Mock<IConfigurationSource>();
-            
+
         // Используем CallBase и создаем тестовый источник
         var testSource = new TestConfigurationSource<T>(expectedValue);
-            
+
         var sources = new IConfigurationSource[] { testSource };
         var values = new ConcurrentDictionary<string, object?>();
         var service = new ConfigurationService(sources, values);
@@ -189,10 +190,12 @@ public class TestConfigurationSource<T> : IConfigurationSource
         if (typeof(TValue) == typeof(T))
         {
             value = (TValue)(object)_value!;
+
             return true;
         }
-            
+
         value = default!;
+
         return false;
     }
 }

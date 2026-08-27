@@ -7,8 +7,8 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
 
-        var expectedChild = fixture.CreateActor();
-        var parent = fixture.CreateActor();
+        Actor expectedChild = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
 
         // Act
 
@@ -28,10 +28,10 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
 
-        var expectedChild1 = fixture.CreateActor();
-        var expectedChild3 = fixture.CreateActor();
-        var expectedChild2 = fixture.CreateActor();
-        var parent = fixture.CreateActor();
+        Actor expectedChild1 = fixture.CreateActor();
+        Actor expectedChild3 = fixture.CreateActor();
+        Actor expectedChild2 = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
 
         // Act
 
@@ -41,10 +41,11 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
 
         // Assert
 
-        var children = parent.Children();
+        ActorContext.ChildrenEnumerator children = parent.Children();
         children
             .Length
-            .Should().Be(3);
+            .Should()
+            .Be(3);
 
         children
             .ToArray()
@@ -57,8 +58,8 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
 
-        var child = fixture.CreateActor();
-        var expectedParent = fixture.CreateActor();
+        Actor child = fixture.CreateActor();
+        Actor expectedParent = fixture.CreateActor();
 
         // Act
 
@@ -67,7 +68,7 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
         // Assert
 
         child
-            .TryGetParent(out var actualParent)
+            .TryGetParent(out Actor actualParent)
             .Should()
             .BeTrue();
 
@@ -81,8 +82,8 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
 
-        var child = fixture.CreateActor();
-        var parent = fixture.CreateActor();
+        Actor child = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
 
         parent.AddChild(child);
 
@@ -93,7 +94,7 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
         // Assert
 
         child
-            .TryGetParent(out var actualParent)
+            .TryGetParent(out Actor actualParent)
             .Should()
             .BeFalse();
 
@@ -107,10 +108,10 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     {
         // Arrange
 
-        var child1 = fixture.CreateActor();
-        var child2 = fixture.CreateActor();
-        var child3 = fixture.CreateActor();
-        var parent = fixture.CreateActor();
+        Actor child1 = fixture.CreateActor();
+        Actor child2 = fixture.CreateActor();
+        Actor child3 = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
 
         parent.AddChild(child1);
         parent.AddChild(child2);
@@ -122,10 +123,11 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
 
         // Assert
 
-        var children = parent.Children();
+        ActorContext.ChildrenEnumerator children = parent.Children();
         children
             .Length
-            .Should().Be(2);
+            .Should()
+            .Be(2);
 
         children
             .ToArray()
@@ -142,9 +144,9 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     public void ChangeParentCorrectly()
     {
         // Arrange
-        var child = fixture.CreateActor();
-        var parent1 = fixture.CreateActor();
-        var parent2 = fixture.CreateActor();
+        Actor child = fixture.CreateActor();
+        Actor parent1 = fixture.CreateActor();
+        Actor parent2 = fixture.CreateActor();
 
         // Act
         parent1.AddChild(child);
@@ -154,7 +156,7 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
         parent1.Children().Length.Should().Be(0);
         parent2.Children().Length.Should().Be(1);
 
-        child.TryGetParent(out var actualParent).Should().BeTrue();
+        child.TryGetParent(out Actor actualParent).Should().BeTrue();
         actualParent.Should().Be(parent2);
     }
 
@@ -162,9 +164,9 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     public void RemoveFirstChildCorrectly()
     {
         // Arrange
-        var parent = fixture.CreateActor();
-        var child1 = fixture.CreateActor();
-        var child2 = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
+        Actor child1 = fixture.CreateActor();
+        Actor child2 = fixture.CreateActor();
         parent.AddChild(child1); // child1 станет NextSibling для child2
         parent.AddChild(child2); // child2 теперь FirstChildId
 
@@ -180,10 +182,10 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     public void RemoveMiddleChildCorrectly()
     {
         // Arrange
-        var parent = fixture.CreateActor();
-        var child1 = fixture.CreateActor();
-        var child2 = fixture.CreateActor();
-        var child3 = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
+        Actor child1 = fixture.CreateActor();
+        Actor child2 = fixture.CreateActor();
+        Actor child3 = fixture.CreateActor();
 
         // Порядок в списке (LIFO): child3 -> child2 -> child1
         parent.AddChild(child1);
@@ -194,7 +196,7 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
         child2.Destroy(); // Удаляем средний
 
         // Assert
-        var children = parent.Children().ToArray();
+        Actor[] children = parent.Children().ToArray();
         children.Length.Should().Be(2);
         children[0].Should().Be(child3);
         children[1].Should().Be(child1);
@@ -204,9 +206,9 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     public void HasChildMethodWorks()
     {
         // Arrange
-        var parent = fixture.CreateActor();
-        var child = fixture.CreateActor();
-        var stranger = fixture.CreateActor();
+        Actor parent = fixture.CreateActor();
+        Actor child = fixture.CreateActor();
+        Actor stranger = fixture.CreateActor();
 
         // Act
         parent.AddChild(child);
@@ -220,7 +222,7 @@ public sealed class ActorNodeShould(ActorTestFixture fixture) : IClassFixture<Ac
     public void ParentCannotAddItselfAsChild()
     {
         // Arrange
-        var actor = fixture.CreateActor();
+        Actor actor = fixture.CreateActor();
 
         // Act
         actor.AddChild(actor);

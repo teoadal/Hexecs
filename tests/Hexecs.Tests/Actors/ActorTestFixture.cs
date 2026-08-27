@@ -9,7 +9,9 @@ namespace Hexecs.Tests.Actors;
 public sealed class ActorTestFixture : BaseFixture, IDisposable
 {
     public ActorContext Actors => World.Actors;
+
     public AssetContext Assets => World.Assets;
+
     public readonly World World;
 
     public ActorTestFixture()
@@ -25,42 +27,46 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
 
     public Actor CreateActor(uint? id = null)
     {
-        var actor = Actors.CreateActor(id);
+        Actor actor = Actors.CreateActor(id);
+
         return actor;
     }
 
-    public Actor<T1> CreateActor<T1>(uint? id = null, T1? component1 = null)
+    public Actor CreateActor<T1>(uint? id = null, T1? component1 = null)
         where T1 : struct, IActorComponent
     {
-        var actor = Actors.CreateActor(id);
+        Actor actor = Actors.CreateActor(id);
         actor.Add(component1 ?? CreateComponent<T1>());
 
-        return actor.As<T1>();
+        return actor;
     }
 
-    public Actor<T1> CreateActor<T1, T2>(uint? id = null, T1? component1 = null, T2? component2 = null)
+    public Actor CreateActor<T1, T2>(uint? id = null, T1? component1 = null, T2? component2 = null)
         where T1 : struct, IActorComponent
         where T2 : struct, IActorComponent
     {
-        var actor = Actors.CreateActor(id);
+        Actor actor = Actors.CreateActor(id);
         actor.Add(component1 ?? CreateComponent<T1>());
         actor.Add(component2 ?? CreateComponent<T2>());
 
-        return actor.As<T1>();
+        return actor;
     }
 
-    public Actor<T1> CreateActor<T1, T2, T3>(uint? id = null, T1? component1 = null, T2? component2 = null,
+    public Actor CreateActor<T1, T2, T3>(
+        uint? id = null,
+        T1? component1 = null,
+        T2? component2 = null,
         T3? component3 = null)
         where T1 : struct, IActorComponent
         where T2 : struct, IActorComponent
         where T3 : struct, IActorComponent
     {
-        var actor = Actors.CreateActor(id);
+        Actor actor = Actors.CreateActor(id);
         actor.Add(component1 ?? CreateComponent<T1>());
         actor.Add(component2 ?? CreateComponent<T2>());
         actor.Add(component3 ?? CreateComponent<T3>());
 
-        return actor.As<T1>();
+        return actor;
     }
 
     public Actor[] CreateActors<T1>(int? length = null)
@@ -68,12 +74,16 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
     {
         length ??= RandomInt(10, 100);
 
-        if (length is 0) return [];
+        if (length is 0)
+        {
+            return [];
+        }
 
         var actors = new Actor[length.Value];
+
         for (var i = 0; i < actors.Length; i++)
         {
-            var actor = Actors.CreateActor();
+            Actor actor = Actors.CreateActor();
             actor.Add(CreateComponent<T1>());
         }
 
@@ -86,12 +96,16 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
     {
         length ??= RandomInt(10, 100);
 
-        if (length is 0) return [];
+        if (length is 0)
+        {
+            return [];
+        }
 
         var actors = new Actor[length.Value];
+
         for (var i = 0; i < actors.Length; i++)
         {
-            var actor = Actors.CreateActor();
+            Actor actor = Actors.CreateActor();
             actor.Add(CreateComponent<T1>());
             actor.Add(CreateComponent<T2>());
 
@@ -108,12 +122,16 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
     {
         length ??= RandomInt(10, 100);
 
-        if (length is 0) return [];
+        if (length is 0)
+        {
+            return [];
+        }
 
         var actors = new Actor[length.Value];
+
         for (var i = 0; i < actors.Length; i++)
         {
-            var actor = Actors.CreateActor();
+            Actor actor = Actors.CreateActor();
             actor.Add(CreateComponent<T1>());
             actor.Add(CreateComponent<T2>());
             actor.Add(CreateComponent<T3>());
@@ -128,10 +146,25 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
     {
         object? result = null;
 
-        if (typeof(T) == typeof(Attack)) result = new Attack { Value = RandomInt() };
-        if (typeof(T) == typeof(Defence)) result = new Defence { Value = RandomInt() };
-        if (typeof(T) == typeof(Description)) result = new Description { Name = RandomString(10) };
-        if (typeof(T) == typeof(Speed)) result = new Speed { Value = RandomInt() };
+        if (typeof(T) == typeof(Attack))
+        {
+            result = new Attack { Value = RandomInt() };
+        }
+
+        if (typeof(T) == typeof(Defence))
+        {
+            result = new Defence { Value = RandomInt() };
+        }
+
+        if (typeof(T) == typeof(Description))
+        {
+            result = new Description { Name = RandomString(10) };
+        }
+
+        if (typeof(T) == typeof(Speed))
+        {
+            result = new Speed { Value = RandomInt() };
+        }
 
         return result == null
             ? throw new NotSupportedException()
@@ -140,10 +173,10 @@ public sealed class ActorTestFixture : BaseFixture, IDisposable
 
     private void CreateAssets(IAssetLoader loader)
     {
-        var unit1 = loader.CreateAsset(UnitAsset.Alias1);
+        AssetConfigurator unit1 = loader.CreateAsset(UnitAsset.Alias1);
         unit1.Set(new UnitAsset(RandomInt(1, 10), RandomInt(11, 20)));
 
-        var unit2 = loader.CreateAsset(UnitAsset.Alias2);
+        AssetConfigurator unit2 = loader.CreateAsset(UnitAsset.Alias2);
         unit2.Set(new UnitAsset(RandomInt(1, 10), RandomInt(11, 20)));
     }
 

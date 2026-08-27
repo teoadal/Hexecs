@@ -9,7 +9,7 @@ namespace Hexecs.Values;
 /// </summary>
 public sealed class ValueService
 {
-    public static ValueService Empty => new([]);
+    public static ValueService Empty => new ValueService([]);
 
     private readonly FrozenDictionary<string, IValueTable> _tables;
 
@@ -23,7 +23,7 @@ public sealed class ValueService
     /// </summary>
     public void Clear()
     {
-        foreach (var table in _tables.Values)
+        foreach (IValueTable table in _tables.Values)
         {
             table.Clear();
         }
@@ -36,7 +36,10 @@ public sealed class ValueService
     /// <returns><c>true</c>, если таблица найдена и очищена; иначе <c>false</c>.</returns>
     public bool ClearTable(string tableName)
     {
-        if (!_tables.TryGetValue(tableName, out var table)) return false;
+        if (!_tables.TryGetValue(tableName, out IValueTable? table))
+        {
+            return false;
+        }
 
         table.Clear();
         return true;
@@ -50,7 +53,10 @@ public sealed class ValueService
     /// <exception cref="Exception">Возникает, если таблица не найдена.</exception>
     public IValueTable GetTable(string tableName)
     {
-        if (_tables.TryGetValue(tableName, out var table)) return table;
+        if (_tables.TryGetValue(tableName, out IValueTable? table))
+        {
+            return table;
+        }
 
         ValueError.TableNotFound(tableName);
         return null;
@@ -66,7 +72,7 @@ public sealed class ValueService
     public IValueTable<TKey> GetTable<TKey>(string tableName)
         where TKey : notnull
     {
-        if (_tables.TryGetValue(tableName, out var table))
+        if (_tables.TryGetValue(tableName, out IValueTable? table))
         {
             if (table is IValueTable<TKey> expected)
             {
@@ -93,7 +99,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        if (_tables.TryGetValue(tableName, out var table))
+        if (_tables.TryGetValue(tableName, out IValueTable? table))
         {
             if (table is IValueTable<TKey, TValue> expected)
             {
@@ -120,7 +126,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        var table = GetTable<TKey, TValue>(tableName);
+        IValueTable<TKey, TValue> table = GetTable<TKey, TValue>(tableName);
         return table.Get(key);
     }
 
@@ -135,7 +141,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        var table = GetTable<TKey, TValue>(tableName);
+        IValueTable<TKey, TValue> table = GetTable<TKey, TValue>(tableName);
         return table;
     }
 
@@ -144,7 +150,10 @@ public sealed class ValueService
     /// </summary>
     /// <param name="tableName">Имя проверяемой таблицы.</param>
     /// <returns><c>true</c>, если таблица существует; иначе <c>false</c>.</returns>
-    public bool HasTable(string tableName) => _tables.ContainsKey(tableName);
+    public bool HasTable(string tableName)
+    {
+        return _tables.ContainsKey(tableName);
+    }
 
     /// <summary>
     /// Проверяет, существует ли значение по указанному ключу в таблице.
@@ -156,7 +165,7 @@ public sealed class ValueService
     public bool HasValue<TKey>(string tableName, TKey key)
         where TKey : notnull
     {
-        var table = GetTable<TKey>(tableName);
+        IValueTable<TKey> table = GetTable<TKey>(tableName);
         return table.Has(key);
     }
 
@@ -173,7 +182,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        var table = GetTable<TKey, TValue>(tableName);
+        IValueTable<TKey, TValue> table = GetTable<TKey, TValue>(tableName);
         return table.Has(key, value);
     }
 
@@ -187,7 +196,7 @@ public sealed class ValueService
     public bool RemoveValue<TKey>(string tableName, TKey key)
         where TKey : notnull
     {
-        if (_tables.TryGetValue(tableName, out var table) &&
+        if (_tables.TryGetValue(tableName, out IValueTable? table) &&
             table is IValueTable<TKey> expectedTable)
         {
             return expectedTable.Remove(key);
@@ -209,7 +218,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        if (_tables.TryGetValue(tableName, out var table) &&
+        if (_tables.TryGetValue(tableName, out IValueTable? table) &&
             table is IValueTable<TKey, TValue> expectedTable)
         {
             return expectedTable.Remove(key, out value);
@@ -231,7 +240,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        var table = GetTable<TKey, TValue>(tableName);
+        IValueTable<TKey, TValue> table = GetTable<TKey, TValue>(tableName);
         table.Set(key, value);
     }
 
@@ -248,7 +257,7 @@ public sealed class ValueService
         where TKey : notnull
         where TValue : notnull
     {
-        if (_tables.TryGetValue(tableName, out var table) && table is IValueTable<TKey, TValue> expectedTable)
+        if (_tables.TryGetValue(tableName, out IValueTable? table) && table is IValueTable<TKey, TValue> expectedTable)
         {
             return expectedTable.TryGet(key, out value);
         }

@@ -35,19 +35,29 @@ public sealed partial class AssetConstraint
 
         public void Clear()
         {
-            if (_subscriptions.Length > 0) ArrayPool<Subscription>.Shared.Return(_subscriptions);
+            if (_subscriptions.Length > 0)
+            {
+                ArrayPool<Subscription>.Shared.Return(_subscriptions);
+            }
+
             _length = 0;
         }
 
         public bool Equals(AssetConstraint? constraint)
         {
-            if (constraint == null || constraint._hash != _hash) return false;
+            if (constraint == null || constraint._hash != _hash)
+            {
+                return false;
+            }
 
-            var currentSubscriptions = _subscriptions.AsSpan(0, _length);
-            var constraintSubscriptions = constraint._subscriptions;
+            Span<Subscription> currentSubscriptions = _subscriptions.AsSpan(0, _length);
+            Subscription[] constraintSubscriptions = constraint._subscriptions;
             for (var i = 0; i < currentSubscriptions.Length; i++)
             {
-                if (!_subscriptions[i].Equals(constraintSubscriptions[i])) return false;
+                if (!_subscriptions[i].Equals(constraintSubscriptions[i]))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -55,7 +65,7 @@ public sealed partial class AssetConstraint
 
         public Builder Exclude<T>() where T : struct, IAssetComponent
         {
-            var pool = Context.GetOrCreateComponentPool<T>();
+            AssetComponentPool<T> pool = Context.GetOrCreateComponentPool<T>();
 
             AddSubscription<T>(false, pool, id => !pool.Has(id));
 
@@ -64,7 +74,7 @@ public sealed partial class AssetConstraint
 
         public Builder Include<T>() where T : struct, IAssetComponent
         {
-            var pool = Context.GetOrCreateComponentPool<T>();
+            AssetComponentPool<T> pool = Context.GetOrCreateComponentPool<T>();
 
             AddSubscription<T>(true, pool, pool.Has);
 
@@ -75,12 +85,15 @@ public sealed partial class AssetConstraint
         private void AddSubscription<T>(bool include, IAssetComponentPool pool, Func<AssetId, bool> check)
             where T : struct, IAssetComponent
         {
-            var id = AssetComponentType<T>.Id;
+            ushort id = AssetComponentType<T>.Id;
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var exists in _subscriptions.AsSpan(0, _length))
+            foreach (Subscription exists in _subscriptions.AsSpan(0, _length))
             {
-                if (exists.ComponentId == id) AssetError.ConstraintExists<T>();
+                if (exists.ComponentId == id)
+                {
+                    AssetError.ConstraintExists<T>();
+                }
             }
 
             ArrayUtils.Insert(
@@ -96,7 +109,7 @@ public sealed partial class AssetConstraint
             var hash = 2;
 
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var subscription in _subscriptions.AsSpan(0, _length))
+            foreach (Subscription subscription in _subscriptions.AsSpan(0, _length))
             {
                 hash = HashCode.Combine(hash, subscription.GetHashCode());
             }

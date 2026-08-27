@@ -30,18 +30,27 @@ public sealed partial class AssetConstraint
 
         public int CompareTo(Subscription other)
         {
-            var componentIdComparison = _pool.Id.CompareTo(other._pool.Id);
+            int componentIdComparison = _pool.Id.CompareTo(other._pool.Id);
             return componentIdComparison != 0
                 ? componentIdComparison
                 : _include.CompareTo(other._include);
         }
 
-        public bool Equals(Subscription other) => _include == other._include &&
-                                                  _pool.Id == other._pool.Id;
+        public bool Equals(Subscription other)
+        {
+            return _include == other._include &&
+                _pool.Id == other._pool.Id;
+        }
 
-        public override bool Equals(object? obj) => obj is Subscription other && Equals(other);
+        public override bool Equals(object? obj)
+        {
+            return obj is Subscription other && Equals(other);
+        }
 
-        public override int GetHashCode() => HashCode.Combine(_pool.Id, _include ? 2 : 3);
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_pool.Id, _include ? 2 : 3);
+        }
 
         #endregion
     }

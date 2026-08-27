@@ -10,14 +10,14 @@ internal sealed class MessageQueue<TMessage> : IMessageQueue<TMessage>
     private readonly IMessageHandler<TMessage> _handler;
     private readonly Queue<TMessage> _queue;
 #if NET9_0_OR_GREATER
-    private readonly Lock _lock = new();
+    private readonly Lock _lock = new Lock();
 #else
-    private readonly object _lock = new();
+    private readonly object _lock = new object();
 #endif
 
     public MessageQueue(IMessageHandler<TMessage> handler)
     {
-        Group = QueueAttribute.TryGetName(typeof(TMessage), out var name)
+        Group = QueueAttribute.TryGetName(typeof(TMessage), out string name)
             ? name
             : "Default";
 
@@ -45,7 +45,7 @@ internal sealed class MessageQueue<TMessage> : IMessageQueue<TMessage>
         lock (_lock)
 #endif
         {
-            while (_queue.TryDequeue(out var message))
+            while (_queue.TryDequeue(out TMessage message))
             {
                 _handler.Handle(in message);
             }
@@ -55,11 +55,14 @@ internal sealed class MessageQueue<TMessage> : IMessageQueue<TMessage>
     public bool TryEnqueue(in TMessage message)
     {
 #if NET9_0_OR_GREATER
-        var result = _lock.TryEnter();
+        bool result = _lock.TryEnter();
 #else
-        var result = Monitor.TryEnter(_lock);
+        bool result = Monitor.TryEnter(_lock);
 #endif
-        if (!result) return false;
+        if (!result)
+        {
+            return false;
+        }
 
         try
         {

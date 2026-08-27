@@ -10,5 +10,8 @@ internal sealed class SimpleNotificationPipeline<TNotification> : INotificationH
         _handler = handler;
     }
 
-    public void Handle(in TNotification notification) => _handler.Handle(in notification);
+    public void Handle(in TNotification notification)
+    {
+        _handler.Handle(in notification);
+    }
 }

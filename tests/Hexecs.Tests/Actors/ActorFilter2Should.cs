@@ -8,9 +8,9 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
     public void ReturnsEmptyWhenNoActorsMatchFilter()
     {
         // arrange
-        
+
         Actor expected = fixture.CreateActor<Defence>(); // Создаем актера с другим компонентом, чтобы убедиться, что он не попадет в фильтр
-        
+
         // act
         ActorFilter<Attack> filter = fixture
             .Actors
@@ -46,7 +46,7 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         actorRef.Component1.Should().Be(attackComponent);
         actorRef.Component2.Should().Be(defenceComponent);
     }
-    
+
     [Fact(DisplayName = "Не содержит актера только с одним из двух компонентов при фильтрации по двум компонентам")]
     public void DoesNotContainActorWithOnlyOneOfTwoComponentsWhenFilteredByTwoComponents()
     {
@@ -57,7 +57,7 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         Actor actorWithBoth = fixture.CreateActor<Attack, Defence>(component1: attackComponent, component2: defenceComponent);
         Actor actorWithAttackOnly = fixture.CreateActor<Attack>(component1: attackComponent);
         Actor actorWithDefenceOnly = fixture.CreateActor<Defence>(component1: defenceComponent);
-        
+
         // act
         ActorFilter<Attack, Defence> filter = fixture
             .Actors
@@ -68,7 +68,7 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         filter.Contains(actorWithAttackOnly).Should().BeFalse();
         filter.Contains(actorWithDefenceOnly).Should().BeFalse();
     }
-    
+
     [Fact(DisplayName = "Удаляет актера из фильтра по двум компонентам, если первый компонент (Attack) удален")]
     public void RemovesActorFromTwoComponentFilterWhenFirstComponentIsRemoved()
     {
@@ -89,7 +89,7 @@ public sealed class ActorFilter2Should(ActorTestFixture fixture) : IClassFixture
         // assert
         filter.Contains(actor).Should().BeFalse();
     }
-    
+
     [Fact(DisplayName = "Удаляет актера из фильтра по двум компонентам, если второй компонент (Defence) удален")]
     public void RemovesActorFromTwoComponentFilterWhenSecondComponentIsRemoved()
     {

@@ -8,5 +8,8 @@ internal sealed class ActionAssetLoader(int order, Action<IAssetLoader> source) 
         get => order;
     }
 
-    public void Load(IAssetLoader loader) => source(loader);
+    public void Load(IAssetLoader loader)
+    {
+        source(loader);
+    }
 }

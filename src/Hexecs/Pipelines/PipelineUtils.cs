@@ -5,10 +5,14 @@ internal static class PipelineUtils
 {
     public static Type GetCommandType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type commandHandlerType)
     {
-        foreach (var contract in commandHandlerType.GetInterfaces())
+        foreach (Type contract in commandHandlerType.GetInterfaces())
         {
-            if (!contract.IsGenericType) continue;
-            var genericTypeDefinition = contract.GetGenericTypeDefinition();
+            if (!contract.IsGenericType)
+            {
+                continue;
+            }
+
+            Type genericTypeDefinition = contract.GetGenericTypeDefinition();
             if (genericTypeDefinition == typeof(ICommandHandler<>) ||
                 genericTypeDefinition == typeof(ICommandHandler<,>))
             {

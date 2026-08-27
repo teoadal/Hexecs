@@ -2,6 +2,7 @@
 using Hexecs.Benchmarks.Map.Common.Positions;
 using Hexecs.Benchmarks.Map.Common.Visibles;
 using Hexecs.Benchmarks.Map.Utils;
+using Hexecs.Benchmarks.Map.Utils.Sprites;
 using Hexecs.Worlds;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -37,10 +38,10 @@ internal sealed class TerrainDrawSystem : DrawSystem<Position, Terrain>
 
     protected override void Draw(in ActorRef<Position, Terrain> actor, in WorldTime time)
     {
-        ref readonly var terrain = ref actor.Component2;
-        ref readonly var texture = ref _spriteAtlas.GetSprite(in terrain);
+        ref readonly Terrain terrain = ref actor.Component2;
+        ref readonly Sprite texture = ref _spriteAtlas.GetSprite(in terrain);
 
-        ref readonly var worldPosition = ref actor.Component1.World;
+        ref readonly Point worldPosition = ref actor.Component1.World;
         texture.Draw(_spriteBatch, new Vector2(worldPosition.X, worldPosition.Y));
     }
 

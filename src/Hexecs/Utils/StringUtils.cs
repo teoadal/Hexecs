@@ -15,7 +15,7 @@ public static class StringUtils
     private const string Choices = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?_@#$%";
 
     [ThreadStatic]
-    private static StringBuilder? _stringBuilder;
+    private static StringBuilder? Buffer;
 
     /// <summary>
     /// Преобразует StringBuilder в строку и возвращает его в пул.
@@ -70,7 +70,7 @@ public static class StringUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static StringBuilder Rent(int capacity = 2048)
     {
-        StringBuilder builder = _stringBuilder ?? new StringBuilder(capacity);
+        StringBuilder builder = Buffer ?? new StringBuilder(capacity);
         builder.EnsureCapacity(capacity);
 
         return builder;
@@ -89,6 +89,6 @@ public static class StringUtils
             builder.Clear();
         }
 
-        _stringBuilder = builder;
+        Buffer = builder;
     }
 }

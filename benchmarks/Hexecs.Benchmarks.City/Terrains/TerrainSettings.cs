@@ -4,7 +4,7 @@ public sealed class TerrainSettings
 {
     public const string Key = "Map:Terrain";
 
-    public static readonly TerrainSettings Default = new()
+    public static readonly TerrainSettings Default = new TerrainSettings
     {
         TileSize = 16,
         TileSpacing = 1,

@@ -12,25 +12,25 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.102
-//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.400
+//     [Host]    : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method                      | Count  | Mean         | Ratio | Gen0     | Allocated  | Alloc Ratio |
 //     |---------------------------- |------- |-------------:|------:|---------:|-----------:|------------:|
-//     | FriFlo_CreateAddDestroy     | 1000   |     157.5 us |  0.32 |        - |          - |          NA |
-//     | DefaultEcs_CreateAddDestroy | 1000   |     400.8 us |  0.83 |   1.4648 |    32000 B |          NA |
-//     | Hexecs_CreateAddDestroy     | 1000   |     485.5 us |  1.00 |        - |          - |          NA |
+//     | FriFlo_CreateAddDestroy     | 1000   |     160.3 us |  0.31 |        - |          - |          NA |
+//     | DefaultEcs_CreateAddDestroy | 1000   |     401.6 us |  0.77 |   1.4648 |    32000 B |          NA |
+//     | Hexecs_CreateAddDestroy     | 1000   |     521.4 us |  1.00 |        - |          - |          NA |
 //     |                             |        |              |       |          |            |             |
-//     | FriFlo_CreateAddDestroy     | 100000 |  16,503.2 us |  0.26 |        - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 100000 |  62,708.1 us |  1.00 |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 100000 |  89,760.2 us |  1.43 | 166.6667 |  3200040 B |   80,001.00 |
+//     | FriFlo_CreateAddDestroy     | 100000 |  16,367.5 us |  0.25 |        - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 100000 |  64,667.0 us |  1.00 |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 100000 |  88,922.5 us |  1.38 | 166.6667 |  3200040 B |   80,001.00 |
 //     |                             |        |              |       |          |            |             |
-//     | FriFlo_CreateAddDestroy     | 500000 |  84,276.5 us |  0.15 |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 500000 | 457,366.0 us |  0.83 |        - | 16000040 B |  400,001.00 |
-//     | Hexecs_CreateAddDestroy     | 500000 | 551,567.4 us |  1.00 |        - |       40 B |        1.00 |
+//     | FriFlo_CreateAddDestroy     | 500000 |  84,863.0 us |  0.16 |        - |       40 B |        1.00 |
+//     | Hexecs_CreateAddDestroy     | 500000 | 545,966.3 us |  1.00 |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 500000 | 676,605.1 us |  1.24 |        - | 16000040 B |  400,001.00 |
 //
 // ---------------------------------------------------------------------------------------------------------
 //

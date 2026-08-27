@@ -5,7 +5,10 @@ namespace Hexecs.Assets;
 public sealed partial class AssetFilter<T1, T2, T3>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
 
     public ref struct Enumerator
     {
@@ -13,8 +16,8 @@ public sealed partial class AssetFilter<T1, T2, T3>
         {
             get
             {
-                var filter = _filter;
-                var (assetId, entry) = _enumerator.Current;
+                AssetFilter<T1, T2, T3> filter = _filter;
+                (uint assetId, Entry entry) = _enumerator.Current;
                 return new AssetRef<T1, T2, T3>(
                     filter.Context,
                     new AssetId(assetId),
@@ -41,16 +44,22 @@ public sealed partial class AssetFilter<T1, T2, T3>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => _enumerator.MoveNext();
+        public bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
-        
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
+
         public Asset[] ToArray()
         {
             var count = 0;
-            var assets = ArrayUtils.Create<Asset>(_filter.Length);
-            foreach (var asset in this)
+            Asset[] assets = ArrayUtils.Create<Asset>(_filter.Length);
+            foreach (AssetRef<T1, T2, T3> asset in this)
             {
                 assets[count++] = asset;
             }

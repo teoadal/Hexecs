@@ -23,9 +23,12 @@ internal sealed class VisibleSystem : UpdateSystem<Position>
 
     protected override bool BeforeUpdate(in WorldTime time)
     {
-        var currentViewport = _camera.Viewport;
+        CameraViewport currentViewport = _camera.Viewport;
 
-        if (currentViewport.Equals(_currentViewport)) return false; // не обновляем, если камера не двигалась
+        if (currentViewport.Equals(_currentViewport))
+        {
+            return false; // не обновляем, если камера не двигалась
+        }
 
         _currentViewport = currentViewport;
 
@@ -34,7 +37,7 @@ internal sealed class VisibleSystem : UpdateSystem<Position>
 
     protected override void Update(in ActorRef<Position> actor, in WorldTime time)
     {
-        ref readonly var position = ref actor.Component1.World;
+        ref readonly Point position = ref actor.Component1.World;
 
         if (_currentViewport.Visible(position.X, position.Y, _tileSize, _tileSize))
         {

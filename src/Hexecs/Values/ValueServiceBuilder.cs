@@ -58,7 +58,7 @@ public sealed class ValueServiceBuilder
     private void EnsureTableNotExists(string name)
     {
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var table in _tables)
+        foreach (IValueTable table in _tables)
         {
             if (table.Name == name)
             {

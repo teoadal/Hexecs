@@ -4,7 +4,7 @@ namespace Hexecs.Assets.Loggers;
 
 internal sealed class AssetLogWriter : ILogValueWriter<Asset>
 {
-    public static readonly AssetLogWriter Instance = new();
+    public static readonly AssetLogWriter Instance = new AssetLogWriter();
 
     private AssetLogWriter()
     {

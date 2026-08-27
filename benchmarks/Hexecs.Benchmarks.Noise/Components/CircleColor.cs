@@ -10,11 +10,14 @@ public readonly struct CircleColor(Color value) : IActorComponent
         var r = (byte)random.Next(256);
         var g = (byte)random.Next(256);
         var b = (byte)random.Next(256);
-        
+
         return new CircleColor(new Color(r, g, b, alpha ?? 255));
     }
-    
+
     public readonly Color Value = value;
 
-    public static implicit operator CircleColor(Color value) => new(value);
+    public static implicit operator CircleColor(Color value)
+    {
+        return new CircleColor(value);
+    }
 }

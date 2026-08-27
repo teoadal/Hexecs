@@ -148,7 +148,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ComponentsAccess<T> GetComponentAccess()
     {
-        return new ComponentsAccess<T>(_sparse, _values);
+        return new ComponentsAccess<T>(_sparse, _values.AsSpan(0, _count));
     }
 
     public ref T GetOrCreate(ActorId ownerId, out bool added, Func<ActorId, T>? factory = null)

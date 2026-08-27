@@ -9,12 +9,15 @@ public sealed partial class AssetContext
     {
         var loader = new Loader(this, _aliases);
 
-        foreach (var source in sources)
+        foreach (IAssetSource source in sources)
         {
             source.Load(loader);
 
             // ReSharper disable once SuspiciousTypeConversion.Global
-            if (source is IDisposable disposable) disposable.Dispose();
+            if (source is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
 
         loader.Dispose();
@@ -41,21 +44,25 @@ public sealed partial class AssetContext
 
         public void Dispose()
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
+
             _disposed = true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AssetConfigurator CreateAsset()
         {
-            var id = GetNextAssetId();
+            uint id = GetNextAssetId();
             return CreateAsset(id);
         }
 
         public AssetConfigurator CreateAsset<T1>(in T1 component1)
             where T1 : struct, IAssetComponent
         {
-            var id = GetNextAssetId();
+            uint id = GetNextAssetId();
             return CreateAsset(id, in component1);
         }
 
@@ -63,7 +70,7 @@ public sealed partial class AssetContext
             where T1 : struct, IAssetComponent
             where T2 : struct, IAssetComponent
         {
-            var id = GetNextAssetId();
+            uint id = GetNextAssetId();
             return CreateAsset(id, in component1, in component2);
         }
 
@@ -72,7 +79,7 @@ public sealed partial class AssetContext
             where T2 : struct, IAssetComponent
             where T3 : struct, IAssetComponent
         {
-            var id = GetNextAssetId();
+            uint id = GetNextAssetId();
             return CreateAsset(id, in component1, in component2, in component3);
         }
 
@@ -89,10 +96,10 @@ public sealed partial class AssetContext
         {
             EnsureNotDisposed();
 
-            ref var entry = ref Context.AddEntry(id);
+            ref Entry entry = ref Context.AddEntry(id);
             var assetId = new AssetId(id);
 
-            var pool1 = Context.GetOrCreateComponentPool<T1>();
+            AssetComponentPool<T1> pool1 = Context.GetOrCreateComponentPool<T1>();
             pool1.Set(assetId, in component1);
             entry.Add(AssetComponentType<T1>.Id);
 
@@ -105,14 +112,14 @@ public sealed partial class AssetContext
         {
             EnsureNotDisposed();
 
-            ref var entry = ref Context.AddEntry(id);
+            ref Entry entry = ref Context.AddEntry(id);
             var assetId = new AssetId(id);
 
-            var pool1 = Context.GetOrCreateComponentPool<T1>();
+            AssetComponentPool<T1> pool1 = Context.GetOrCreateComponentPool<T1>();
             pool1.Set(assetId, in component1);
             entry.Add(AssetComponentType<T1>.Id);
 
-            var pool2 = Context.GetOrCreateComponentPool<T2>();
+            AssetComponentPool<T2> pool2 = Context.GetOrCreateComponentPool<T2>();
             pool2.Set(assetId, in component2);
             entry.Add(AssetComponentType<T2>.Id);
 
@@ -127,18 +134,18 @@ public sealed partial class AssetContext
             where T3 : struct, IAssetComponent
         {
             EnsureNotDisposed();
-            ref var entry = ref Context.AddEntry(id);
+            ref Entry entry = ref Context.AddEntry(id);
             var assetId = new AssetId(id);
 
-            var pool1 = Context.GetOrCreateComponentPool<T1>();
+            AssetComponentPool<T1> pool1 = Context.GetOrCreateComponentPool<T1>();
             pool1.Set(assetId, in component1);
             entry.Add(AssetComponentType<T1>.Id);
 
-            var pool2 = Context.GetOrCreateComponentPool<T2>();
+            AssetComponentPool<T2> pool2 = Context.GetOrCreateComponentPool<T2>();
             pool2.Set(assetId, in component2);
             entry.Add(AssetComponentType<T2>.Id);
 
-            var pool3 = Context.GetOrCreateComponentPool<T3>();
+            AssetComponentPool<T3> pool3 = Context.GetOrCreateComponentPool<T3>();
             pool3.Set(assetId, in component3);
             entry.Add(AssetComponentType<T3>.Id);
 
@@ -147,14 +154,14 @@ public sealed partial class AssetContext
 
         public AssetConfigurator CreateAsset(string alias)
         {
-            var id = GetId(alias);
+            AssetId id = GetId(alias);
             return CreateAsset(id.Value);
         }
 
         public AssetConfigurator CreateAsset<T1>(string alias, in T1 component1)
             where T1 : struct, IAssetComponent
         {
-            var id = GetId(alias);
+            AssetId id = GetId(alias);
             return CreateAsset(id.Value, in component1);
         }
 
@@ -162,7 +169,7 @@ public sealed partial class AssetContext
             where T1 : struct, IAssetComponent
             where T2 : struct, IAssetComponent
         {
-            var id = GetId(alias);
+            AssetId id = GetId(alias);
             return CreateAsset(id.Value, in component1, in component2);
         }
 
@@ -173,28 +180,40 @@ public sealed partial class AssetContext
             where T2 : struct, IAssetComponent
             where T3 : struct, IAssetComponent
         {
-            var id = GetId(alias);
+            AssetId id = GetId(alias);
             return CreateAsset(id.Value, in component1, in component2, in component3);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void EnsureNotDisposed()
         {
-            if (_disposed) AssetError.LoaderDisposed();
+            if (_disposed)
+            {
+                AssetError.LoaderDisposed();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Asset GetAsset(AssetId assetId) => Context.GetAsset(assetId);
+        public Asset GetAsset(AssetId assetId)
+        {
+            return Context.GetAsset(assetId);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Asset GetAsset(string alias) => Context.GetAsset(GetId(alias));
+        public Asset GetAsset(string alias)
+        {
+            return Context.GetAsset(GetId(alias));
+        }
 
         public string GetAlias(AssetId assetId)
         {
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var alias in _aliases)
+            foreach (KeyValuePair<string, uint> alias in _aliases)
             {
-                if (alias.Value == assetId.Value) return alias.Key;
+                if (alias.Value == assetId.Value)
+                {
+                    return alias.Key;
+                }
             }
 
             AssetError.AliasNotFound(assetId);
@@ -203,12 +222,12 @@ public sealed partial class AssetContext
 
         public AssetId GetId(string assetAlias)
         {
-            if (_aliases.TryGetValue(assetAlias, out var exists))
+            if (_aliases.TryGetValue(assetAlias, out uint exists))
             {
                 return new AssetId(exists);
             }
 
-            var id = GetNextAssetId();
+            uint id = GetNextAssetId();
             _aliases.Add(assetAlias, id);
             return new AssetId(id);
         }
@@ -218,7 +237,7 @@ public sealed partial class AssetContext
             where TArray : struct, IAssetComponent, IArray<TItem>
             where TItem : struct
         {
-            return _blockBuilders.Remove(typeof(AssetBlockBuilder<TArray, TItem>), out var exists)
+            return _blockBuilders.Remove(typeof(AssetBlockBuilder<TArray, TItem>), out object? exists)
                 ? (AssetBlockBuilder<TArray, TItem>)exists
                 : new AssetBlockBuilder<TArray, TItem>(this, blockBuilder);
         }
@@ -233,10 +252,10 @@ public sealed partial class AssetContext
         public ref T SetComponent<T>(AssetId assetId, in T component) where T : struct, IAssetComponent
         {
             EnsureNotDisposed();
-            ref var entry = ref Context.GetEntryExact(assetId.Value);
+            ref Entry entry = ref Context.GetEntryExact(assetId.Value);
 
-            var pool = Context.GetOrCreateComponentPool<T>();
-            ref var reference = ref pool.Set(assetId, in component);
+            AssetComponentPool<T> pool = Context.GetOrCreateComponentPool<T>();
+            ref T reference = ref pool.Set(assetId, in component);
 
             entry.Add(AssetComponentType<T>.Id);
 
@@ -247,7 +266,7 @@ public sealed partial class AssetContext
         {
             EnsureNotDisposed();
 
-            var id = Interlocked.Increment(ref _nextId);
+            uint id = Interlocked.Increment(ref _nextId);
             while (Context.ExistsAsset(new AssetId(id)))
             {
                 id = Interlocked.Increment(ref _nextId);

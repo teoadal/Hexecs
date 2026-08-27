@@ -4,17 +4,18 @@ using Hexecs.Benchmarks.Noise.Systems;
 using Hexecs.Dependencies;
 using Hexecs.Threading;
 using Hexecs.Worlds;
+
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Hexecs.Benchmarks.Noise;
 
-public class NoiseGame : Game
+internal sealed class NoiseGame : Game
 {
     private BenchmarkCounter _benchmarkCounter = null!;
     private ActorContext _context = null!;
     private readonly GraphicsDeviceManager _graphics;
-    private readonly Random _random = new();
+    private readonly Random _random = new Random();
     private World _world = null!;
 
     private const int InitialEntityCount = 2_000_000;
@@ -28,7 +29,7 @@ public class NoiseGame : Game
             PreferredBackBufferHeight = 720,
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
-            SynchronizeWithVerticalRetrace = true,
+            SynchronizeWithVerticalRetrace = false,
             IsFullScreen = false,
             HardwareModeSwitch = false
         };
@@ -39,32 +40,32 @@ public class NoiseGame : Game
             e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = 8; // 8x MSAA
         };
 
-        _graphics.ApplyChanges();
-
-        IsFixedTimeStep = false;
+        IsFixedTimeStep = true;
         Content.RootDirectory = "Content";
+
+        _graphics.ApplyChanges();
     }
 
     protected override void Initialize()
     {
         GraphicsDevice.SamplerStates[0] = SamplerState.AnisotropicClamp;
 
-        var width = _graphics.PreferredBackBufferWidth;
-        var height = _graphics.PreferredBackBufferHeight;
+        int width = _graphics.PreferredBackBufferWidth;
+        int height = _graphics.PreferredBackBufferHeight;
 
         _world = new WorldBuilder()
             .UseDefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
             .UseDefaultActorContext(builder => builder
                 .Capacity(InitialEntityCount)
-                .ConfigureComponentPool<CircleColor>(color => color.Capacity(InitialEntityCount))
-                .ConfigureComponentPool<Position>(position => position.Capacity(InitialEntityCount))
-                .ConfigureComponentPool<Velocity>(velocity => velocity.Capacity(InitialEntityCount))
+                .ConfigureComponentPool<CircleColor>(static color => color.Capacity(InitialEntityCount))
+                .ConfigureComponentPool<Position>(static position => position.Capacity(InitialEntityCount))
+                .ConfigureComponentPool<Velocity>(static velocity => velocity.Capacity(InitialEntityCount))
                 .CreateUpdateSystem(ctx => new MovementSystem(ctx, ctx.GetRequiredService<IParallelWorker>(), width, height))
                 .CreateDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2)))
             .Build();
 
         _context = _world.Actors;
-        _benchmarkCounter = new BenchmarkCounter(() => _context.Length, Content, GraphicsDevice);
+        _benchmarkCounter = new BenchmarkCounter(static ctx => ctx.Length, _context, Content, GraphicsDevice);
 
         for (var i = 0; i < InitialEntityCount; i++)
         {
@@ -74,28 +75,31 @@ public class NoiseGame : Game
         base.Initialize();
     }
 
-
     private void SpawnEntity(CircleColor? color = null)
     {
-        var actor = _context.CreateActor();
-        actor.Add(Position.Create(
-            x: _graphics.PreferredBackBufferWidth / 2,
-            y: _graphics.PreferredBackBufferHeight / 2));
+        Actor actor = _context.CreateActor();
+        actor.Add(
+            Position.Create(
+                x: _graphics.PreferredBackBufferWidth / 2,
+                y: _graphics.PreferredBackBufferHeight / 2));
 
-        actor.Add(Velocity.Create(
-            x: (float)(_random.NextDouble() * 200 - 100),
-            y: (float)(_random.NextDouble() * 200 - 100)));
+        actor.Add(
+            Velocity.Create(
+                x: (float)(_random.NextDouble() * 200 - 100),
+                y: (float)(_random.NextDouble() * 200 - 100)));
 
         actor.Add(color ?? CircleColor.CreateRgba(_random));
     }
 
     protected override void Update(GameTime gameTime)
     {
-        var keyboard = Keyboard.GetState();
+        KeyboardState keyboard = Keyboard.GetState();
+
         if (keyboard.IsKeyDown(Keys.Space))
         {
-            var count = _context.Length;
+            int count = _context.Length;
             var color = CircleColor.CreateRgba(_random);
+
             for (var i = 0; i < 50; i++)
             {
                 if (count >= MaxEntityCount)

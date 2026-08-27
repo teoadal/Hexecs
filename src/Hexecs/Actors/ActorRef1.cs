@@ -395,22 +395,12 @@ public readonly ref struct ActorRef<T1>
 
     #region Equality
 
-    /// <summary>
-    /// Проверяет равенство между двумя ссылками на актёров.
-    /// </summary>
-    /// <param name="other">Ссылка на актёра для сравнения.</param>
-    /// <returns>Возвращает true, если ссылки на актёров равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(ActorRef<T1> other)
     {
         return Id == other.Id && Context == other.Context;
     }
 
-    /// <summary>
-    /// Проверяет равенство с другим объектом.
-    /// </summary>
-    /// <param name="obj">Объект для сравнения.</param>
-    /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
     public override bool Equals(object? obj)
     {
         return obj switch
@@ -420,10 +410,6 @@ public readonly ref struct ActorRef<T1>
         };
     }
 
-    /// <summary>
-    /// Возвращает хеш-код для ссылки на актёра.
-    /// </summary>
-    /// <returns>Хеш-код ссылки на актёра.</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(Id);

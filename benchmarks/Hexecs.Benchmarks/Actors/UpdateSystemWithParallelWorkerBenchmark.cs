@@ -13,21 +13,21 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.102
-//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.400
+//     [Host]    : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0
 //
-//     | Method              | Count   | Mean        | Ratio | Allocated | Alloc Ratio |
-//     |-------------------- |-------- |------------:|------:|----------:|------------:|
-//     | FriFlo_Parallel     | 100000  |    92.29 us |  0.45 |         - |          NA |
-//     | DefaultEcs_Parallel | 100000  |   199.27 us |  0.96 |         - |          NA |
-//     | Hexecs_Parallel     | 100000  |   206.64 us |  1.00 |         - |          NA |
-//     |                     |         |             |       |           |             |
-//     | FriFlo_Parallel     | 1000000 |   765.89 us |  0.31 |         - |          NA |
-//     | DefaultEcs_Parallel | 1000000 | 2,078.13 us |  0.83 |         - |          NA |
-//     | Hexecs_Parallel     | 1000000 | 2,497.94 us |  1.00 |         - |          NA |
+//     | Method              | Count   | Mean       | Ratio | Allocated | Alloc Ratio |
+//     |-------------------- |-------- |-----------:|------:|----------:|------------:|
+//     | FriFlo_Parallel     | 100000  |   100.4 us |  0.68 |         - |          NA |
+//     | Hexecs_Parallel     | 100000  |   148.3 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 100000  |   199.0 us |  1.34 |         - |          NA |
+//     |                     |         |            |       |           |             |
+//     | FriFlo_Parallel     | 1000000 |   857.3 us |  0.58 |         - |          NA |
+//     | Hexecs_Parallel     | 1000000 | 1,490.1 us |  1.00 |         - |          NA |
+//     | DefaultEcs_Parallel | 1000000 | 2,107.1 us |  1.41 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //

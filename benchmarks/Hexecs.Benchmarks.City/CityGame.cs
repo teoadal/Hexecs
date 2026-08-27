@@ -4,6 +4,7 @@ using Hexecs.Benchmarks.Map.Terrains;
 using Hexecs.Benchmarks.Map.Terrains.Commands.Generate;
 using Hexecs.Benchmarks.Map.Utils;
 using Hexecs.Worlds;
+
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -24,7 +25,7 @@ internal sealed class CityGame : Game
             PreferredBackBufferHeight = 720,
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
-            SynchronizeWithVerticalRetrace = true,
+            SynchronizeWithVerticalRetrace = false,
             IsFullScreen = false,
             HardwareModeSwitch = false
         };
@@ -35,10 +36,10 @@ internal sealed class CityGame : Game
             e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = 8; // 8x MSAA
         };
 
-        _graphics.ApplyChanges();
-
-        IsFixedTimeStep = false;
+        IsFixedTimeStep = true;
         Content.RootDirectory = "Content";
+
+        _graphics.ApplyChanges();
     }
 
     protected override void Initialize()
@@ -88,7 +89,8 @@ internal sealed class CityGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        var keyboard = Keyboard.GetState();
+        KeyboardState keyboard = Keyboard.GetState();
+
         if (keyboard.IsKeyDown(Keys.Space))
         {
         }

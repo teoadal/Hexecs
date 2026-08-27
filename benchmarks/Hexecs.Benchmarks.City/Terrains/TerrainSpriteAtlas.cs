@@ -13,9 +13,9 @@ internal sealed class TerrainSpriteAtlas : SpriteAtlas<Terrain>
 
     protected override AtlasKey CreateKey(in Terrain key)
     {
-        var type = key.Type;
+        TerrainType type = key.Type;
 
-        var column = type switch
+        int column = type switch
         {
             TerrainType.Ground => 6,
             TerrainType.WaterRiver => 3,
@@ -23,7 +23,7 @@ internal sealed class TerrainSpriteAtlas : SpriteAtlas<Terrain>
             _ => 1
         };
 
-        var row = type switch
+        int row = type switch
         {
             TerrainType.Ground => 0,
             TerrainType.WaterRiver => 1,

@@ -11,7 +11,7 @@ public sealed partial class AssetContext
         public readonly Asset Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_context, new AssetId(_enumerator.Current));
+            get => new Asset(_context, new AssetId(_enumerator.Current));
         }
 
         public readonly int Length
@@ -36,10 +36,16 @@ public sealed partial class AssetContext
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => _enumerator.MoveNext();
+        public bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
 
         #region Interfaces
 
@@ -49,9 +55,15 @@ public sealed partial class AssetContext
             get => Current;
         }
 
-        readonly IEnumerator IEnumerable.GetEnumerator() => this;
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this;
+        }
 
-        readonly IEnumerator<Asset> IEnumerable<Asset>.GetEnumerator() => this;
+        readonly IEnumerator<Asset> IEnumerable<Asset>.GetEnumerator()
+        {
+            return this;
+        }
 
         readonly void IEnumerator.Reset()
         {
@@ -61,9 +73,18 @@ public sealed partial class AssetContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
 
-    IEnumerator<Asset> IEnumerable<Asset>.GetEnumerator() => GetEnumerator();
+    IEnumerator<Asset> IEnumerable<Asset>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

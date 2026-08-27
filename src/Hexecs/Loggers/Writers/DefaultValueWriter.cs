@@ -12,7 +12,7 @@ internal sealed class DefaultValueWriter<T> : ILogValueWriter<T>
         {
             Span<char> buffer = stackalloc char[512];
             if (((ISpanFormattable)arg).TryFormat(buffer,
-                    out var charsWritten,
+                    out int charsWritten,
                     ReadOnlySpan<char>.Empty,
                     CultureInfo.InvariantCulture))
             {

@@ -15,7 +15,10 @@ public readonly struct Temperature
     private const byte Offset = 100;
     private readonly byte _raw;
 
-    private Temperature(byte raw) => _raw = raw;
+    private Temperature(byte raw)
+    {
+        _raw = raw;
+    }
 
     public float Celsius
     {
@@ -35,5 +38,8 @@ public readonly struct Temperature
         get => Celsius >= 100;
     }
 
-    public override string ToString() => $"{Celsius}°C";
+    public override string ToString()
+    {
+        return $"{Celsius}°C";
+    }
 }

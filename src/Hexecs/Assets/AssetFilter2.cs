@@ -33,11 +33,17 @@ public sealed partial class AssetFilter<T1, T2> : IAssetFilter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(AssetId assetId) => _dictionary.ContainsKey(assetId.Value);
+    public bool Contains(AssetId assetId)
+    {
+        return _dictionary.ContainsKey(assetId.Value);
+    }
 
     public AssetRef<T1, T2> Get(AssetId assetId)
     {
-        if (!_dictionary.TryGetValue(assetId.Value, out var entry)) AssetError.NotFound(assetId);
+        if (!_dictionary.TryGetValue(assetId.Value, out Entry entry))
+        {
+            AssetError.NotFound(assetId);
+        }
 
         return new AssetRef<T1, T2>(
             Context,
@@ -48,16 +54,19 @@ public sealed partial class AssetFilter<T1, T2> : IAssetFilter
 
     public Asset[] ToArray()
     {
-        var dictionary = _dictionary;
+        FrozenDictionary<uint, Entry> dictionary = _dictionary;
 
-        var count = dictionary.Count;
-        if (count == 0) return [];
+        int count = dictionary.Count;
+        if (count == 0)
+        {
+            return [];
+        }
 
         var assets = new Asset[count];
-        var ctx = Context;
+        AssetContext ctx = Context;
 
         var index = 0;
-        foreach (var assetId in dictionary.Keys)
+        foreach (uint assetId in dictionary.Keys)
         {
             assets[index++] = new Asset(ctx, new AssetId(assetId));
         }
@@ -71,25 +80,34 @@ public sealed partial class AssetFilter<T1, T2> : IAssetFilter
         AssetComponentPool<T2> pool2,
         AssetConstraint? constraint)
     {
-        var bufferPool = ArrayPool<KeyValuePair<uint, Entry>>.Shared;
-        var buffer = bufferPool.Rent(16);
+        ArrayPool<KeyValuePair<uint, Entry>> bufferPool = ArrayPool<KeyValuePair<uint, Entry>>.Shared;
+        KeyValuePair<uint, Entry>[] buffer = bufferPool.Rent(16);
         var length = 0;
 
-        var constraintFunction = constraint == null
+        Func<AssetId, bool> constraintFunction = constraint == null
             ? DelegateUtils<AssetId>.AlwaysTrue
             : constraint.Applicable;
 
-        foreach (var asset in context)
+        foreach (Asset asset in context)
         {
-            var assetId = asset.Id;
+            AssetId assetId = asset.Id;
 
-            var index1 = pool1.TryGetIndex(assetId);
-            if (index1 == -1) continue;
+            int index1 = pool1.TryGetIndex(assetId);
+            if (index1 == -1)
+            {
+                continue;
+            }
 
-            var index2 = pool2.TryGetIndex(assetId);
-            if (index2 == -1) continue;
+            int index2 = pool2.TryGetIndex(assetId);
+            if (index2 == -1)
+            {
+                continue;
+            }
 
-            if (!constraintFunction(assetId)) continue;
+            if (!constraintFunction(assetId))
+            {
+                continue;
+            }
 
             ArrayUtils.Insert(
                 ref buffer,
@@ -101,7 +119,7 @@ public sealed partial class AssetFilter<T1, T2> : IAssetFilter
         }
 
         var segment = new ArraySegment<KeyValuePair<uint, Entry>>(buffer, 0, length);
-        var result = segment.ToFrozenDictionary();
+        FrozenDictionary<uint, Entry> result = segment.ToFrozenDictionary();
 
         bufferPool.Return(buffer, true);
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+
 using Hexecs.Actors.Components;
 using Hexecs.Actors.Delegates;
 using Hexecs.Actors.Relations;
@@ -50,7 +51,8 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     private uint _nextActorId;
     private readonly Dictionary<ushort, uint> _singles;
 
-    internal ActorContext(bool isDefault,
+    internal ActorContext(
+        bool isDefault,
         int id,
         DependencyProvider dependencyProvider,
         World world,
@@ -143,6 +145,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
 
         var cloneId = new ActorId(cloneIdRaw);
         ref Entry entry = ref GetEntryRefExact(actorId.Value);
+
         foreach (ushort componentId in entry)
         {
             IActorComponentPool componentPool = _componentPools[componentId]!;
@@ -176,6 +179,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         uint actorId = expectedId ?? GetNextActorId();
 
         AddEntry(actorId);
+
         return new Actor(this, new ActorId(actorId));
     }
 
@@ -190,6 +194,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         if (RemoveEntry(actorId.Value))
         {
             _freeIds.Push(actorId.Value);
+
             return true;
         }
 
@@ -245,9 +250,11 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         where T1 : struct, IActorComponent
     {
         ActorComponentPool<T1>? pool = GetComponentPool<T1>();
+
         if (pool != null)
         {
             ActorRef<T1> first = pool.First();
+
             if (!first.IsEmpty)
             {
                 return first;
@@ -255,6 +262,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         }
 
         ActorError.NotFound<T1>();
+
         return ActorRef<T1>.Empty;
     }
 
@@ -269,6 +277,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         where T1 : struct, IActorComponent
     {
         ref T1 component = ref TryGetComponentRef<T1>(actorId);
+
         if (Unsafe.IsNullRef(ref component))
         {
             ActorError.ComponentNotFound<T1>(actorId);
@@ -288,9 +297,11 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         where T1 : struct, IActorComponent
     {
         ActorComponentPool<T1>? pool = GetComponentPool<T1>();
+
         if (pool != null)
         {
             ActorRef<T1> exists = pool.First(predicate);
+
             if (!exists.IsEmpty)
             {
                 return exists;
@@ -298,6 +309,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         }
 
         ActorError.ApplicableNotFound<T1>();
+
         return ActorRef<T1>.Empty;
     }
 
@@ -312,12 +324,14 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
     {
         var builder = new ValueStringBuilder(stackalloc char[512]);
         GetDescription(actorId, ref builder, maxComponentDescription);
+
         return builder.Flush();
     }
 
     public void GetDescription(ActorId actorId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
     {
         ref Entry entry = ref GetEntryRef(actorId.Value);
+
         if (Unsafe.IsNullRef(ref entry))
         {
             builder.Append('\'');
@@ -331,6 +345,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         builder.Append(actorId.Value);
 
         int componentsLength = entry.Length;
+
         if (componentsLength == 0)
         {
             return;
@@ -349,6 +364,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
             if (maxComponentDescription == index)
             {
                 printMore = true;
+
                 break;
             }
 
@@ -356,13 +372,13 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
                 ref buffer,
                 pool,
                 index++,
-                TypeOf.GetTypeName(ActorComponentType.GetType(componentId))
-            );
+                TypeOf.GetTypeName(ActorComponentType.GetType(componentId)));
         }
 
         Array.Sort(buffer, 0, index);
 
         var first = true;
+
         foreach (string componentName in buffer.AsSpan(0, index))
         {
             if (first == false)
@@ -397,13 +413,16 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         where T1 : struct, IActorComponent
     {
         ushort componentId = ActorComponentType<T1>.Id;
+
         if (_singles.ContainsKey(componentId))
         {
             var componentPool = (ActorComponentPool<T1>)_componentPools[componentId]!;
+
             return componentPool.First();
         }
 
         ActorComponentPool<T1>? pool = GetComponentPool<T1>();
+
         if (pool == null)
         {
             ActorError.SingleNotFound<T1>();
@@ -431,13 +450,16 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         where T1 : struct, IActorComponent
     {
         ref T1 component = ref TryGetComponentRef<T1>(actorId);
+
         if (Unsafe.IsNullRef(ref component))
         {
             actor = ActorRef<T1>.Empty;
+
             return false;
         }
 
         actor = new ActorRef<T1>(this, actorId, ref component);
+
         return true;
     }
 
@@ -453,6 +475,7 @@ public sealed partial class ActorContext : IEnumerable<Actor>, IDisposable
         }
 
         uint actorId = Interlocked.Increment(ref _nextActorId);
+
         while (!Unsafe.IsNullRef(ref GetEntryRef(actorId))) // is alive
         {
             actorId = Interlocked.Increment(ref _nextActorId);

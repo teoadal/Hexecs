@@ -8,6 +8,12 @@ public readonly ref struct ComponentsAccess<T>
         get => new ComponentsAccess<T>();
     }
 
+    public Span<T> Values
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _values;
+    }
+
     private readonly ReadOnlySpan<uint> _sparse;
     private readonly Span<T> _values;
 
@@ -19,7 +25,7 @@ public readonly ref struct ComponentsAccess<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ComponentsAccess(uint[] sparse, T[] values)
+    internal ComponentsAccess(Span<uint> sparse, Span<T> values)
     {
         _sparse = sparse;
         _values = values;

@@ -16,10 +16,10 @@ public sealed partial class AssetContext
     public AssetFilter<T1> Filter<T1>()
         where T1 : struct, IAssetComponent
     {
-        var key = typeof(AssetFilter<T1>);
+        Type key = typeof(AssetFilter<T1>);
 
         // ReSharper disable once InvertIf
-        if (!_filters.TryGetValue(key, out var collection))
+        if (!_filters.TryGetValue(key, out IAssetFilter? collection))
         {
             collection = new AssetFilter<T1>(this);
             _filters.Add(key, collection);
@@ -38,10 +38,10 @@ public sealed partial class AssetContext
     public AssetFilter<T1> Filter<T1>(Action<AssetConstraint.Builder> constraint)
         where T1 : struct, IAssetComponent
     {
-        var builder = ResolveConstraintBuilder();
+        AssetConstraint.Builder builder = ResolveConstraintBuilder();
         constraint(builder);
 
-        foreach (var filter in _filtersWithConstraint)
+        foreach (IAssetFilter filter in _filtersWithConstraint)
         {
             // ReSharper disable once InvertIf
             if (filter is AssetFilter<T1> expected && builder.Equals(filter.Constraint))
@@ -70,10 +70,10 @@ public sealed partial class AssetContext
         where T1 : struct, IAssetComponent
         where T2 : struct, IAssetComponent
     {
-        var key = typeof(AssetFilter<T1, T2>);
+        Type key = typeof(AssetFilter<T1, T2>);
 
         // ReSharper disable once InvertIf
-        if (!_filters.TryGetValue(key, out var collection))
+        if (!_filters.TryGetValue(key, out IAssetFilter? collection))
         {
             collection = new AssetFilter<T1, T2>(this);
             _filters.Add(key, collection);
@@ -94,10 +94,10 @@ public sealed partial class AssetContext
         where T1 : struct, IAssetComponent
         where T2 : struct, IAssetComponent
     {
-        var builder = ResolveConstraintBuilder();
+        AssetConstraint.Builder builder = ResolveConstraintBuilder();
         constraint(builder);
 
-        foreach (var filter in _filtersWithConstraint)
+        foreach (IAssetFilter filter in _filtersWithConstraint)
         {
             // ReSharper disable once InvertIf
             if (filter is AssetFilter<T1, T2> expected && builder.Equals(filter.Constraint))
@@ -128,10 +128,10 @@ public sealed partial class AssetContext
         where T2 : struct, IAssetComponent
         where T3 : struct, IAssetComponent
     {
-        var key = typeof(AssetFilter<T1, T2, T3>);
+        Type key = typeof(AssetFilter<T1, T2, T3>);
 
         // ReSharper disable once InvertIf
-        if (!_filters.TryGetValue(key, out var collection))
+        if (!_filters.TryGetValue(key, out IAssetFilter? collection))
         {
             collection = new AssetFilter<T1, T2, T3>(this);
             _filters.Add(key, collection);
@@ -154,10 +154,10 @@ public sealed partial class AssetContext
         where T2 : struct, IAssetComponent
         where T3 : struct, IAssetComponent
     {
-        var builder = ResolveConstraintBuilder();
+        AssetConstraint.Builder builder = ResolveConstraintBuilder();
         constraint(builder);
 
-        foreach (var filter in _filtersWithConstraint)
+        foreach (IAssetFilter filter in _filtersWithConstraint)
         {
             // ReSharper disable once InvertIf
             if (filter is AssetFilter<T1, T2, T3> expected && builder.Equals(filter.Constraint))
@@ -177,7 +177,7 @@ public sealed partial class AssetContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private AssetConstraint FlushConstraintBuilder(AssetConstraint.Builder builder)
     {
-        var constraint = builder.Build();
+        AssetConstraint constraint = builder.Build();
         ReturnConstraintBuilder(builder);
 
         return constraint;

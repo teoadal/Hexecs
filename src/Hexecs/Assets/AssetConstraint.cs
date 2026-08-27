@@ -23,7 +23,7 @@ public sealed partial class AssetConstraint : IEquatable<AssetConstraint>
     {
         return new Builder(context).Include<T1>();
     }
-    
+
     /// <summary>
     /// Создает построитель ограничений с включением двух указанных компонентов.
     /// </summary>
@@ -58,7 +58,7 @@ public sealed partial class AssetConstraint : IEquatable<AssetConstraint>
             .Include<T2>()
             .Include<T3>();
     }
-    
+
     private readonly int _hash;
     private readonly Subscription[] _subscriptions;
 
@@ -71,26 +71,35 @@ public sealed partial class AssetConstraint : IEquatable<AssetConstraint>
     public bool Applicable(AssetId assetId)
     {
         // ReSharper disable once LoopCanBeConvertedToQuery
-        foreach (var subscription in _subscriptions)
+        foreach (Subscription subscription in _subscriptions)
         {
-            if (!subscription.Check(assetId)) return false;
+            if (!subscription.Check(assetId))
+            {
+                return false;
+            }
         }
 
         return true;
     }
-    
+
     #region Equality
 
     public bool Equals(AssetConstraint? other)
     {
-        if (other == null) return false;
+        if (other == null)
+        {
+            return false;
+        }
 
-        var otherSubscriptions = other._subscriptions;
+        Subscription[] otherSubscriptions = other._subscriptions;
 
         // ReSharper disable once LoopCanBeConvertedToQuery
         for (var i = 0; i < _subscriptions.Length; i++)
         {
-            if (!_subscriptions[i].Equals(otherSubscriptions[i])) return false;
+            if (!_subscriptions[i].Equals(otherSubscriptions[i]))
+            {
+                return false;
+            }
         }
 
         return true;
@@ -101,7 +110,10 @@ public sealed partial class AssetConstraint : IEquatable<AssetConstraint>
         return ReferenceEquals(this, obj) || obj is AssetConstraint other && Equals(other);
     }
 
-    public override int GetHashCode() => _hash;
+    public override int GetHashCode()
+    {
+        return _hash;
+    }
 
     #endregion
 }

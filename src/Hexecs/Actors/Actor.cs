@@ -380,54 +380,28 @@ public readonly struct Actor : IEquatable<Actor>
 
     #region Equality
 
-    /// <summary>
-    /// Проверяет равенство между двумя актёрами.
-    /// </summary>
-    /// <param name="other">Актёр для сравнения.</param>
-    /// <returns>Возвращает true, если актёры равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(Actor other)
     {
         return Id == other.Id && ReferenceEquals(Context, other.Context);
     }
 
-    /// <summary>
-    /// Проверяет равенство с другим объектом.
-    /// </summary>
-    /// <param name="obj">Объект для сравнения.</param>
-    /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
     public override bool Equals(object? obj)
     {
         return obj is Actor other && Equals(other);
     }
 
-    /// <summary>
-    /// Возвращает хеш-код для актёра.
-    /// </summary>
-    /// <returns>Хеш-код актёра.</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(Id);
     }
 
-    /// <summary>
-    /// Сравнивает двух актёров на равенство.
-    /// </summary>
-    /// <param name="left">Левый актёр.</param>
-    /// <param name="right">Правый актёр.</param>
-    /// <returns>Возвращает true, если актёры равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(in Actor left, in Actor right)
     {
         return left.Equals(right);
     }
 
-    /// <summary>
-    /// Сравнивает двух актёров на неравенство.
-    /// </summary>
-    /// <param name="left">Левый актёр.</param>
-    /// <param name="right">Правый актёр.</param>
-    /// <returns>Возвращает true, если актёры не равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(in Actor left, in Actor right)
     {

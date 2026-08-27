@@ -2,11 +2,11 @@ namespace Hexecs.Pipelines.Notifications;
 
 internal static class NotificationType
 {
-    private static readonly Dictionary<Type, ushort> Types = new(128, ReferenceComparer<Type>.Instance);
+    private static readonly Dictionary<Type, ushort> Types = new Dictionary<Type, ushort>(128, ReferenceComparer<Type>.Instance);
 #if NET9_0_OR_GREATER
-    private static readonly Lock LockObj = new();
+    private static readonly Lock LockObj = new Lock();
 #else
-    private static readonly object LockObj = new();
+    private static readonly object LockObj = new object();
 #endif
     private static ushort _nextId;
 
@@ -18,9 +18,12 @@ internal static class NotificationType
         lock (LockObj)
 #endif
         {
-            if (Types.TryGetValue(type, out var exists)) return exists;
+            if (Types.TryGetValue(type, out ushort exists))
+            {
+                return exists;
+            }
 
-            var notificationId = _nextId++;
+            ushort notificationId = _nextId++;
             Types[type] = notificationId;
 
             return notificationId;
@@ -35,9 +38,12 @@ internal static class NotificationType
         lock (LockObj)
 #endif
         {
-            foreach (var (type, existsId) in Types)
+            foreach ((Type type, ushort existsId) in Types)
             {
-                if (existsId == id) return type;
+                if (existsId == id)
+                {
+                    return type;
+                }
             }
 
             PipelineError.NotificationTypeNotFound(id);

@@ -10,7 +10,7 @@ namespace Hexecs.Worlds;
 
 public sealed class WorldBuilder : IDependencyCollection
 {
-    private readonly List<Func<World, IAssetSource>> _assetSourceBuilders = new(4);
+    private readonly List<Func<World, IAssetSource>> _assetSourceBuilders = new List<Func<World, IAssetSource>>(4);
     private readonly List<IDependencyRegistrar> _registrars = [];
     private readonly List<Dependency> _dependencies = [];
 
@@ -40,7 +40,7 @@ public sealed class WorldBuilder : IDependencyCollection
 
     public World Build()
     {
-        foreach (var registrar in _registrars)
+        foreach (IDependencyRegistrar registrar in _registrars)
         {
             registrar.TryRegister(this);
         }
@@ -59,7 +59,10 @@ public sealed class WorldBuilder : IDependencyCollection
             _defaultActorContextBuilder ?? DelegateUtils<ActorContextBuilder>.EmptyAction,
             _valueStorage ?? ValueService.Empty);
 
-        if (_debugWorld) WorldDebug.World = instance;
+        if (_debugWorld)
+        {
+            WorldDebug.World = instance;
+        }
 
         LoadAssets(instance);
 
@@ -94,7 +97,10 @@ public sealed class WorldBuilder : IDependencyCollection
         return this;
     }
 
-    public WorldBuilder CreateAssetData(Action<IAssetLoader> source) => CreateAssetData(int.MaxValue, source);
+    public WorldBuilder CreateAssetData(Action<IAssetLoader> source)
+    {
+        return CreateAssetData(int.MaxValue, source);
+    }
 
     #endregion
 
@@ -223,7 +229,7 @@ public sealed class WorldBuilder : IDependencyCollection
 
     private void LoadAssets(World world)
     {
-        var sortedAssetSources = _assetSourceBuilders
+        IOrderedEnumerable<IAssetSource> sortedAssetSources = _assetSourceBuilders
             .Select(func => func(world))
             .Order(OrderComparer<IAssetSource>.CreateInstance());
 

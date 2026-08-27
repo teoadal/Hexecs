@@ -6,9 +6,9 @@ public sealed partial class AssetContext
 {
     private IAssetComponentPool?[] _componentPools;
 #if NET9_0_OR_GREATER
-    private readonly Lock _componentPoolLock = new();
+    private readonly Lock _componentPoolLock = new Lock();
 #else
-    private readonly object _componentPoolLock = new();
+    private readonly object _componentPoolLock = new object();
 #endif
 
     /// <summary>
@@ -18,7 +18,7 @@ public sealed partial class AssetContext
     /// <returns>Перечислитель компонентов ассета</returns>
     public ComponentEnumerator Components(AssetId assetId)
     {
-        ref var entry = ref GetEntry(assetId.Value);
+        ref Entry entry = ref GetEntry(assetId.Value);
         return Unsafe.IsNullRef(ref entry)
             ? ComponentEnumerator.Empty
             : new ComponentEnumerator(assetId, _componentPools, entry.ToArray());
@@ -33,7 +33,7 @@ public sealed partial class AssetContext
     public bool HasComponent<T>(AssetId assetId)
         where T : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T>();
+        AssetComponentPool<T>? pool = GetComponentPool<T>();
         return pool != null && pool.Has(assetId);
     }
 
@@ -47,18 +47,25 @@ public sealed partial class AssetContext
     public ref readonly T GetComponent<T>(AssetId assetId)
         where T : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T>();
-        if (pool == null) AssetError.ComponentNotFound<T>(assetId);
+        AssetComponentPool<T>? pool = GetComponentPool<T>();
+        if (pool == null)
+        {
+            AssetError.ComponentNotFound<T>(assetId);
+        }
+
         return ref pool.Get(assetId);
     }
 
     public AssetComponentRef<T> GetComponentRef<T>(AssetId assetId)
         where T : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T>();
-        if (pool == null) return AssetComponentRef<T>.Empty;
+        AssetComponentPool<T>? pool = GetComponentPool<T>();
+        if (pool == null)
+        {
+            return AssetComponentRef<T>.Empty;
+        }
 
-        var index = pool.TryGetIndex(assetId);
+        int index = pool.TryGetIndex(assetId);
 
         return index == -1
             ? AssetComponentRef<T>.Empty
@@ -74,10 +81,14 @@ public sealed partial class AssetContext
     internal AssetComponentPool<T>? GetComponentPool<T>()
         where T : struct, IAssetComponent
     {
-        var id = AssetComponentType<T>.Id;
+        ushort id = AssetComponentType<T>.Id;
 
-        if (id >= _componentPools.Length) return null;
-        var pool = _componentPools[id];
+        if (id >= _componentPools.Length)
+        {
+            return null;
+        }
+
+        IAssetComponentPool? pool = _componentPools[id];
         return pool == null
             ? null
             : Unsafe.As<AssetComponentPool<T>>(pool);
@@ -91,11 +102,14 @@ public sealed partial class AssetContext
     internal AssetComponentPool<T> GetOrCreateComponentPool<T>()
         where T : struct, IAssetComponent
     {
-        var id = AssetComponentType<T>.Id;
+        ushort id = AssetComponentType<T>.Id;
         if (id < _componentPools.Length)
         {
-            var existsPool = _componentPools[id];
-            if (existsPool != null) return Unsafe.As<AssetComponentPool<T>>(existsPool);
+            IAssetComponentPool? existsPool = _componentPools[id];
+            if (existsPool != null)
+            {
+                return Unsafe.As<AssetComponentPool<T>>(existsPool);
+            }
         }
 #if NET9_0_OR_GREATER
         using (_componentPoolLock.EnterScope())
@@ -104,7 +118,7 @@ public sealed partial class AssetContext
 #endif
         {
             ArrayUtils.EnsureCapacity(ref _componentPools, id);
-            ref var pool = ref _componentPools[id];
+            ref IAssetComponentPool? pool = ref _componentPools[id];
             pool ??= new AssetComponentPool<T>(this);
 
             return Unsafe.As<AssetComponentPool<T>>(pool);

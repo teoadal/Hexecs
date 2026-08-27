@@ -16,7 +16,10 @@ public readonly struct Result(bool isOk, string? message)
     /// <param name="message">Дополнительное сообщение.</param>
     /// <returns>Результат операции.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result Create(bool isOk, string? message = null) => isOk ? Ok(message) : Failed(message);
+    public static Result Create(bool isOk, string? message = null)
+    {
+        return isOk ? Ok(message) : Failed(message);
+    }
 
     /// <summary>
     /// Создает успешный результат операции.
@@ -24,7 +27,10 @@ public readonly struct Result(bool isOk, string? message)
     /// <param name="message">Дополнительное сообщение.</param>
     /// <returns>Успешный результат операции.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result Ok(string? message = null) => new(true, message);
+    public static Result Ok(string? message = null)
+    {
+        return new Result(true, message);
+    }
 
     /// <summary>
     /// Создает неуспешный результат операции.
@@ -32,7 +38,10 @@ public readonly struct Result(bool isOk, string? message)
     /// <param name="message">Сообщение об ошибке.</param>
     /// <returns>Неуспешный результат операции.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result Failed(string? message = null) => new(false, message ?? "Something went wrong");
+    public static Result Failed(string? message = null)
+    {
+        return new Result(false, message ?? "Something went wrong");
+    }
 
     /// <summary>
     /// Флаг, указывающий на успешность выполнения операции.
@@ -50,13 +59,19 @@ public readonly struct Result(bool isOk, string? message)
     /// <param name="result">Результат операции.</param>
     /// <returns>Значение флага успешности.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in Result result) => result.IsOk;
-    
+    public static implicit operator bool(in Result result)
+    {
+        return result.IsOk;
+    }
+
     /// <summary>
     /// Неявное преобразование логического значения в результат.
     /// </summary>
     /// <param name="isOk">Флаг успешности.</param>
     /// <returns>Результат операции.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Result(bool isOk) => Create(isOk);
+    public static implicit operator Result(bool isOk)
+    {
+        return Create(isOk);
+    }
 }

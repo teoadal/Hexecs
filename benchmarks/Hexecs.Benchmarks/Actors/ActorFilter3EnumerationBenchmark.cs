@@ -13,25 +13,25 @@ namespace Hexecs.Benchmarks.Actors;
 
 // BenchmarkDotNet v0.15.8, Windows 11 (10.0.22621.4317/22H2/2022Update/SunValley2)
 // Intel Xeon CPU E5-2697 v3 2.60GHz, 2 CPU, 56 logical and 28 physical cores
-//     .NET SDK 10.0.102
-//     [Host]    : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
-//     .NET 10.0 : .NET 10.0.2 (10.0.2, 10.0.225.61305), X64 RyuJIT x86-64-v3
+//     .NET SDK 10.0.400
+//     [Host]    : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+//     .NET 10.0 : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
 //
 // Job=.NET 10.0  Runtime=.NET 10.0
 //
 //     | Method                 | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
 //     |----------------------- |------- |----------:|------:|----------:|------------:|
-//     | FriFlo_Chunks          | 10000  |  16.10 us |  0.55 |         - |          NA |
-//     | Hexecs_ComponentAccess | 10000  |  25.10 us |  0.86 |         - |          NA |
-//     | FriFlo                 | 10000  |  25.66 us |  0.87 |      88 B |          NA |
-//     | Hexecs                 | 10000  |  29.33 us |  1.00 |         - |          NA |
-//     | DefaultEcs             | 10000  |  29.34 us |  1.00 |         - |          NA |
+//     | FriFlo_Chunks          | 10000  |  16.52 us |  0.64 |         - |          NA |
+//     | Hexecs_ComponentAccess | 10000  |  19.01 us |  0.74 |         - |          NA |
+//     | Hexecs                 | 10000  |  25.75 us |  1.00 |         - |          NA |
+//     | FriFlo                 | 10000  |  26.46 us |  1.03 |      88 B |          NA |
+//     | DefaultEcs             | 10000  |  30.37 us |  1.18 |         - |          NA |
 //     |                        |        |           |       |           |             |
-//     | FriFlo_Chunks          | 100000 | 158.62 us |  0.50 |         - |          NA |
-//     | FriFlo                 | 100000 | 253.14 us |  0.79 |      88 B |          NA |
-//     | Hexecs_ComponentAccess | 100000 | 285.76 us |  0.89 |         - |          NA |
-//     | DefaultEcs             | 100000 | 287.17 us |  0.90 |         - |          NA |
-//     | Hexecs                 | 100000 | 320.26 us |  1.00 |         - |          NA |
+//     | FriFlo_Chunks          | 100000 | 163.69 us |  0.63 |         - |          NA |
+//     | Hexecs_ComponentAccess | 100000 | 195.65 us |  0.75 |         - |          NA |
+//     | FriFlo                 | 100000 | 259.28 us |  0.99 |      88 B |          NA |
+//     | Hexecs                 | 100000 | 261.44 us |  1.00 |         - |          NA |
+//     | DefaultEcs             | 100000 | 296.66 us |  1.13 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //

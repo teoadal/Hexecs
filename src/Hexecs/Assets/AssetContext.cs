@@ -31,7 +31,11 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         ClearEntries();
@@ -46,7 +50,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <returns>Возвращаем true, если ассет существует; иначе false</returns>
     public bool ExistsAsset(AssetId assetId)
     {
-        ref var entry = ref GetEntry(assetId.Value);
+        ref Entry entry = ref GetEntry(assetId.Value);
         return !Unsafe.IsNullRef(ref entry);
     }
 
@@ -58,7 +62,11 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <exception cref="Exception">Выбрасывается, если ассет не найден</exception>
     public Asset GetAsset(AssetId assetId)
     {
-        if (!ExistsAsset(assetId)) AssetError.NotFound(assetId);
+        if (!ExistsAsset(assetId))
+        {
+            AssetError.NotFound(assetId);
+        }
+
         return new Asset(this, assetId);
     }
 
@@ -70,7 +78,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <exception cref="Exception">Выбрасывается, если ассет, связанный с алиасом не найден</exception>
     public Asset GetAsset(string alias)
     {
-        if (_aliases.TryGetValue(alias, out var assetId))
+        if (_aliases.TryGetValue(alias, out uint assetId))
         {
             return GetAsset(new AssetId(assetId));
         }
@@ -88,10 +96,10 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     public AssetRef<T1> GetAssetRef<T1>()
         where T1 : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T1>();
+        AssetComponentPool<T1>? pool = GetComponentPool<T1>();
         if (pool != null)
         {
-            var first = pool.First();
+            AssetRef<T1> first = pool.First();
             if (!first.IsEmpty)
             {
                 return first;
@@ -112,15 +120,21 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     public AssetRef<T1> GetAssetRef<T1>(string alias)
         where T1 : struct, IAssetComponent
     {
-        if (_aliases.TryGetValue(alias, out var assetIdRaw))
+        if (_aliases.TryGetValue(alias, out uint assetIdRaw))
         {
             var assetId = new AssetId(assetIdRaw);
 
-            var pool = GetComponentPool<T1>();
-            if (pool == null) AssetError.ComponentNotFound<T1>(assetId);
+            AssetComponentPool<T1>? pool = GetComponentPool<T1>();
+            if (pool == null)
+            {
+                AssetError.ComponentNotFound<T1>(assetId);
+            }
 
-            ref var component = ref pool.Get(assetId);
-            if (Unsafe.IsNullRef(ref component)) AssetError.ComponentNotFound<T1>(assetId);
+            ref T1 component = ref pool.Get(assetId);
+            if (Unsafe.IsNullRef(ref component))
+            {
+                AssetError.ComponentNotFound<T1>(assetId);
+            }
 
             return new AssetRef<T1>(this, assetId, ref component);
         }
@@ -139,11 +153,17 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     public AssetRef<T1> GetAssetRef<T1>(AssetId assetId)
         where T1 : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T1>();
-        if (pool == null) AssetError.ComponentNotFound<T1>(assetId);
+        AssetComponentPool<T1>? pool = GetComponentPool<T1>();
+        if (pool == null)
+        {
+            AssetError.ComponentNotFound<T1>(assetId);
+        }
 
-        ref var component = ref pool.Get(assetId);
-        if (Unsafe.IsNullRef(ref component)) AssetError.ComponentNotFound<T1>(assetId);
+        ref T1 component = ref pool.Get(assetId);
+        if (Unsafe.IsNullRef(ref component))
+        {
+            AssetError.ComponentNotFound<T1>(assetId);
+        }
 
         return new AssetRef<T1>(this, assetId, ref component);
     }
@@ -151,10 +171,10 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     public AssetRef<T1> GetActorRef<T1>(AssetPredicate<T1> predicate)
         where T1 : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T1>();
+        AssetComponentPool<T1>? pool = GetComponentPool<T1>();
         if (pool != null)
         {
-            var exists = pool.First(predicate);
+            AssetRef<T1> exists = pool.First(predicate);
             if (!exists.IsEmpty)
             {
                 return exists;
@@ -181,7 +201,7 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
 
     public void GetDescription(AssetId assetId, ref ValueStringBuilder builder, int maxComponentDescription = 5)
     {
-        ref var entry = ref GetEntry(assetId.Value);
+        ref Entry entry = ref GetEntry(assetId.Value);
         if (Unsafe.IsNullRef(ref entry))
         {
             builder.Append('\'');
@@ -194,19 +214,22 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
         builder.Append("Id = ");
         builder.Append(assetId.Value);
 
-        ref var components = ref entry;
-        var componentsLength = components.Length;
-        if (componentsLength == 0) return;
+        ref Entry components = ref entry;
+        int componentsLength = components.Length;
+        if (componentsLength == 0)
+        {
+            return;
+        }
 
         builder.Append(" (");
 
-        var pool = ArrayPool<string>.Shared;
-        var buffer = pool.Rent(componentsLength);
+        ArrayPool<string> pool = ArrayPool<string>.Shared;
+        string[] buffer = pool.Rent(componentsLength);
         var index = 0;
         var printMore = false;
 
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var componentId in components)
+        foreach (ushort componentId in components)
         {
             if (maxComponentDescription == index)
             {
@@ -225,15 +248,25 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
         Array.Sort(buffer, 0, componentsLength);
 
         var first = true;
-        foreach (var componentName in buffer.AsSpan(0, index))
+        foreach (string componentName in buffer.AsSpan(0, index))
         {
-            if (first == false) builder.Append(", ");
-            else first = false;
+            if (first == false)
+            {
+                builder.Append(", ");
+            }
+            else
+            {
+                first = false;
+            }
 
             builder.Append(componentName);
         }
 
-        if (printMore) builder.Append(", ...");
+        if (printMore)
+        {
+            builder.Append(", ...");
+        }
+
         builder.Append(')');
         
         pool.Return(buffer);
@@ -248,14 +281,14 @@ public sealed partial class AssetContext : IEnumerable<Asset>, IDisposable
     /// <returns>Возвращает true, если ассет найден и содержит указанный компонент; иначе false</returns>
     public bool TryGetAssetRef<T1>(AssetId assetId, out AssetRef<T1> asset) where T1 : struct, IAssetComponent
     {
-        var pool = GetComponentPool<T1>();
+        AssetComponentPool<T1>? pool = GetComponentPool<T1>();
         if (pool == null)
         {
             asset = AssetRef<T1>.Empty;
             return false;
         }
 
-        ref var component = ref pool.TryGet(assetId);
+        ref T1 component = ref pool.TryGet(assetId);
         if (Unsafe.IsNullRef(ref component))
         {
             asset = AssetRef<T1>.Empty;

@@ -57,8 +57,14 @@ internal sealed class Camera(GraphicsDevice graphicsDevice)
     /// <param name="factor">Множитель масштаба (больше 1 для приближения, меньше 1 для отдаления).</param>
     public void AdjustZoom(float factor)
     {
-        if (factor > 0) _currentZoom += 1f;
-        else _currentZoom -= 1f;
+        if (factor > 0)
+        {
+            _currentZoom += 1f;
+        }
+        else
+        {
+            _currentZoom -= 1f;
+        }
 
         _currentZoom = MathHelper.Clamp(_currentZoom, 1f, 10f);
     }
@@ -67,26 +73,44 @@ internal sealed class Camera(GraphicsDevice graphicsDevice)
     /// Смещает камеру на указанный вектор.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Move(Vector2 direction) => _currentPosition += direction;
+    public void Move(Vector2 direction)
+    {
+        _currentPosition += direction;
+    }
 
     /// <summary>
     /// Обрабатывает ввод игрока для перемещения и масштабирования камеры.
     /// </summary>
     public void Update(GameTime gameTime)
     {
-        var keyboard = Keyboard.GetState();
-        var mouse = Mouse.GetState();
+        KeyboardState keyboard = Keyboard.GetState();
+        MouseState mouse = Mouse.GetState();
 
         var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         // Базовое управление камерой
-        var speed = 500f / _currentZoom;
-        var moveDir = Vector2.Zero;
+        float speed = 500f / _currentZoom;
+        Vector2 moveDir = Vector2.Zero;
 
-        if (keyboard.IsKeyDown(Keys.W)) moveDir.Y -= 1;
-        if (keyboard.IsKeyDown(Keys.S)) moveDir.Y += 1;
-        if (keyboard.IsKeyDown(Keys.A)) moveDir.X -= 1;
-        if (keyboard.IsKeyDown(Keys.D)) moveDir.X += 1;
+        if (keyboard.IsKeyDown(Keys.W))
+        {
+            moveDir.Y -= 1;
+        }
+
+        if (keyboard.IsKeyDown(Keys.S))
+        {
+            moveDir.Y += 1;
+        }
+
+        if (keyboard.IsKeyDown(Keys.A))
+        {
+            moveDir.X -= 1;
+        }
+
+        if (keyboard.IsKeyDown(Keys.D))
+        {
+            moveDir.X += 1;
+        }
 
         if (moveDir != Vector2.Zero)
         {
@@ -94,7 +118,7 @@ internal sealed class Camera(GraphicsDevice graphicsDevice)
             Move(moveDir * speed * dt);
         }
 
-        var scrollDelta = mouse.ScrollWheelValue - _previousScrollValue;
+        int scrollDelta = mouse.ScrollWheelValue - _previousScrollValue;
         if (scrollDelta != 0)
         {
             AdjustZoom(scrollDelta);
@@ -135,8 +159,8 @@ internal sealed class Camera(GraphicsDevice graphicsDevice)
 
     private void UpdateTransformationMatrix()
     {
-        var viewport = graphicsDevice.Viewport;
-        var zoom = MathF.Round(_currentZoom);
+        Viewport viewport = graphicsDevice.Viewport;
+        float zoom = MathF.Round(_currentZoom);
 
         var roundedPosition = new Vector2(
             MathF.Round(_currentPosition.X),
@@ -150,16 +174,16 @@ internal sealed class Camera(GraphicsDevice graphicsDevice)
 
     private void UpdateViewportBoundary()
     {
-        var deviceViewport = graphicsDevice.Viewport;
-        var topLeft = ScreenToWorld(Vector2.Zero);
-        var bottomRight = ScreenToWorld(new Vector2(deviceViewport.Width, deviceViewport.Height));
+        Viewport deviceViewport = graphicsDevice.Viewport;
+        Vector2 topLeft = ScreenToWorld(Vector2.Zero);
+        Vector2 bottomRight = ScreenToWorld(new Vector2(deviceViewport.Width, deviceViewport.Height));
 
         var width = (int)MathF.Ceiling(bottomRight.X - topLeft.X);
         var height = (int)MathF.Ceiling(bottomRight.Y - topLeft.Y);
         var x = (int)topLeft.X;
         var y = (int)topLeft.Y;
 
-        ref var viewport = ref _currentViewport;
+        ref CameraViewport viewport = ref _currentViewport;
         viewport.Left = x;
         viewport.Right = x + width;
         viewport.Top = y;

@@ -12,7 +12,7 @@ public sealed partial class AssetContext
         public static ComponentEnumerator Empty
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new();
+            get => new ComponentEnumerator();
         }
 
         public readonly IAssetComponent Current
@@ -51,18 +51,27 @@ public sealed partial class AssetContext
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _componentIds.Length;
+        public bool MoveNext()
+        {
+            return ++_index < _componentIds.Length;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly ComponentEnumerator GetEnumerator() => this;
+        public readonly ComponentEnumerator GetEnumerator()
+        {
+            return this;
+        }
 
         public readonly IAssetComponent[] ToArray()
         {
-            var ids = _componentIds;
+            ReadOnlySpan<ushort> ids = _componentIds;
 
-            if (ids.Length == 0) return [];
+            if (ids.Length == 0)
+            {
+                return [];
+            }
 
-            var array = ArrayUtils.Create<IAssetComponent>(ids.Length);
+            IAssetComponent[] array = ArrayUtils.Create<IAssetComponent>(ids.Length);
             for (var i = 0; i < ids.Length; i++)
             {
                 array[i] = _pools[ids[i]]!.Get(_assetId);

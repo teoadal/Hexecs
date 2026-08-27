@@ -35,7 +35,10 @@ public readonly struct AssetConfigurator
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly T Get<T>() where T : struct, IAssetComponent => ref _loader.Context.GetComponent<T>(_id);
+    public ref readonly T Get<T>() where T : struct, IAssetComponent
+    {
+        return ref _loader.Context.GetComponent<T>(_id);
+    }
 
     public void Set<T>(in T component)
         where T : struct, IAssetComponent
@@ -49,7 +52,7 @@ public readonly struct AssetConfigurator
         where TArray : struct, IAssetComponent, IArray<TItem>
         where TItem : struct
     {
-        var builder = Loader.RentBlockBuilder(blockBuilder);
+        AssetBlockBuilder<TArray, TItem> builder = Loader.RentBlockBuilder(blockBuilder);
         block(builder);
 
         Set(builder.Flush());

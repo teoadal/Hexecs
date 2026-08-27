@@ -21,7 +21,7 @@ public sealed class Dice(int? seed = null)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetNext()
     {
-        var seed = Interlocked.Exchange(ref _seed, 214013 * _seed + 2531011);
+        int seed = Interlocked.Exchange(ref _seed, 214013 * _seed + 2531011);
         return (seed >> 16) & 0x7FFF;
     }
 
@@ -33,16 +33,26 @@ public sealed class Dice(int? seed = null)
     /// <returns>Целое число в указанном диапазоне</returns>
     public int GetNext(int start, int end)
     {
-        if (start == end) return start;
-        if (end < start) (end, start) = (start, end);
+        if (start == end)
+        {
+            return start;
+        }
+
+        if (end < start)
+        {
+            (end, start) = (start, end);
+        }
 
         var maxValue = (uint)(end - start);
-        var value = (uint)GetNext() % maxValue;
+        uint value = (uint)GetNext() % maxValue;
         return (int)value + start;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public double GetNextDouble() => GetNext() / 32768.0;
+    public double GetNextDouble()
+    {
+        return GetNext() / 32768.0;
+    }
 
     #region Roll
 
@@ -51,7 +61,10 @@ public sealed class Dice(int? seed = null)
     /// </summary>
     /// <returns>true - успех, false - провал</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Roll() => GetNext(0, 100) > 50;
+    public bool Roll()
+    {
+        return GetNext(0, 100) > 50;
+    }
 
     /// <summary>
     /// Имитирует бросок кости с указанной вероятностью успеха.
@@ -61,7 +74,11 @@ public sealed class Dice(int? seed = null)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Roll(int success)
     {
-        if (success == 100) return true;
+        if (success == 100)
+        {
+            return true;
+        }
+
         return success > 0 && GetNext(0, 100) <= success;
     }
 

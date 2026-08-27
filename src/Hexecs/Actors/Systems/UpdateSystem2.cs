@@ -79,7 +79,17 @@ public abstract class UpdateSystem<T1, T2> : UpdateSystem, IParallelJob
         }
     }
 
-    protected abstract void Update(in ActorRef<T1, T2> actor, in WorldTime time);
+    protected virtual void Update(in ActorRef<T1, T2> actor, in WorldTime time)
+    {
+    }
+
+    protected virtual void Update(ActorFilter<T1, T2>.SkipTakeEnumerator batch, in WorldTime time)
+    {
+        foreach (ActorRef<T1, T2> actor in batch)
+        {
+            Update(in actor, in time);
+        }
+    }
 
     void IParallelJob.Execute(int workerIndex, int workersCount)
     {
@@ -92,12 +102,7 @@ public abstract class UpdateSystem<T1, T2> : UpdateSystem, IParallelJob
                 ? Filter.Skip(start)
                 : Filter.Skip(start, _currentBatchSize);
 
-            ref readonly WorldTime currentTime = ref _currentTime;
-
-            foreach (ActorRef<T1, T2> actor in batch)
-            {
-                Update(in actor, in currentTime);
-            }
+            Update(batch, _currentTime);
         }
     }
 

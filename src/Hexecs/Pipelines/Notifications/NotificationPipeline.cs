@@ -12,7 +12,7 @@ internal sealed class NotificationPipeline<TNotification> : INotificationHandler
 
     public void Handle(in TNotification notification)
     {
-        foreach (var handler in _handlers)
+        foreach (INotificationHandler<TNotification> handler in _handlers)
         {
             handler.Handle(in notification);
         }

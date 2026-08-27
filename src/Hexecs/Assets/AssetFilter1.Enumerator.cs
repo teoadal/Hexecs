@@ -5,7 +5,10 @@ namespace Hexecs.Assets;
 public sealed partial class AssetFilter<T1>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
 
     public ref struct Enumerator
     {
@@ -13,8 +16,8 @@ public sealed partial class AssetFilter<T1>
         {
             get
             {
-                var filter = _filter;
-                var (assetId, entry) = _enumerator.Current;
+                AssetFilter<T1> filter = _filter;
+                (uint assetId, Entry entry) = _enumerator.Current;
                 return new AssetRef<T1>(
                     filter.Context,
                     new AssetId(assetId),
@@ -39,9 +42,15 @@ public sealed partial class AssetFilter<T1>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => _enumerator.MoveNext();
+        public bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
     }
 }

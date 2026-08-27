@@ -11,10 +11,4 @@ internal static class WorldError
     {
         throw new Exception($"Actor context with id {id} isn't found");
     }
-    
-    [DoesNotReturn]
-    public static void InvalidState(WorldState currentState)
-    {
-        throw new Exception($"World has invalid state '{currentState}' for execute it");
-    }
 }

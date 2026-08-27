@@ -7,7 +7,11 @@ internal static class WorldDebug
         get;
         set
         {
-            if (field != null && field != value) Error.Raise("debug world already set");
+            if (field != null && field != value)
+            {
+                Error.Raise("debug world already set");
+            }
+
             field = value;
         }
     }

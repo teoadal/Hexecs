@@ -113,6 +113,18 @@ public sealed partial class ActorFilter<T1, T2> : IActorFilter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ComponentsAccess<T1> GetComponents1()
+    {
+        return _pool1.GetComponentAccess();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ComponentsAccess<T2> GetComponents2()
+    {
+        return _pool2.GetComponentAccess();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActorRef<T1, T2> GetRef(ActorId actorId)
     {
         if (!ContainsEntry(actorId.Value))

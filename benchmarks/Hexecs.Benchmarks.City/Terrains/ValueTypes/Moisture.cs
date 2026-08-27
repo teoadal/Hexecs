@@ -9,7 +9,7 @@ public readonly struct Moisture
     public static Moisture Default
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(Offset);
+        get => new Moisture(Offset);
     }
 
     public static Moisture FromValue(float value)
@@ -21,7 +21,10 @@ public readonly struct Moisture
     private const byte Offset = 100;
     private readonly byte _raw;
 
-    private Moisture(byte raw) => _raw = raw;
+    private Moisture(byte raw)
+    {
+        _raw = raw;
+    }
 
     public float Value
     {

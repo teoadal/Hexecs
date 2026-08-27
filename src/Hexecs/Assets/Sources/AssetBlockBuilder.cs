@@ -29,7 +29,7 @@ public sealed class AssetBlockBuilder<TArray, TItem>
 
     internal TArray Flush()
     {
-        var result = _blockBuilder(new ReadOnlyMemory<TItem>(_buffer, 0, _length));
+        TArray result = _blockBuilder(new ReadOnlyMemory<TItem>(_buffer, 0, _length));
 
         ArrayUtils.Clear(_buffer);
         _length = 0;

@@ -10,10 +10,9 @@ public struct InstanceData : IVertexType
     public Color Color; // Будет мапиться на COLOR0
 
     // Описываем разметку для GPU
-    public static readonly VertexDeclaration VertexDeclaration = new(
+    public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
         new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.Position, 1),
-        new VertexElement(16, VertexElementFormat.Color, VertexElementUsage.Color, 0)
-    );
+        new VertexElement(16, VertexElementFormat.Color, VertexElementUsage.Color, 0));
 
     VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 }

@@ -8,7 +8,7 @@ namespace Hexecs.Benchmarks.Map.Utils.Sprites;
 internal abstract class SpriteAtlas<TKey> : IDisposable
     where TKey : struct
 {
-    private readonly Dictionary<TKey, Sprite> _sprites = new();
+    private readonly Dictionary<TKey, Sprite> _sprites = new Dictionary<TKey, Sprite>();
     private readonly Texture2D _texture;
 
     private readonly int _tileSize;
@@ -27,8 +27,8 @@ internal abstract class SpriteAtlas<TKey> : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var atlasKey = CreateKey(in key);
-        ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(_sprites, key, out var exists);
+        AtlasKey atlasKey = CreateKey(in key);
+        ref Sprite value = ref CollectionsMarshal.GetValueRefOrAddDefault(_sprites, key, out bool exists);
         if (exists)
         {
             return ref value;
@@ -42,8 +42,8 @@ internal abstract class SpriteAtlas<TKey> : IDisposable
 
     private Sprite CreateSprite(int column, int row)
     {
-        var x = column * (_tileSize + _tileSpacing);
-        var y = row * (_tileSize + _tileSpacing);
+        int x = column * (_tileSize + _tileSpacing);
+        int y = row * (_tileSize + _tileSpacing);
         var sourceRect = new Rectangle(x, y, _tileSize, _tileSize);
 
         return new Sprite(_texture, sourceRect);
@@ -51,7 +51,11 @@ internal abstract class SpriteAtlas<TKey> : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         _sprites.Clear();

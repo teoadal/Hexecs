@@ -4,7 +4,7 @@ namespace Hexecs.Assets.Loggers;
 
 internal sealed class AssetIdLogWriter : ILogValueWriter<AssetId>
 {
-    public static readonly AssetIdLogWriter Instance = new();
+    public static readonly AssetIdLogWriter Instance = new AssetIdLogWriter();
 
     private AssetIdLogWriter()
     {
@@ -18,7 +18,7 @@ internal sealed class AssetIdLogWriter : ILogValueWriter<AssetId>
         }
         else
         {
-            if (AssetMarshal.TryGetDebugContext(out var context))
+            if (AssetMarshal.TryGetDebugContext(out AssetContext? context))
             {
                 context.GetDescription(asset, ref stringBuilder);
             }

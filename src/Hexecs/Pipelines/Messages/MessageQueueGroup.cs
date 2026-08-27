@@ -6,7 +6,7 @@ internal sealed class MessageQueueGroup(string group, IMessageQueue[] queues) : 
 
     public void Execute()
     {
-        foreach (var queue in queues)
+        foreach (IMessageQueue queue in queues)
         {
             queue.Execute();
         }

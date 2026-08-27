@@ -5,7 +5,7 @@ namespace Hexecs.Benchmarks.Map.Terrains.ValueTypes;
 public readonly struct Elevation
 {
     public static Elevation Default => FromValue(10);
-    
+
     public static Elevation FromValue(int value)
     {
         var raw = (byte)Math.Clamp(value + Offset, 0, 255);
@@ -15,13 +15,16 @@ public readonly struct Elevation
     public static Elevation SeaLevel
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(Offset);
+        get => new Elevation(Offset);
     }
 
     private const byte Offset = 100; // sea level
     private readonly byte _raw;
 
-    private Elevation(byte raw) => _raw = raw;
+    private Elevation(byte raw)
+    {
+        _raw = raw;
+    }
 
     public int Value
     {
@@ -53,5 +56,8 @@ public readonly struct Elevation
         get => _raw == Offset;
     }
 
-    public override string ToString() => $"{Value}m";
+    public override string ToString()
+    {
+        return $"{Value}m";
+    }
 }

@@ -39,12 +39,18 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsEnabled(LogLevel level) => level >= _minLevel;
+    public bool IsEnabled(LogLevel level)
+    {
+        return level >= _minLevel;
+    }
 
     [SkipLocalsInit]
     public void Write(LogLevel level, string context, string template)
     {
-        if (!IsEnabled(level)) return;
+        if (!IsEnabled(level))
+        {
+            return;
+        }
 
         var sb = new ValueStringBuilder(stackalloc char[512]);
 
@@ -56,14 +62,17 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
     [SkipLocalsInit]
     public void Write<T1>(LogLevel level, string context, string template, T1 arg1)
     {
-        if (!IsEnabled(level)) return;
+        if (!IsEnabled(level))
+        {
+            return;
+        }
 
-        var segments = _templates.GetOrAdd(template, CreateTemplate);
+        TemplateSegment[] segments = _templates.GetOrAdd(template, CreateTemplate);
         var sb = new ValueStringBuilder(stackalloc char[512]);
 
         BeginWrite(level, context, ref sb);
 
-        foreach (ref var segment in segments.AsSpan())
+        foreach (ref TemplateSegment segment in segments.AsSpan())
         {
             if (segment.IsArgument)
             {
@@ -89,14 +98,17 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
     [SkipLocalsInit]
     public void Write<T1, T2>(LogLevel level, string context, string template, T1 arg1, T2 arg2)
     {
-        if (!IsEnabled(level)) return;
+        if (!IsEnabled(level))
+        {
+            return;
+        }
 
-        var segments = _templates.GetOrAdd(template, CreateTemplate);
+        TemplateSegment[] segments = _templates.GetOrAdd(template, CreateTemplate);
         var sb = new ValueStringBuilder(stackalloc char[512]);
 
         BeginWrite(level, context, ref sb);
 
-        foreach (ref var segment in segments.AsSpan())
+        foreach (ref TemplateSegment segment in segments.AsSpan())
         {
             if (segment.IsArgument)
             {
@@ -125,14 +137,17 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
     [SkipLocalsInit]
     public void Write<T1, T2, T3>(LogLevel level, string context, string template, T1 arg1, T2 arg2, T3 arg3)
     {
-        if (!IsEnabled(level)) return;
+        if (!IsEnabled(level))
+        {
+            return;
+        }
 
-        var segments = _templates.GetOrAdd(template, CreateTemplate);
+        TemplateSegment[] segments = _templates.GetOrAdd(template, CreateTemplate);
         var sb = new ValueStringBuilder(stackalloc char[512]);
 
         BeginWrite(level, context, ref sb);
 
-        foreach (ref var segment in segments.AsSpan())
+        foreach (ref TemplateSegment segment in segments.AsSpan())
         {
             if (segment.IsArgument)
             {
@@ -167,14 +182,17 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
         string context, string template,
         T1 arg1, T2 arg2, T3 arg3, T4 arg4)
     {
-        if (!IsEnabled(level)) return;
+        if (!IsEnabled(level))
+        {
+            return;
+        }
 
-        var segments = _templates.GetOrAdd(template, CreateTemplate);
+        TemplateSegment[] segments = _templates.GetOrAdd(template, CreateTemplate);
         var sb = new ValueStringBuilder(stackalloc char[512]);
 
         BeginWrite(level, context, ref sb);
 
-        foreach (ref var segment in segments.AsSpan())
+        foreach (ref TemplateSegment segment in segments.AsSpan())
         {
             if (segment.IsArgument)
             {
@@ -211,14 +229,17 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
         string context, string template,
         T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
     {
-        if (!IsEnabled(level)) return;
+        if (!IsEnabled(level))
+        {
+            return;
+        }
 
-        var segments = _templates.GetOrAdd(template, CreateTemplate);
+        TemplateSegment[] segments = _templates.GetOrAdd(template, CreateTemplate);
         var sb = new ValueStringBuilder(stackalloc char[512]);
 
         BeginWrite(level, context, ref sb);
 
-        foreach (ref var segment in segments.AsSpan())
+        foreach (ref TemplateSegment segment in segments.AsSpan())
         {
             if (segment.IsArgument)
             {
@@ -281,7 +302,7 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteValueWriter<T>(ref ValueStringBuilder sb, ref TemplateSegment segment, T value)
     {
-        ref var writer = ref segment.Writer;
+        ref ILogValueWriter? writer = ref segment.Writer;
         writer ??= GetValueWriter<T>();
 
         Unsafe
@@ -300,15 +321,18 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
 
     private ILogValueWriter<T> GetValueWriter<T>()
     {
-        var valueType = typeof(T);
-        if (_valueWriters.TryGetValue(valueType, out var existsWriter))
+        Type valueType = typeof(T);
+        if (_valueWriters.TryGetValue(valueType, out ILogValueWriter? existsWriter))
         {
             return Unsafe.As<ILogValueWriter<T>>(existsWriter);
         }
 
-        foreach (var valueWriterFactory in _logValueWriterFactories)
+        foreach (ILogValueWriterFactory valueWriterFactory in _logValueWriterFactories)
         {
-            if (!valueWriterFactory.TryCreateWriter<T>(out var createdWriter)) continue;
+            if (!valueWriterFactory.TryCreateWriter<T>(out ILogValueWriter<T> createdWriter))
+            {
+                continue;
+            }
 
             _valueWriters.TryAdd(valueType, createdWriter);
             return createdWriter;
@@ -321,7 +345,7 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
 
     private static TemplateSegment[] CreateTemplate(string template)
     {
-        var segments = Interlocked.Exchange(ref _segmentBuffer, null) ?? [];
+        List<TemplateSegment> segments = Interlocked.Exchange(ref _segmentBuffer, null) ?? [];
 
         var segmentLength = 0;
         var segmentStartIndex = 0;
@@ -329,17 +353,17 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
 
         for (var i = 0; i < template.Length; i++)
         {
-            var ch = template[i];
+            char ch = template[i];
             switch (ch)
             {
                 case '{':
-                    var textValue = template.AsMemory(segmentStartIndex, segmentLength);
+                    ReadOnlyMemory<char> textValue = template.AsMemory(segmentStartIndex, segmentLength);
                     segments.Add(new TemplateSegment(0, textValue));
                     segmentStartIndex = i + 1;
                     segmentLength = 0;
                     continue;
                 case '}':
-                    var argumentValue = template.AsMemory(segmentStartIndex, segmentLength);
+                    ReadOnlyMemory<char> argumentValue = template.AsMemory(segmentStartIndex, segmentLength);
                     segments.Add(new TemplateSegment(segmentIndex++, argumentValue));
                     segmentStartIndex = i + 1;
                     segmentLength = 0;
@@ -354,7 +378,7 @@ internal sealed class TextSink : ILogSink, IAsyncDisposable
             segments.Add(new TemplateSegment(0, template.AsMemory(segmentStartIndex, segmentLength)));
         }
 
-        var result = segments.ToArray();
+        TemplateSegment[] result = segments.ToArray();
 
         segments.Clear();
         Interlocked.Exchange(ref _segmentBuffer, segments);

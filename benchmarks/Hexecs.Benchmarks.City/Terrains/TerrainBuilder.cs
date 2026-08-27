@@ -7,7 +7,7 @@ internal sealed class TerrainBuilder : IActorBuilder<TerrainAsset>
 {
     public void Build(in Actor actor, in AssetRef<TerrainAsset> asset, Args args)
     {
-        ref readonly var assetData = ref asset.Component1;
+        ref readonly TerrainAsset assetData = ref asset.Component1;
 
         actor.Add(new Terrain
         {

@@ -18,6 +18,12 @@ public readonly struct ActorId : IEquatable<ActorId>
     /// </summary>
     internal const uint EmptyId = 0;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ActorId Unsafe(uint actorId)
+    {
+        return new ActorId(actorId);
+    }
+
     /// <summary>
     /// Пустой идентификатор актёра, используемый по умолчанию.
     /// </summary>

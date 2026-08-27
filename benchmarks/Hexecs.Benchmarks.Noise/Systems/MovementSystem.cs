@@ -10,30 +10,28 @@ public sealed class MovementSystem(
     ActorContext context,
     IParallelWorker worker,
     int width,
-    int height
-) : UpdateSystem<Position, Velocity>(context, parallelWorker: worker)
+    int height) : UpdateSystem<Position, Velocity>(context, parallelWorker: worker)
 {
-    private readonly Vector2 _bounds = new(width, height);
+    private readonly Vector2 _bounds = new Vector2(width, height);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override void Update(
         in ActorRef<Position, Velocity> actor,
         in WorldTime time)
     {
-        ref var pos = ref actor.Component1;
-        ref var vel = ref actor.Component2;
+        ref Vector2 pos = ref actor.Component1.Value;
+        ref Vector2 vel = ref actor.Component2.Value;
 
-        pos.Value += vel.Value * time.DeltaTime;
+        pos += vel * time.DeltaTime;
 
         // Отскоки
-        if (pos.Value.X <= 0 || pos.Value.X >= _bounds.X)
+        if (pos.X <= 0 || pos.X >= _bounds.X)
         {
-            vel.Value.X *= -1;
+            vel.X *= -1;
         }
 
-        if (pos.Value.Y <= 0 || pos.Value.Y >= _bounds.Y)
+        if (pos.Y <= 0 || pos.Y >= _bounds.Y)
         {
-            vel.Value.Y *= -1;
+            vel.Y *= -1;
         }
     }
 }

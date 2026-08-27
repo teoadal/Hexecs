@@ -1,7 +1,9 @@
 using Hexecs.Actors;
 using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Noise.Components;
+using Hexecs.Utils;
 using Hexecs.Worlds;
+
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Hexecs.Benchmarks.Noise.Systems;
@@ -28,12 +30,12 @@ public sealed class RenderSystem : DrawSystem
         _instanceBuffer = new DynamicVertexBuffer(device, typeof(InstanceData), maxEntities, BufferUsage.WriteOnly);
 
         // 2. Геометрия одного инстанса (квадрат 1x1)
-        var vertices = new VertexPositionTexture[]
+        var vertices = new[]
         {
-            new(new Vector3(-1, -1, 0), new Vector2(0, 0)),
-            new(new Vector3(1, -1, 0), new Vector2(1, 0)),
-            new(new Vector3(-1, 1, 0), new Vector2(0, 1)),
-            new(new Vector3(1, 1, 0), new Vector2(1, 1))
+            new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 0)),
+            new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 0)),
+            new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 1)),
+            new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 1))
         };
         _geometryBuffer = new VertexBuffer(device, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
         _geometryBuffer.SetData(vertices);
@@ -45,10 +47,11 @@ public sealed class RenderSystem : DrawSystem
         _projection = Matrix.CreateOrthographicOffCenter(0, device.Viewport.Width, device.Viewport.Height, 0, 0, 1);
 
         // 4. Загрузка шейдера
-        var shaderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", "Instancing.mgfx");
+        string shaderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", "Instancing.mgfx");
+
         if (File.Exists(shaderPath))
         {
-            var bytecode = File.ReadAllBytes(shaderPath);
+            byte[] bytecode = File.ReadAllBytes(shaderPath);
             _shader = new Effect(device, bytecode);
         }
         else
@@ -59,17 +62,31 @@ public sealed class RenderSystem : DrawSystem
 
     public override void Draw(in WorldTime time)
     {
-        var count = _filter.Length;
-        if (count <= 0) return;
+        int count = _filter.Length;
+
+        if (count <= 0)
+        {
+            return;
+        }
+
+        ComponentsAccess<Position> positions = _filter.GetComponents1();
+        ComponentsAccess<CircleColor> colors = _filter.GetComponents2();
 
         var i = 0;
-        foreach (var actor in _filter)
-        {
-            if (i >= _hostBuffer.Length) break;
 
-            ref var data = ref _hostBuffer[i];
-            data.PositionScale = new Vector4(actor.Component1.Value.X, actor.Component1.Value.Y, 4.0f, 0f);
-            data.Color = actor.Component2.Value;
+        foreach (uint actorIdRaw in _filter.Keys)
+        {
+            if (i >= _hostBuffer.Length)
+            {
+                break;
+            }
+
+            ref InstanceData data = ref _hostBuffer[i];
+
+            Vector2 position = positions[actorIdRaw].Value;
+
+            data.PositionScale = new Vector4(position.X, position.Y, 4.0f, 0f);
+            data.Color = colors[actorIdRaw].Value;
             i++;
         }
 
@@ -84,11 +101,10 @@ public sealed class RenderSystem : DrawSystem
 
             _device.SetVertexBuffers(
                 new VertexBufferBinding(_geometryBuffer, 0, 0),
-                new VertexBufferBinding(_instanceBuffer, 0, 1)
-            );
+                new VertexBufferBinding(_instanceBuffer, 0, 1));
             _device.Indices = _indexBuffer;
 
-            foreach (var pass in _shader.CurrentTechnique.Passes)
+            foreach (EffectPass pass in _shader.CurrentTechnique.Passes)
             {
                 pass.Apply();
                 _device.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0, 2, i);

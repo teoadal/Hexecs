@@ -29,6 +29,7 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <summary>
     /// Цикл обновления
     /// </summary>
+
     // ReSharper disable once ConvertToAutoPropertyWhenPossible
     public int Cycle
     {
@@ -41,16 +42,6 @@ public sealed class World : IDependencyProvider, IDisposable
     /// </summary>
     public readonly Dice Dice;
 
-    /// <summary>
-    /// Состояние мира
-    /// </summary>
-    // ReSharper disable once ConvertToAutoProperty
-    public WorldState State
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _state;
-    }
-
     public readonly ValueService Values;
 
     private ActorContext?[] _actorContexts = new ActorContext?[4];
@@ -62,7 +53,6 @@ public sealed class World : IDependencyProvider, IDisposable
     private long _previousDraw;
     private long _previousUpdate;
     private readonly long _startTime;
-    private WorldState _state;
 
     internal World(
         ConfigurationService configurationService,
@@ -83,15 +73,13 @@ public sealed class World : IDependencyProvider, IDisposable
         _services.Add(DependencyKey.First(typeof(ValueService)), valueService);
         _services.Add(DependencyKey.First(typeof(World)), this);
 
-        var time = Environment.TickCount64;
+        long time = Environment.TickCount64;
         _previousDraw = time;
         _previousUpdate = time;
         _startTime = time;
 
         Actors = CreateActorContextImpl(true, defaultActorContextBuilder);
         _services.Add(DependencyKey.First(typeof(ActorContext)), Actors);
-
-        _state = WorldState.None;
     }
 
     /// <summary>
@@ -112,7 +100,7 @@ public sealed class World : IDependencyProvider, IDisposable
     {
         _services.Dispose();
 
-        foreach (var context in _actorContexts)
+        foreach (ActorContext? context in _actorContexts)
         {
             context?.Clear();
         }
@@ -120,7 +108,10 @@ public sealed class World : IDependencyProvider, IDisposable
         ArrayUtils.Clear(_actorContexts);
     }
 
-    public void Draw(TimeSpan elapsed, TimeSpan total) => Draw(new WorldTime(_cycle, elapsed, total));
+    public void Draw(TimeSpan elapsed, TimeSpan total)
+    {
+        Draw(new WorldTime(_cycle, elapsed, total));
+    }
 
     /// <summary>
     /// Рисует мир, в текущем цикле игрового времени.
@@ -132,24 +123,13 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <exception cref="Exception">Если уже запущен цикл обновления</exception>
     public void Draw(WorldTime? time = null)
     {
-#if NET9_0_OR_GREATER
-        var state = Interlocked.CompareExchange(ref _state, WorldState.Draw, WorldState.None);
-#else
-        var state = (WorldState)Interlocked.CompareExchange(
-            ref Unsafe.As<WorldState, int>(ref _state),
-            (int)WorldState.Draw,
-            (int)WorldState.None);
-#endif
+        long now = Environment.TickCount64;
 
-        if (state != WorldState.None) WorldError.InvalidState(state);
-
-        var now = Environment.TickCount64;
-
-        var worldTime = time ?? new WorldTime(_cycle, now - _previousDraw, now - _startTime);
+        WorldTime worldTime = time ?? new WorldTime(_cycle, now - _previousDraw, now - _startTime);
 
         try
         {
-            foreach (var actorContext in _actorContexts)
+            foreach (ActorContext? actorContext in _actorContexts)
             {
                 actorContext?.Draw(worldTime);
             }
@@ -157,14 +137,6 @@ public sealed class World : IDependencyProvider, IDisposable
         finally
         {
             _previousDraw = now;
-
-#if NET9_0_OR_GREATER
-        Interlocked.Exchange(ref _state, WorldState.None);
-#else
-            Interlocked.Exchange(
-                ref Unsafe.As<WorldState, int>(ref _state),
-                (int)WorldState.None);
-#endif
         }
     }
 
@@ -176,11 +148,15 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <exception cref="Exception">Выбрасывается, если контекст с указанным идентификатором не найден.</exception>
     public ActorContext GetActorContext(int id)
     {
-        var instance = id < _actorContexts.Length
+        ActorContext? instance = id < _actorContexts.Length
             ? _actorContexts[id]
             : null;
 
-        if (instance == null) WorldError.ActorContextNotFound(id);
+        if (instance == null)
+        {
+            WorldError.ActorContextNotFound(id);
+        }
+
         return instance;
     }
 
@@ -190,7 +166,10 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <param name="contract">Тип запрашиваемого сервиса.</param>
     /// <returns>Экземпляр сервиса или null, если сервис не найден.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public object? GetService(Type contract) => _services.GetService(contract);
+    public object? GetService(Type contract)
+    {
+        return _services.GetService(contract);
+    }
 
     /// <summary>
     /// Возвращает сервис указанного типа из провайдера зависимостей.
@@ -198,7 +177,10 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <typeparam name="TService">Тип запрашиваемого сервиса.</typeparam>
     /// <returns>Экземпляр сервиса или null, если сервис не найден.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TService? GetService<TService>() where TService : class => _services.GetService<TService>();
+    public TService? GetService<TService>() where TService : class
+    {
+        return _services.GetService<TService>();
+    }
 
     /// <summary>
     /// Возвращает все сервисы указанного типа из провайдера зависимостей.
@@ -206,7 +188,10 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <typeparam name="TService">Тип запрашиваемых сервисов.</typeparam>
     /// <returns>Массив сервисов указанного типа.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TService[] GetServices<TService>() where TService : class => _services.GetServices<TService>();
+    public TService[] GetServices<TService>() where TService : class
+    {
+        return _services.GetServices<TService>();
+    }
 
     /// <summary>
     /// Удаляет указанный контекст актёров из мира.
@@ -217,11 +202,16 @@ public sealed class World : IDependencyProvider, IDisposable
     {
         for (var i = 0; i < _actorContexts.Length; i++)
         {
-            ref var exists = ref _actorContexts[i];
-            if (exists == null || exists.Id != context.Id) continue;
+            ref ActorContext? exists = ref _actorContexts[i];
+
+            if (exists == null || exists.Id != context.Id)
+            {
+                continue;
+            }
 
             context.Clear();
             exists = null;
+
             return true;
         }
 
@@ -236,16 +226,20 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <returns>Возвращает true, если контекст был найден; иначе false.</returns>
     public bool TryGetActorContext(int id, out ActorContext context)
     {
-        var instance = id < _actorContexts.Length
+        ActorContext? instance = id < _actorContexts.Length
             ? _actorContexts[id]
             : null;
 
         context = instance!;
+
         return instance != null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update(TimeSpan elapsed, TimeSpan total) => Update(new WorldTime(_cycle, elapsed, total));
+    public void Update(TimeSpan elapsed, TimeSpan total)
+    {
+        Update(new WorldTime(_cycle, elapsed, total));
+    }
 
     /// <summary>
     /// Обновляет мир, выполняя один цикл игрового времени.
@@ -257,25 +251,14 @@ public sealed class World : IDependencyProvider, IDisposable
     /// <exception cref="Exception">Если уже запущен цикл рисования</exception>
     public void Update(WorldTime? time = null)
     {
-#if NET9_0_OR_GREATER
-        var state = Interlocked.CompareExchange(ref _state, WorldState.Update, WorldState.None);
-#else
-        var state = (WorldState)Interlocked.CompareExchange(
-            ref Unsafe.As<WorldState, int>(ref _state),
-            (int)WorldState.Update,
-            (int)WorldState.None);
-#endif
-
-        if (state != WorldState.None) WorldError.InvalidState(state);
-
-        var now = Environment.TickCount64;
+        long now = Environment.TickCount64;
         _cycle++;
 
-        var worldTime = time ?? new WorldTime(_cycle, now - _previousUpdate, now - _startTime);
+        WorldTime worldTime = time ?? new WorldTime(_cycle, now - _previousUpdate, now - _startTime);
 
         try
         {
-            foreach (var actorContext in _actorContexts)
+            foreach (ActorContext? actorContext in _actorContexts)
             {
                 actorContext?.Update(worldTime);
             }
@@ -283,20 +266,12 @@ public sealed class World : IDependencyProvider, IDisposable
         finally
         {
             _previousUpdate = now;
-
-#if NET9_0_OR_GREATER
-        Interlocked.Exchange(ref _state, WorldState.None);
-#else
-            Interlocked.Exchange(
-                ref Unsafe.As<WorldState, int>(ref _state),
-                (int)WorldState.None);
-#endif
         }
     }
 
     private ActorContext CreateActorContextImpl(bool isDefault, Action<ActorContextBuilder> context)
     {
-        var id = Interlocked.Increment(ref _nextActorContextId);
+        int id = Interlocked.Increment(ref _nextActorContextId);
 
         var builder = new ActorContextBuilder(
             isDefault,
@@ -306,7 +281,7 @@ public sealed class World : IDependencyProvider, IDisposable
 
         context(builder);
 
-        var instance = builder.Build();
+        ActorContext instance = builder.Build();
         ArrayUtils.EnsureCapacity(ref _actorContexts, id);
         _actorContexts[id] = instance;
 

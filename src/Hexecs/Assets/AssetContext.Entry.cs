@@ -20,14 +20,23 @@ public sealed partial class AssetContext
 
         public void Add(ushort item)
         {
-            if (_length < InlineArraySize) _inlineArray[_length] = item;
-            else ArrayUtils.Insert(ref _array, _length - InlineArraySize, item);
+            if (_length < InlineArraySize)
+            {
+                _inlineArray[_length] = item;
+            }
+            else
+            {
+                ArrayUtils.Insert(ref _array, _length - InlineArraySize, item);
+            }
 
             _length++;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool Contains(ushort item) => IndexOf(item) > -1;
+        public readonly bool Contains(ushort item)
+        {
+            return IndexOf(item) > -1;
+        }
 
         public void Dispose()
         {
@@ -37,16 +46,19 @@ public sealed partial class AssetContext
 
         public EntryComponentEnumerator GetEnumerator()
         {
-            ref var reference = ref Unsafe.As<InlineItemArray, ushort>(ref _inlineArray);
-            var span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
+            ref ushort reference = ref Unsafe.As<InlineItemArray, ushort>(ref _inlineArray);
+            Span<ushort> span = MemoryMarshal.CreateSpan(ref reference, InlineArraySize);
             return new EntryComponentEnumerator(span, _array, _length);
         }
 
         public readonly int IndexOf(ushort item)
         {
-            if (_length == 0) return -1;
+            if (_length == 0)
+            {
+                return -1;
+            }
 
-            var inlineLength = Math.Min(_length, InlineArraySize);
+            int inlineLength = Math.Min(_length, InlineArraySize);
             for (var i = 0; i < inlineLength; i++)
             {
                 if (_inlineArray[i] == item)
@@ -55,12 +67,18 @@ public sealed partial class AssetContext
                 }
             }
 
-            if (_array == null || _array.Length == 0) return -1;
+            if (_array == null || _array.Length == 0)
+            {
+                return -1;
+            }
 
-            var span = _array.AsSpan(0, _length - InlineArraySize);
+            Span<ushort> span = _array.AsSpan(0, _length - InlineArraySize);
             for (var i = 0; i < span.Length; i++)
             {
-                if (span[i] == item) return InlineArraySize + i;
+                if (span[i] == item)
+                {
+                    return InlineArraySize + i;
+                }
             }
 
             return -1;
@@ -72,16 +90,25 @@ public sealed partial class AssetContext
             readonly get => index < InlineArraySize ? _inlineArray[index] : _array[index - InlineArraySize];
             set
             {
-                if (index < InlineArraySize) _inlineArray[index] = value;
-                else _array[index - InlineArraySize] = value;
+                if (index < InlineArraySize)
+                {
+                    _inlineArray[index] = value;
+                }
+                else
+                {
+                    _array[index - InlineArraySize] = value;
+                }
             }
         }
 
         public readonly ushort[] ToArray()
         {
-            if (_length == 0) return [];
+            if (_length == 0)
+            {
+                return [];
+            }
 
-            var result = ArrayUtils.Create<ushort>(_length);
+            ushort[] result = ArrayUtils.Create<ushort>(_length);
             for (var i = 0; i < _length; i++)
             {
                 result[i] = this[i];
@@ -115,7 +142,10 @@ public sealed partial class AssetContext
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext() => ++_index < _length;
+            public bool MoveNext()
+            {
+                return ++_index < _length;
+            }
         }
 
         [InlineArray(InlineArraySize)]

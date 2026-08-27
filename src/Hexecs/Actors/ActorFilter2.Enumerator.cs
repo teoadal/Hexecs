@@ -24,7 +24,7 @@ public sealed partial class ActorFilter<T1, T2>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var id = _ids[_index];
+                uint id = _ids[_index];
 
                 return new ActorRef<T1, T2>(
                     _context,
@@ -39,7 +39,7 @@ public sealed partial class ActorFilter<T1, T2>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _ids.Length;
         }
-        
+
         private readonly ActorContext _context;
         private readonly ActorFilter<T1, T2> _filter;
         private readonly ComponentsAccess<T1> _pool1;
@@ -56,19 +56,28 @@ public sealed partial class ActorFilter<T1, T2>
             _pool1 = filter._pool1.GetComponentAccess();
             _pool2 = filter._pool2.GetComponentAccess();
 
-            var count = filter._count;
+            int count = filter._count;
             _ids = filter._dense.AsSpan(0, count);
 
             _index = -1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose() => _filter.ProcessPostponedUpdates();
+        public void Dispose()
+        {
+            _filter.ProcessPostponedUpdates();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _ids.Length;
+        public bool MoveNext()
+        {
+            return ++_index < _ids.Length;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
     }
 }

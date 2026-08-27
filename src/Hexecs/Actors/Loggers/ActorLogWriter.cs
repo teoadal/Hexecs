@@ -4,7 +4,7 @@ namespace Hexecs.Actors.Loggers;
 
 internal sealed class ActorLogWriter : ILogValueWriter<Actor>
 {
-    public static readonly ActorLogWriter Instance = new();
+    public static readonly ActorLogWriter Instance = new ActorLogWriter();
 
     private ActorLogWriter()
     {

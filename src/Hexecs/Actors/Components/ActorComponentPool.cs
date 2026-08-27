@@ -38,7 +38,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     {
         Context = context;
 
-        var capacity = HashHelper.GetPrime(configuration.Capacity ?? Math.Max(context.Length, 16));
+        int capacity = HashHelper.GetPrime(configuration.Capacity ?? Math.Max(context.Length, 16));
 
         _sparse = new uint[capacity];
         _dense = new uint[capacity];
@@ -51,10 +51,10 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
 
     public ref T Add(ActorId ownerId, in T component)
     {
-        var result = TryAddEntry(ownerId.Value);
+        AddResult result = TryAddEntry(ownerId.Value);
         if (result.IsSuccess)
         {
-            ref var componentRef = ref result.Component;
+            ref T componentRef = ref result.Component;
             componentRef = component;
 
             Added?.Invoke(ownerId);
@@ -69,12 +69,12 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
 
     public void Clear()
     {
-        var dense = _dense;
-        var sparse = _sparse;
+        uint[] dense = _dense;
+        uint[] sparse = _sparse;
 
         if (_disposeHandler != null)
         {
-            foreach (ref var component in _values.AsSpan(0, _count))
+            foreach (ref T component in _values.AsSpan(0, _count))
             {
                 _disposeHandler(ref component);
             }
@@ -83,7 +83,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
         // Очищаем только те индексы в sparse, которые реально используются
         for (var i = 0; i < _count; i++)
         {
-            var key = dense[i];
+            uint key = dense[i];
             sparse[key] = 0;
         }
 
@@ -92,15 +92,18 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
 
     public ref T Clone(ActorId ownerId, ActorId cloneId)
     {
-        ref var ownerEntry = ref GetEntryRef(ownerId.Value);
-        if (Unsafe.IsNullRef(ref ownerEntry)) ActorError.ComponentNotFound<T>(ownerId);
+        ref T ownerEntry = ref GetEntryRef(ownerId.Value);
+        if (Unsafe.IsNullRef(ref ownerEntry))
+        {
+            ActorError.ComponentNotFound<T>(ownerId);
+        }
 
         if (_cloneHandler == null)
         {
             return ref Add(cloneId, in ownerEntry);
         }
 
-        var clone = _cloneHandler(in ownerEntry);
+        T clone = _cloneHandler(in ownerEntry);
         return ref Add(cloneId, Unsafe.AsRef(in clone));
     }
 
@@ -113,10 +116,10 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
 
     public ActorRef<T> First(ActorPredicate<T> predicate)
     {
-        var count = _count;
-        var keys = _dense;
-        var values = _values;
-        var context = Context;
+        int count = _count;
+        uint[] keys = _dense;
+        T[] values = _values;
+        ActorContext context = Context;
 
         for (var i = 0; i < count; i++)
         {
@@ -133,7 +136,7 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(ActorId ownerId)
     {
-        ref var entry = ref GetEntryRef(ownerId.Value);
+        ref T entry = ref GetEntryRef(ownerId.Value);
         if (!Unsafe.IsNullRef(ref entry))
         {
             return ref entry;
@@ -143,12 +146,15 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ComponentsAccess<T> GetComponentAccess() => new(_sparse, _values);
+    public ComponentsAccess<T> GetComponentAccess()
+    {
+        return new ComponentsAccess<T>(_sparse, _values);
+    }
 
     public ref T GetOrCreate(ActorId ownerId, out bool added, Func<ActorId, T>? factory = null)
     {
-        var result = UpsertEntry(ownerId.Value, out var exists);
-        ref var componentRef = ref result.Component;
+        AddResult result = UpsertEntry(ownerId.Value, out bool exists);
+        ref T componentRef = ref result.Component;
 
         if (exists)
         {
@@ -192,11 +198,14 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
 
     public bool TryAdd(ActorId ownerId, in T component)
     {
-        var result = TryAddEntry(ownerId.Value);
+        AddResult result = TryAddEntry(ownerId.Value);
 
-        if (!result.IsSuccess) return false;
+        if (!result.IsSuccess)
+        {
+            return false;
+        }
 
-        ref var componentRef = ref result.Component;
+        ref T componentRef = ref result.Component;
         componentRef = component;
 
         Added?.Invoke(ownerId);
@@ -206,12 +215,18 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T TryGet(uint ownerId) => ref GetEntryRef(ownerId);
+    public ref T TryGet(uint ownerId)
+    {
+        return ref GetEntryRef(ownerId);
+    }
 
     public bool Update(ActorId ownerId, in T component)
     {
-        ref var exists = ref GetEntryRef(ownerId.Value);
-        if (Unsafe.IsNullRef(ref exists)) return false;
+        ref T exists = ref GetEntryRef(ownerId.Value);
+        if (Unsafe.IsNullRef(ref exists))
+        {
+            return false;
+        }
 
         ComponentUpdating?.Invoke(ownerId, ref exists, in component);
 
@@ -227,9 +242,15 @@ internal sealed partial class ActorComponentPool<T> : IActorComponentPool
         get => Context;
     }
 
-    void IActorComponentPool.Clone(ActorId ownerId, ActorId cloneId) => Clone(ownerId, cloneId);
+    void IActorComponentPool.Clone(ActorId ownerId, ActorId cloneId)
+    {
+        Clone(ownerId, cloneId);
+    }
 
-    IActorComponent IActorComponentPool.Get(ActorId ownerId) => Get(ownerId);
+    IActorComponent IActorComponentPool.Get(ActorId ownerId)
+    {
+        return Get(ownerId);
+    }
 
     #endregion
 }

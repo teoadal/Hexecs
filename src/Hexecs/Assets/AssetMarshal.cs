@@ -5,19 +5,33 @@ namespace Hexecs.Assets;
 
 public static class AssetMarshal
 {
-    public static ushort GetComponentId<T>() where T : struct, IAssetComponent => AssetComponentType<T>.Id;
+    public static ushort GetComponentId<T>() where T : struct, IAssetComponent
+    {
+        return AssetComponentType<T>.Id;
+    }
 
-    public static ushort GetComponentId(Type componentType) => AssetComponentType.GetId(componentType);
+    public static ushort GetComponentId(Type componentType)
+    {
+        return AssetComponentType.GetId(componentType);
+    }
 
-    public static Type GetComponentType(ushort componentId) => AssetComponentType.GetType(componentId);
+    public static Type GetComponentType(ushort componentId)
+    {
+        return AssetComponentType.GetType(componentId);
+    }
 
     public static ref T GetMutableComponent<T>(in Asset asset)
         where T : struct, IAssetComponent
     {
-        var pool = asset.Context.GetComponentPool<T>();
+        AssetComponentPool<T>? pool = asset.Context.GetComponentPool<T>();
 
-        var assetId = asset.Id;
-        if (pool == null) AssetError.ComponentNotFound<T>(assetId);
+        AssetId assetId = asset.Id;
+
+        if (pool == null)
+        {
+            AssetError.ComponentNotFound<T>(assetId);
+        }
+
         return ref pool.Get(assetId);
     }
 
@@ -25,6 +39,7 @@ public static class AssetMarshal
     public static bool TryGetDebugContext([NotNullWhen(true)] out AssetContext? assetContext)
     {
         assetContext = WorldDebug.World?.Assets;
+
         return assetContext != null;
     }
 }

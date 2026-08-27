@@ -6,11 +6,17 @@ public sealed partial class ActorContext
 {
     public void AddChild(ActorId parentId, ActorId childId)
     {
-        if (parentId == childId) return;
+        if (parentId == childId)
+        {
+            return;
+        }
 
-        ref var childNode = ref GetOrAddComponent<ActorNodeComponent>(childId);
+        ref ActorNodeComponent childNode = ref GetOrAddComponent<ActorNodeComponent>(childId);
 
-        if (childNode.ParentId == parentId) return;
+        if (childNode.ParentId == parentId)
+        {
+            return;
+        }
 
         // Если у ребенка уже есть родитель — отсоединяем
         if (childNode.ParentId.IsNotEmpty)
@@ -18,17 +24,17 @@ public sealed partial class ActorContext
             RemoveChild(childNode.ParentId, childId);
         }
 
-        ref var parentNode = ref GetOrAddComponent<ActorNodeComponent>(parentId);
+        ref ActorNodeComponent parentNode = ref GetOrAddComponent<ActorNodeComponent>(parentId);
 
         // Вставляем ребенка в начало списка детей родителя
-        var oldFirstId = parentNode.FirstChildId;
+        ActorId oldFirstId = parentNode.FirstChildId;
         childNode.ParentId = parentId;
         childNode.NextSiblingId = oldFirstId;
         childNode.PrevSiblingId = ActorId.Empty;
 
         if (oldFirstId.IsNotEmpty)
         {
-            ref var oldFirstNode = ref GetComponent<ActorNodeComponent>(oldFirstId);
+            ref ActorNodeComponent oldFirstNode = ref GetComponent<ActorNodeComponent>(oldFirstId);
             oldFirstNode.PrevSiblingId = childId;
         }
 
@@ -38,7 +44,8 @@ public sealed partial class ActorContext
 
     public ChildrenEnumerator Children(ActorId parentId)
     {
-        ref var component = ref TryGetComponentRef<ActorNodeComponent>(parentId);
+        ref ActorNodeComponent component = ref TryGetComponentRef<ActorNodeComponent>(parentId);
+
         return Unsafe.IsNullRef(ref component) || component.FirstChildId.IsEmpty
             ? ChildrenEnumerator.Empty
             : new ChildrenEnumerator(this, component.FirstChildId, component.ChildCount);
@@ -46,12 +53,19 @@ public sealed partial class ActorContext
 
     public bool HasChild(ActorId parentId, ActorId childId)
     {
-        ref var component = ref TryGetComponentRef<ActorNodeComponent>(parentId);
-        if (Unsafe.IsNullRef(ref component) || component.FirstChildId.IsEmpty) return false;
+        ref ActorNodeComponent component = ref TryGetComponentRef<ActorNodeComponent>(parentId);
 
-        foreach (var child in Children(parentId))
+        if (Unsafe.IsNullRef(ref component) || component.FirstChildId.IsEmpty)
         {
-            if (child.Id == childId) return true;
+            return false;
+        }
+
+        foreach (Actor child in Children(parentId))
+        {
+            if (child.Id == childId)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -59,16 +73,24 @@ public sealed partial class ActorContext
 
     public bool RemoveChild(ActorId parentId, ActorId childId)
     {
-        ref var parentNode = ref TryGetComponentRef<ActorNodeComponent>(parentId);
-        if (Unsafe.IsNullRef(ref parentNode)) return false;
+        ref ActorNodeComponent parentNode = ref TryGetComponentRef<ActorNodeComponent>(parentId);
 
-        ref var childNode = ref TryGetComponentRef<ActorNodeComponent>(childId);
-        if (Unsafe.IsNullRef(ref childNode) || childNode.ParentId != parentId) return false;
+        if (Unsafe.IsNullRef(ref parentNode))
+        {
+            return false;
+        }
+
+        ref ActorNodeComponent childNode = ref TryGetComponentRef<ActorNodeComponent>(childId);
+
+        if (Unsafe.IsNullRef(ref childNode) || childNode.ParentId != parentId)
+        {
+            return false;
+        }
 
         // 1. Обновляем ссылку у предыдущего соседа или у родителя
         if (childNode.PrevSiblingId.IsNotEmpty)
         {
-            ref var prevNode = ref GetComponent<ActorNodeComponent>(childNode.PrevSiblingId);
+            ref ActorNodeComponent prevNode = ref GetComponent<ActorNodeComponent>(childNode.PrevSiblingId);
             prevNode.NextSiblingId = childNode.NextSiblingId;
         }
         else
@@ -80,7 +102,7 @@ public sealed partial class ActorContext
         // 2. Обновляем ссылку у следующего соседа
         if (childNode.NextSiblingId.IsNotEmpty)
         {
-            ref var nextNode = ref GetComponent<ActorNodeComponent>(childNode.NextSiblingId);
+            ref ActorNodeComponent nextNode = ref GetComponent<ActorNodeComponent>(childNode.NextSiblingId);
             nextNode.PrevSiblingId = childNode.PrevSiblingId;
         }
 
@@ -95,32 +117,41 @@ public sealed partial class ActorContext
 
     public bool TryGetParent(ActorId childId, out Actor parent)
     {
-        ref var component = ref TryGetComponentRef<ActorNodeComponent>(childId);
+        ref ActorNodeComponent component = ref TryGetComponentRef<ActorNodeComponent>(childId);
+
         if (!Unsafe.IsNullRef(ref component) && component.ParentId.IsNotEmpty)
         {
             parent = new Actor(this, component.ParentId);
+
             return true;
         }
 
         parent = Actor.Empty;
+
         return false;
     }
 
     private void OnNodeRemoving(ref ActorNodeComponent node)
     {
-        var parentId = node.ParentId;
+        ActorId parentId = node.ParentId;
+
         if (parentId.IsNotEmpty)
         {
-            ref var parentNode = ref TryGetComponentRef<ActorNodeComponent>(parentId);
+            ref ActorNodeComponent parentNode = ref TryGetComponentRef<ActorNodeComponent>(parentId);
+
             if (!Unsafe.IsNullRef(ref parentNode))
             {
-                var prevId = node.PrevSiblingId;
-                var nextId = node.NextSiblingId;
+                ActorId prevId = node.PrevSiblingId;
+                ActorId nextId = node.NextSiblingId;
 
                 if (prevId.IsNotEmpty)
                 {
-                    ref var prevNode = ref TryGetComponentRef<ActorNodeComponent>(prevId);
-                    if (!Unsafe.IsNullRef(ref prevNode)) prevNode.NextSiblingId = nextId;
+                    ref ActorNodeComponent prevNode = ref TryGetComponentRef<ActorNodeComponent>(prevId);
+
+                    if (!Unsafe.IsNullRef(ref prevNode))
+                    {
+                        prevNode.NextSiblingId = nextId;
+                    }
                 }
                 else
                 {
@@ -129,8 +160,12 @@ public sealed partial class ActorContext
 
                 if (nextId.IsNotEmpty)
                 {
-                    ref var nextNode = ref TryGetComponentRef<ActorNodeComponent>(nextId);
-                    if (!Unsafe.IsNullRef(ref nextNode)) nextNode.PrevSiblingId = prevId;
+                    ref ActorNodeComponent nextNode = ref TryGetComponentRef<ActorNodeComponent>(nextId);
+
+                    if (!Unsafe.IsNullRef(ref nextNode))
+                    {
+                        nextNode.PrevSiblingId = prevId;
+                    }
                 }
 
                 parentNode.ChildCount--;
@@ -138,13 +173,18 @@ public sealed partial class ActorContext
         }
 
         // 2. У всех детей обнуляем ссылки (теперь они сироты без соседей)
-        var currentChildId = node.FirstChildId;
+        ActorId currentChildId = node.FirstChildId;
+
         while (currentChildId.IsNotEmpty)
         {
-            ref var childNode = ref TryGetComponentRef<ActorNodeComponent>(currentChildId);
-            if (Unsafe.IsNullRef(ref childNode)) break;
+            ref ActorNodeComponent childNode = ref TryGetComponentRef<ActorNodeComponent>(currentChildId);
 
-            var nextSiblingId = childNode.NextSiblingId;
+            if (Unsafe.IsNullRef(ref childNode))
+            {
+                break;
+            }
+
+            ActorId nextSiblingId = childNode.NextSiblingId;
 
             childNode.ParentId = ActorId.Empty;
             childNode.PrevSiblingId = ActorId.Empty;

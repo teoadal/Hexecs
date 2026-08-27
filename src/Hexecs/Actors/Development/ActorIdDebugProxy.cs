@@ -6,7 +6,7 @@ internal sealed class ActorIdDebugProxy(ActorId actorId)
 {
     public IActorComponent[] Components => _components ??= actorId.IsEmpty
         ? []
-        : ActorMarshal.TryGetDebugContext(out var actorContext)
+        : ActorMarshal.TryGetDebugContext(out ActorContext? actorContext)
             ? actorContext.Components(actorId).ToArray()
             : [];
 

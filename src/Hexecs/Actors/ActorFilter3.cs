@@ -21,9 +21,9 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
     private readonly ConcurrentQueue<Operation> _postponedUpdates;
     private int _postponedReadersCount;
 #if NET9_0_OR_GREATER
-    private readonly Lock _postponedSyncLock = new();
+    private readonly Lock _postponedSyncLock = new Lock();
 #else
-    private readonly object _postponedSyncLock = new();
+    private readonly object _postponedSyncLock = new object();
 #endif
 
     private readonly ActorComponentPool<T1> _pool1;
@@ -38,7 +38,7 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
         Context = context;
 
         capacity = Math.Max(capacity, context.Length);
-        
+
         _sparse = new uint[capacity];
         _dense = new uint[capacity];
 
@@ -62,7 +62,7 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
         _pool3.ComponentAdded += OnAddedComponent3;
         _pool3.ComponentRemoving += OnRemovingComponent3;
 
-        foreach (var actor in context)
+        foreach (Actor actor in context)
         {
             OnAdded(actor.Id);
         }
@@ -73,19 +73,32 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
     #region Contains
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(ActorId actorId) => ContainsEntry(actorId.Value);
+    public bool Contains(ActorId actorId)
+    {
+        return ContainsEntry(actorId.Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in Actor actor) => ContainsEntry(actor.Id.Value);
+    public bool Contains(in Actor actor)
+    {
+        return ContainsEntry(actor.Id.Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Contains(in ActorRef<T1, T2, T3> actor) => ContainsEntry(actor.Id.Value);
+    public bool Contains(in ActorRef<T1, T2, T3> actor)
+    {
+        return ContainsEntry(actor.Id.Value);
+    }
 
     #endregion
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         ClearEntries();
@@ -109,7 +122,10 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActorRef<T1, T2, T3> GetRef(ActorId actorId)
     {
-        if (!ContainsEntry(actorId.Value)) ActorError.NotFound(actorId);
+        if (!ContainsEntry(actorId.Value))
+        {
+            ActorError.NotFound(actorId);
+        }
 
         return new ActorRef<T1, T2, T3>(
             Context,
@@ -121,9 +137,12 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
 
     public ActorRef<T1, T2, T3> GetRef(ActorPredicate<T1, T2, T3> predicate)
     {
-        foreach (var actor in this)
+        foreach (ActorRef<T1, T2, T3> actor in this)
         {
-            if (predicate(in actor)) return actor;
+            if (predicate(in actor))
+            {
+                return actor;
+            }
         }
 
         ActorError.ApplicableNotFound();
@@ -143,12 +162,15 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
 
         try
         {
-            var count = _count;
-            if (count == 0) return [];
+            int count = _count;
+            if (count == 0)
+            {
+                return [];
+            }
 
             var actors = new Actor[count];
-            var keys = _dense;
-            var ctx = Context;
+            uint[] keys = _dense;
+            ActorContext ctx = Context;
 
             for (var i = 0; i < count; i++)
             {
@@ -217,17 +239,32 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
         _postponedUpdates.Enqueue(Operation.Clear());
     }
 
-    private void OnRemoving(ActorId actorId) => Remove(actorId);
+    private void OnRemoving(ActorId actorId)
+    {
+        Remove(actorId);
+    }
 
-    private void OnRemovingComponent1(ActorId actorId, ref T1 component) => Remove(actorId);
+    private void OnRemovingComponent1(ActorId actorId, ref T1 component)
+    {
+        Remove(actorId);
+    }
 
-    private void OnRemovingComponent2(ActorId actorId, ref T2 component) => Remove(actorId);
+    private void OnRemovingComponent2(ActorId actorId, ref T2 component)
+    {
+        Remove(actorId);
+    }
 
-    private void OnRemovingComponent3(ActorId actorId, ref T3 component) => Remove(actorId);
+    private void OnRemovingComponent3(ActorId actorId, ref T3 component)
+    {
+        Remove(actorId);
+    }
 
     private void Add(ActorId actorId)
     {
-        if (Constraint != null && !Constraint.Applicable(actorId)) return;
+        if (Constraint != null && !Constraint.Applicable(actorId))
+        {
+            return;
+        }
 
         if (Volatile.Read(ref _postponedReadersCount) == 0)
         {
@@ -251,7 +288,10 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
 
     private void ProcessPostponedUpdates()
     {
-        if (Interlocked.Decrement(ref _postponedReadersCount) > 0) return;
+        if (Interlocked.Decrement(ref _postponedReadersCount) > 0)
+        {
+            return;
+        }
 
         var isClear = false;
 #if NET9_0_OR_GREATER
@@ -260,9 +300,12 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
         lock (_postponedSyncLock)
 #endif
         {
-            if (Volatile.Read(ref _postponedReadersCount) > 0) return;
+            if (Volatile.Read(ref _postponedReadersCount) > 0)
+            {
+                return;
+            }
 
-            while (_postponedUpdates.TryDequeue(out var operation))
+            while (_postponedUpdates.TryDequeue(out Operation operation))
             {
                 if (operation.IsClear)
                 {
@@ -282,7 +325,10 @@ public sealed partial class ActorFilter<T1, T2, T3> : IActorFilter
         }
 
         // Вызываем событие вне лока, чтобы избежать дедлоков
-        if (isClear) Cleared?.Invoke();
+        if (isClear)
+        {
+            Cleared?.Invoke();
+        }
     }
 
     private void Remove(ActorId actorId)

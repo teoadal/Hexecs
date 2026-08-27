@@ -34,15 +34,20 @@ internal sealed class ParallelSystem : IUpdateSystem, IHaveOrder, IParallelJob
     public bool TryGetSystem<T>([NotNullWhen(true)] out T? system)
         where T : class, IUpdateSystem
     {
-        foreach (var exists in _systems)
+        foreach (IUpdateSystem exists in _systems)
         {
-            if (exists is not T expected) continue;
+            if (exists is not T expected)
+            {
+                continue;
+            }
 
             system = expected;
+
             return true;
         }
 
         system = null;
+
         return false;
     }
 
@@ -56,14 +61,15 @@ internal sealed class ParallelSystem : IUpdateSystem, IHaveOrder, IParallelJob
     }
 
     ActorContext IUpdateSystem.Context => Context;
+
     ActorContext IParallelJob.Context => Context;
-    
+
     void IParallelJob.Execute(int workerIndex, int workersCount)
     {
-        var skip = workerIndex * _batchSize;
-        var batch = _systems.AsSpan(skip, _batchSize);
+        int skip = workerIndex * _batchSize;
+        Span<IUpdateSystem> batch = _systems.AsSpan(skip, _batchSize);
 
-        foreach (var updateSystem in batch)
+        foreach (IUpdateSystem updateSystem in batch)
         {
             updateSystem.Update(_currentTime);
         }

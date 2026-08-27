@@ -13,27 +13,33 @@ public sealed partial class ActorContextBuilder
         public NotificationBuilder<T> Add(INotificationHandler<T> handler)
         {
             _handlers.Add(new Entry<INotificationHandler<T>>(handler));
+
             return this;
         }
 
         public NotificationBuilder<T> Create(Func<ActorContext, INotificationHandler<T>> handler)
         {
             _handlers.Add(new Entry<INotificationHandler<T>>(handler));
+
             return this;
         }
 
-        internal Func<ActorContext, INotificationHandler> Build() => actorContext =>
+        internal Func<ActorContext, INotificationHandler> Build()
         {
-            INotificationHandler result = _handlers.Count == 1
-                ? new SimpleNotificationPipeline<T>(_handlers[0].Invoke(actorContext))
-                : new NotificationPipeline<T>(_handlers
-                    .Select((entry, ctx) => entry.Invoke(ctx), actorContext)
-                    .Order(OrderComparer<INotificationHandler<T>>.CreateInstance())
-                    .ToArray());
+            return actorContext =>
+            {
+                INotificationHandler result = _handlers.Count == 1
+                    ? new SimpleNotificationPipeline<T>(_handlers[0].Invoke(actorContext))
+                    : new NotificationPipeline<T>(
+                        _handlers
+                            .Select((entry, ctx) => entry.Invoke(ctx), actorContext)
+                            .Order(OrderComparer<INotificationHandler<T>>.CreateInstance())
+                            .ToArray());
 
-            _handlers.Clear();
+                _handlers.Clear();
 
-            return result;
-        };
+                return result;
+            };
+        }
     }
 }

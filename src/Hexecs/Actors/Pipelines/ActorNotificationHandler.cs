@@ -48,7 +48,10 @@ public abstract class ActorNotificationHandler<TNotification>(ActorContext conte
     public abstract void Handle(in TNotification notification);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType().Name);
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType().Name);
+    }
 }

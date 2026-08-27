@@ -90,6 +90,7 @@ public sealed partial class ActorContextBuilder
     public ActorContextBuilder AddBuilder(IActorBuilder builder)
     {
         _builders.Add(new Entry<IActorBuilder>(builder));
+
         return this;
     }
 
@@ -101,6 +102,7 @@ public sealed partial class ActorContextBuilder
     public ActorContextBuilder CreateBuilder(Func<ActorContext, IActorBuilder> builder)
     {
         _builders.Add(new Entry<IActorBuilder>(builder));
+
         return this;
     }
 
@@ -112,21 +114,21 @@ public sealed partial class ActorContextBuilder
     public ActorContextBuilder Capacity(int capacity)
     {
         _capacity = capacity;
+
         return this;
     }
 
     /// <summary>
     /// Настройка пула компонентов
     /// </summary>
-    public ActorContextBuilder ConfigureComponentPool<TComponent>(
-        Action<ActorComponentPoolBuilder<TComponent>> component)
+    public ActorContextBuilder ConfigureComponentPool<TComponent>(Action<ActorComponentPoolBuilder<TComponent>> component)
         where TComponent : struct, IActorComponent
     {
         var index = (int)ActorComponentType<TComponent>.Id;
 
         CollectionsMarshal.SetCount(_componentConfigurations, index + 1);
-        var span = CollectionsMarshal.AsSpan(_componentConfigurations);
-        ref var value = ref span[index];
+        Span<IActorComponentConfiguration?> span = CollectionsMarshal.AsSpan(_componentConfigurations);
+        ref IActorComponentConfiguration? value = ref span[index];
 
         if (value == null)
         {
@@ -139,7 +141,6 @@ public sealed partial class ActorContextBuilder
         {
             ActorError.ComponentPoolAlreadyConfigured(typeof(TComponent));
         }
-
 
         return this;
     }
@@ -201,8 +202,7 @@ public sealed partial class ActorContextBuilder
     /// <typeparam name="TCommand">Тип команды.</typeparam>
     /// <typeparam name="TResult">Тип результата команды.</typeparam>
     /// <param name="handler">Функция, создающая обработчик команды.</param>
-    public ActorContextBuilder CreateCommandHandler<TCommand, TResult>(
-        Func<ActorContext, ICommandHandler<TCommand, TResult>> handler)
+    public ActorContextBuilder CreateCommandHandler<TCommand, TResult>(Func<ActorContext, ICommandHandler<TCommand, TResult>> handler)
         where TCommand : struct, ICommand<TResult>
     {
         InsertCommandHandlerEntry(
@@ -218,11 +218,17 @@ public sealed partial class ActorContextBuilder
         var index = (int)commandTypeId;
 
         CollectionsMarshal.SetCount(_commands, index + 1);
-        var span = CollectionsMarshal.AsSpan(_commands);
-        ref var value = ref span[index];
+        Span<Entry<ICommandHandler>> span = CollectionsMarshal.AsSpan(_commands);
+        ref Entry<ICommandHandler> value = ref span[index];
 
-        if (value.IsEmpty) value = entry;
-        else PipelineError.CommandHandlerAlreadyRegistered(commandType);
+        if (value.IsEmpty)
+        {
+            value = entry;
+        }
+        else
+        {
+            PipelineError.CommandHandlerAlreadyRegistered(commandType);
+        }
     }
 
     #endregion
@@ -233,7 +239,10 @@ public sealed partial class ActorContextBuilder
     /// Регистрирует систему отрисовки актёров.
     /// </summary>
     /// <param name="system">Экземпляр системы актёров.</param>
-    public ActorContextBuilder AddDrawSystem(IDrawSystem system) => InsertDrawSystem(new Entry<IDrawSystem>(system));
+    public ActorContextBuilder AddDrawSystem(IDrawSystem system)
+    {
+        return InsertDrawSystem(new Entry<IDrawSystem>(system));
+    }
 
     /// <summary>
     /// Регистрирует функцию для создания системы отрисовки актёров с доступом к контексту актёров.
@@ -247,6 +256,7 @@ public sealed partial class ActorContextBuilder
     private ActorContextBuilder InsertDrawSystem(Entry<IDrawSystem> entry)
     {
         _drawSystems.Add(entry);
+
         return this;
     }
 
@@ -264,6 +274,7 @@ public sealed partial class ActorContextBuilder
         where TQuery : struct, IQuery<TResult>
     {
         InsertQueryHandlerEntry<TQuery, TResult>(new Entry<IQueryHandler>(handler));
+
         return this;
     }
 
@@ -273,11 +284,11 @@ public sealed partial class ActorContextBuilder
     /// <typeparam name="TQuery">Тип запроса.</typeparam>
     /// <typeparam name="TResult">Тип результата запроса.</typeparam>
     /// <param name="handler">Функция, создающая обработчик запроса.</param>
-    public ActorContextBuilder CreateQueryHandler<TQuery, TResult>(
-        Func<ActorContext, IQueryHandler<TQuery, TResult>> handler)
+    public ActorContextBuilder CreateQueryHandler<TQuery, TResult>(Func<ActorContext, IQueryHandler<TQuery, TResult>> handler)
         where TQuery : struct, IQuery<TResult>
     {
         InsertQueryHandlerEntry<TQuery, TResult>(new Entry<IQueryHandler>(handler));
+
         return this;
     }
 
@@ -287,11 +298,17 @@ public sealed partial class ActorContextBuilder
         var index = (int)QueryType<TQuery>.Id;
 
         CollectionsMarshal.SetCount(_queries, index + 1);
-        var span = CollectionsMarshal.AsSpan(_queries);
-        ref var value = ref span[index];
+        Span<Entry<IQueryHandler>> span = CollectionsMarshal.AsSpan(_queries);
+        ref Entry<IQueryHandler> value = ref span[index];
 
-        if (value.IsEmpty) value = entry;
-        else PipelineError.QueryHandlerAlreadyRegistered(typeof(TQuery));
+        if (value.IsEmpty)
+        {
+            value = entry;
+        }
+        else
+        {
+            PipelineError.QueryHandlerAlreadyRegistered(typeof(TQuery));
+        }
     }
 
     #endregion
@@ -304,7 +321,10 @@ public sealed partial class ActorContextBuilder
     /// <typeparam name="TMessage">Тип сообщения.</typeparam>
     /// <param name="handler">Экземпляр обработчика сообщения.</param>
     public ActorContextBuilder AddMessageHandler<TMessage>(IMessageHandler<TMessage> handler)
-        where TMessage : struct, IMessage => CreateMessageHandler(_ => handler);
+        where TMessage : struct, IMessage
+    {
+        return CreateMessageHandler(_ => handler);
+    }
 
     /// <summary>
     /// Регистрирует функцию для создания обработчика сообщения указанного типа с доступом к контексту актёров.
@@ -317,11 +337,17 @@ public sealed partial class ActorContextBuilder
         var index = (int)MessageType<TMessage>.Id;
 
         CollectionsMarshal.SetCount(_messages, index + 1);
-        var span = CollectionsMarshal.AsSpan(_messages);
-        ref var value = ref span[index];
+        Span<Func<ActorContext, IMessageQueue>?> span = CollectionsMarshal.AsSpan(_messages);
+        ref Func<ActorContext, IMessageQueue>? value = ref span[index];
 
-        if (value != null) PipelineError.MessageQueueAlreadyRegistered(typeof(TMessage));
-        else value = context => new MessageQueue<TMessage>(handler(context));
+        if (value != null)
+        {
+            PipelineError.MessageQueueAlreadyRegistered(typeof(TMessage));
+        }
+        else
+        {
+            value = context => new MessageQueue<TMessage>(handler(context));
+        }
 
         return this;
     }
@@ -342,8 +368,8 @@ public sealed partial class ActorContextBuilder
         var index = (int)NotificationType<TNotification>.Id;
 
         CollectionsMarshal.SetCount(_notifications, index + 1);
-        var span = CollectionsMarshal.AsSpan(_notifications);
-        ref var value = ref span[index];
+        Span<Entry<INotificationHandler>> span = CollectionsMarshal.AsSpan(_notifications);
+        ref Entry<INotificationHandler> value = ref span[index];
 
         if (value.IsEmpty)
         {
@@ -363,15 +389,14 @@ public sealed partial class ActorContextBuilder
     /// <typeparam name="TNotification">Тип уведомления.</typeparam>
     /// <param name="pipeline">Действие для конфигурации конвейера обработчиков уведомлений.</param>
     /// <returns>Этот же экземпляр ActorContextBuilder для цепочки вызовов.</returns>
-    public ActorContextBuilder CreateNotificationHandler<TNotification>(
-        Action<NotificationBuilder<TNotification>> pipeline)
+    public ActorContextBuilder CreateNotificationHandler<TNotification>(Action<NotificationBuilder<TNotification>> pipeline)
         where TNotification : struct, INotification
     {
         var index = (int)NotificationType<TNotification>.Id;
 
         CollectionsMarshal.SetCount(_notifications, index + 1);
-        var span = CollectionsMarshal.AsSpan(_notifications);
-        ref var value = ref span[index];
+        Span<Entry<INotificationHandler>> span = CollectionsMarshal.AsSpan(_notifications);
+        ref Entry<INotificationHandler> value = ref span[index];
 
         if (value.IsEmpty)
         {
@@ -420,6 +445,7 @@ public sealed partial class ActorContextBuilder
         parallelSystem(builder);
 
         _updateSystems.Add(new Entry<IUpdateSystem>(builder.Build()));
+
         return this;
     }
 
@@ -433,6 +459,7 @@ public sealed partial class ActorContextBuilder
         builder.Add(parallelSystems);
 
         _updateSystems.Add(new Entry<IUpdateSystem>(builder.Build()));
+
         return this;
     }
 
@@ -448,6 +475,7 @@ public sealed partial class ActorContextBuilder
     private ActorContextBuilder InsertUpdateSystem(Entry<IUpdateSystem> entry)
     {
         _updateSystems.Add(entry);
+
         return this;
     }
 
@@ -482,10 +510,11 @@ public sealed partial class ActorContextBuilder
         _messages.Clear();
 
         // 2. Builder'ы вряд ли зависят от систем, но скорее всего будут зависеть от шины данных.
-        instance.LoadBuilders(_builders
-            .Select(static (entry, ctx) => entry.Invoke(ctx), instance)
-            .Concat(World.GetServices<IActorBuilder>())
-            .Order(OrderComparer<IActorBuilder>.CreateInstance()));
+        instance.LoadBuilders(
+            _builders
+                .Select(static (entry, ctx) => entry.Invoke(ctx), instance)
+                .Concat(World.GetServices<IActorBuilder>())
+                .Order(OrderComparer<IActorBuilder>.CreateInstance()));
 
         _builders.Clear();
 

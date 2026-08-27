@@ -6,16 +6,16 @@ public ref struct ActorRelationEnumerator<T>
     public static ActorRelationEnumerator<T> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, ReadOnlySpan<int>.Empty, ActorId.Empty);
+        get => new ActorRelationEnumerator<T>(null!, ReadOnlySpan<int>.Empty, ActorId.Empty);
     }
 
     public readonly ActorRelation<T> Current
     {
         get
         {
-            var index = _indices[_currentIndex];
-            var key = _pool.Keys[index];
-            ref var reference = ref _pool.Values[index];
+            int index = _indices[_currentIndex];
+            ActorRelationPool<T>.RelationKey key = _pool.Keys[index];
+            ref T reference = ref _pool.Values[index];
             return new ActorRelation<T>(_pool.Context,
                 key.First == _subject ? key.Second : key.First,
                 ref reference);
@@ -42,7 +42,10 @@ public ref struct ActorRelationEnumerator<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActorRelationEnumerator<T> GetEnumerator() => this;
+    public readonly ActorRelationEnumerator<T> GetEnumerator()
+    {
+        return this;
+    }
 
     public void Dispose()
     {

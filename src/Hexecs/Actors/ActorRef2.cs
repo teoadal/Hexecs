@@ -65,10 +65,16 @@ public readonly ref struct ActorRef<T1, T2>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add<T>(in T component) where T : struct, IActorComponent => Context.AddComponent(Id, in component);
+    public void Add<T>(in T component) where T : struct, IActorComponent
+    {
+        Context.AddComponent(Id, in component);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddChild(in Actor child) => Context.AddChild(Id, child.Id);
+    public void AddChild(in Actor child)
+    {
+        Context.AddChild(Id, child.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T AddRelation<T>(in Actor relative, in T relation) where T : struct
@@ -77,22 +83,40 @@ public readonly ref struct ActorRef<T1, T2>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRef<T> AsRef<T>() where T : struct, IActorComponent => Context.GetActorRef<T>(Id);
+    public ActorRef<T> AsRef<T>() where T : struct, IActorComponent
+    {
+        return Context.GetActorRef<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorContext.ChildrenEnumerator Children() => Context.Children(Id);
+    public ActorContext.ChildrenEnumerator Children()
+    {
+        return Context.Children(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Destroy() => Context.DestroyActor(Id);
+    public bool Destroy()
+    {
+        return Context.DestroyActor(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get<T>() where T : struct, IActorComponent => ref Context.GetComponent<T>(Id);
+    public ref T Get<T>() where T : struct, IActorComponent
+    {
+        return ref Context.GetComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Asset GetAsset() => Context.GetBoundAsset(Id);
+    public Asset GetAsset()
+    {
+        return Context.GetBoundAsset(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetRelation<T>(in Actor relative) where T : struct => ref Context.GetRelation<T>(Id, relative.Id);
+    public ref T GetRelation<T>(in Actor relative) where T : struct
+    {
+        return ref Context.GetRelation<T>(Id, relative.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has<T>()
@@ -170,7 +194,7 @@ public readonly ref struct ActorRef<T1, T2>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAdd<T>(in T component) 
+    public bool TryAdd<T>(in T component)
         where T : struct, IActorComponent
     {
         return Context.TryAdd(Id, in component);
@@ -183,7 +207,7 @@ public readonly ref struct ActorRef<T1, T2>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T TryGetRef<T>() 
+    public ref T TryGetRef<T>()
         where T : struct, IActorComponent
     {
         return ref Context.TryGetComponentRef<T>(Id);
@@ -204,42 +228,72 @@ public readonly ref struct ActorRef<T1, T2>
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorRef<T1, T2> other) => Id == other.Id && Context == other.Context;
+    public bool Equals(ActorRef<T1, T2> other)
+    {
+        return Id == other.Id && Context == other.Context;
+    }
 
-    public override bool Equals(object? obj) => obj is Actor other && Id == other.Id;
+    public override bool Equals(object? obj)
+    {
+        return obj is Actor other && Id == other.Id;
+    }
 
-    public override int GetHashCode() => HashCode.Combine(Id);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in ActorRef<T1, T2> left, in ActorRef<T1, T2> right) => left.Equals(right);
+    public static bool operator ==(in ActorRef<T1, T2> left, in ActorRef<T1, T2> right)
+    {
+        return left.Equals(right);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in ActorRef<T1, T2> left, in ActorRef<T1, T2> right) => !left.Equals(right);
+    public static bool operator !=(in ActorRef<T1, T2> left, in ActorRef<T1, T2> right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in ActorRef<T1, T2> actor) => !actor.IsEmpty;
+    public static implicit operator bool(in ActorRef<T1, T2> actor)
+    {
+        return !actor.IsEmpty;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId(in ActorRef<T1, T2> actor) => actor.Id;
+    public static implicit operator ActorId(in ActorRef<T1, T2> actor)
+    {
+        return actor.Id;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor(in ActorRef<T1, T2> actor) => new(actor.Context, actor.Id);
+    public static implicit operator Actor(in ActorRef<T1, T2> actor)
+    {
+        return new Actor(actor.Context, actor.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorRef<T1>(in ActorRef<T1, T2> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component1);
+    public static implicit operator ActorRef<T1>(in ActorRef<T1, T2> actor)
+    {
+        return new ActorRef<T1>(
+            actor.Context,
+            actor.Id,
+            ref actor._component1);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorRef<T2>(in ActorRef<T1, T2> actor) => new(
-        actor.Context,
-        actor.Id,
-        ref actor._component2);
+    public static implicit operator ActorRef<T2>(in ActorRef<T1, T2> actor)
+    {
+        return new ActorRef<T2>(
+            actor.Context,
+            actor.Id,
+            ref actor._component2);
+    }
 
     #endregion
 }

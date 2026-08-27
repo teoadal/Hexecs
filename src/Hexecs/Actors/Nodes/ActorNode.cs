@@ -18,13 +18,18 @@ internal sealed class ActorNode(uint id)
 
     public void AddChild(ActorNode child)
     {
-        var existsParent = child._parent;
-        if (existsParent == this) ActorError.ChildAlreadyAdded(Id, child.Id);
+        ActorNode? existsParent = child._parent;
+
+        if (existsParent == this)
+        {
+            ActorError.ChildAlreadyAdded(Id, child.Id);
+        }
+
         if (existsParent != null && ArrayUtils.Remove(existsParent._children, this))
         {
             existsParent._length--;
         }
-        
+
         ArrayUtils.InsertOrCreate(ref _children, ArrayPool<ActorNode>.Shared, _length, child);
 
         child._parent = this;
@@ -33,14 +38,20 @@ internal sealed class ActorNode(uint id)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<ActorNode> AsSpan() => _children == null
-        ? Span<ActorNode>.Empty
-        : _children.AsSpan(0, _length);
-    
+    public Span<ActorNode> AsSpan()
+    {
+        return _children == null
+            ? Span<ActorNode>.Empty
+            : _children.AsSpan(0, _length);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<ActorNode> AsReadOnlySpan() => _children == null
-        ? ReadOnlySpan<ActorNode>.Empty
-        : _children.AsSpan(0, _length);
+    public ReadOnlySpan<ActorNode> AsReadOnlySpan()
+    {
+        return _children == null
+            ? ReadOnlySpan<ActorNode>.Empty
+            : _children.AsSpan(0, _length);
+    }
 
     public void Dispose()
     {
@@ -49,9 +60,12 @@ internal sealed class ActorNode(uint id)
             _parent._length--;
         }
 
-        if (_children == null) return;
+        if (_children == null)
+        {
+            return;
+        }
 
-        foreach (var child in AsSpan())
+        foreach (ActorNode child in AsSpan())
         {
             child._parent = null;
         }
@@ -64,12 +78,18 @@ internal sealed class ActorNode(uint id)
 
     public bool HasChild(uint childId)
     {
-        if (_children == null) return false;
+        if (_children == null)
+        {
+            return false;
+        }
 
         // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var childNode in AsReadOnlySpan())
+        foreach (ActorNode childNode in AsReadOnlySpan())
         {
-            if (childNode.Id == childId) return true;
+            if (childNode.Id == childId)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -77,17 +97,26 @@ internal sealed class ActorNode(uint id)
 
     public bool RemoveChild(uint childId)
     {
-        if (_children == null || _length == 0) return false;
+        if (_children == null || _length == 0)
+        {
+            return false;
+        }
 
-        var children = AsSpan();
+        Span<ActorNode> children = AsSpan();
+
         for (var i = 0; i < children.Length; i++)
         {
-            var childNode = _children[i];
-            if (childNode.Id != childId) continue;
+            ActorNode childNode = _children[i];
+
+            if (childNode.Id != childId)
+            {
+                continue;
+            }
 
             ArrayUtils.Cut(_children, i);
 
             childNode._parent = null;
+
             break;
         }
 

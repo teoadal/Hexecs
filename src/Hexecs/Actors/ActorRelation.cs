@@ -11,7 +11,7 @@ public readonly ref struct ActorRelation<T1>
     public ActorRelation<T1> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, ActorId.Empty, ref Unsafe.NullRef<T1>());
+        get => new ActorRelation<T1>(null!, ActorId.Empty, ref Unsafe.NullRef<T1>());
     }
 
     public readonly ActorId Id;
@@ -94,13 +94,22 @@ public readonly ref struct ActorRelation<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetRelation<T>(in Actor relative) where T : struct => ref Context.GetRelation<T>(Id, relative.Id);
+    public ref T GetRelation<T>(in Actor relative) where T : struct
+    {
+        return ref Context.GetRelation<T>(Id, relative.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IActorComponent => Context.HasComponent<T>(Id);
+    public bool Has<T>() where T : struct, IActorComponent
+    {
+        return Context.HasComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasRelation<T>(in Actor relative) where T : struct => Context.HasRelation<T>(Id, relative.Id);
+    public bool HasRelation<T>(in Actor relative) where T : struct
+    {
+        return Context.HasRelation<T>(Id, relative.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRef<T>(out ActorRef<T> actor) where T : struct, IActorComponent
@@ -109,10 +118,16 @@ public readonly ref struct ActorRelation<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActorRelationEnumerator<T> Relations<T>() where T : struct => Context.Relations<T>(Id);
+    public ActorRelationEnumerator<T> Relations<T>() where T : struct
+    {
+        return Context.Relations<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Remove<T>() where T : struct, IActorComponent => Context.RemoveComponent<T>(Id);
+    public bool Remove<T>() where T : struct, IActorComponent
+    {
+        return Context.RemoveComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Remove<T>(out T component) where T : struct, IActorComponent
@@ -121,10 +136,16 @@ public readonly ref struct ActorRelation<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveChild(in Actor child) => Context.RemoveChild(Id, child.Id);
+    public bool RemoveChild(in Actor child)
+    {
+        return Context.RemoveChild(Id, child.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveRelation<T>(in Actor relative) where T : struct => Context.RemoveRelation<T>(Id, relative.Id);
+    public bool RemoveRelation<T>(in Actor relative) where T : struct
+    {
+        return Context.RemoveRelation<T>(Id, relative.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool RemoveRelation<T>(in Actor relative, out T relation) where T : struct
@@ -133,10 +154,16 @@ public readonly ref struct ActorRelation<T1>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetAsset(out Asset asset) => Context.TryGetBoundAsset(Id, out asset);
+    public bool TryGetAsset(out Asset asset)
+    {
+        return Context.TryGetBoundAsset(Id, out asset);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetParent(out Actor parent) => Context.TryGetParent(Id, out parent);
+    public bool TryGetParent(out Actor parent)
+    {
+        return Context.TryGetParent(Id, out parent);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Update<T>(in T component, bool createIfNotExists = true) where T : struct, IActorComponent
@@ -147,10 +174,16 @@ public readonly ref struct ActorRelation<T1>
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor(in ActorRelation<T1> relation) => new(relation.Context, relation.Id);
+    public static implicit operator Actor(in ActorRelation<T1> relation)
+    {
+        return new Actor(relation.Context, relation.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in ActorRelation<T1> relation) => !relation.IsEmpty;
+    public static implicit operator bool(in ActorRelation<T1> relation)
+    {
+        return !relation.IsEmpty;
+    }
 
     #endregion
 }

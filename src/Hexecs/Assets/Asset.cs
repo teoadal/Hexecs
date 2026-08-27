@@ -16,7 +16,7 @@ public readonly struct Asset : IEquatable<Asset>
     public static Asset Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, AssetId.Empty);
+        get => new Asset(null!, AssetId.Empty);
     }
 
     /// <summary>
@@ -122,19 +122,28 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="other">Ассет для сравнения</param>
     /// <returns>Возвращает true, если ассеты равны; иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(Asset other) => Id == other.Id && ReferenceEquals(Context, other.Context);
+    public bool Equals(Asset other)
+    {
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
 
     /// <summary>
     /// Проверяет равенство с другим объектом.
     /// </summary>
     /// <param name="obj">Объект для сравнения</param>
     /// <returns>Возвращает true, если объект является ассетом и равен текущему; иначе false</returns>
-    public override bool Equals(object? obj) => obj is Asset other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        return obj is Asset other && Equals(other);
+    }
 
     /// <summary>
     /// Вычисляет хеш-код ассета на основе его идентификатора.
     /// </summary>
-    public override int GetHashCode() => HashCode.Combine(Id);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
 
     /// <summary>
     /// Оператор равенства для ассетов.
@@ -143,7 +152,10 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="right">Второй ассет</param>
     /// <returns>Возвращает true, если ассеты равны; иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in Asset left, in Asset right) => left.Equals(right);
+    public static bool operator ==(in Asset left, in Asset right)
+    {
+        return left.Equals(right);
+    }
 
     /// <summary>
     /// Оператор неравенства для ассетов.
@@ -152,7 +164,10 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="right">Второй ассет</param>
     /// <returns>Возвращает true, если ассеты не равны; иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in Asset left, in Asset right) => !left.Equals(right);
+    public static bool operator !=(in Asset left, in Asset right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
@@ -165,7 +180,10 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="asset">Ассет для преобразования</param>
     /// <returns>Возвращает true, если ассет не пустой; иначе false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in Asset asset) => !asset.IsEmpty;
+    public static implicit operator bool(in Asset asset)
+    {
+        return !asset.IsEmpty;
+    }
 
     /// <summary>
     /// Неявное преобразование ассета в идентификатор ассета.
@@ -173,7 +191,10 @@ public readonly struct Asset : IEquatable<Asset>
     /// <param name="asset">Ассет для преобразования</param>
     /// <returns>Идентификатор ассета</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId(in Asset asset) => asset.Id;
+    public static implicit operator AssetId(in Asset asset)
+    {
+        return asset.Id;
+    }
 
     #endregion
 }

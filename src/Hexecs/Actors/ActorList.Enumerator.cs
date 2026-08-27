@@ -9,14 +9,15 @@ public sealed partial class ActorList<T>
         public static Enumerator Empty
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new();
+            get => new Enumerator();
         }
 
         public readonly ActorRef<T> Current
         {
             get
             {
-                var id = _ids[_index];
+                ActorId id = _ids[_index];
+
                 return new ActorRef<T>(
                     context: _pool.Context,
                     id: id,
@@ -51,16 +52,23 @@ public sealed partial class ActorList<T>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_index < _ids.Length;
+        public bool MoveNext()
+        {
+            return ++_index < _ids.Length;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator()
+        {
+            return this;
+        }
 
         public Actor[] ToArray()
         {
             var count = 0;
-            var actors = ArrayUtils.Create<Actor>(_ids.Length);
-            foreach (var actor in this)
+            Actor[] actors = ArrayUtils.Create<Actor>(_ids.Length);
+
+            foreach (ActorRef<T> actor in this)
             {
                 actors[count++] = actor;
             }

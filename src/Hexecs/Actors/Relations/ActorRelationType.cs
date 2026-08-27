@@ -2,13 +2,13 @@
 
 internal static class ActorRelationType
 {
-    private static readonly Dictionary<Type, ushort> RelationTypes = new(128, ReferenceComparer<Type>.Instance);
+    private static readonly Dictionary<Type, ushort> RelationTypes = new Dictionary<Type, ushort>(128, ReferenceComparer<Type>.Instance);
 #if NET9_0_OR_GREATER
-    private static readonly Lock LockObj = new();
+    private static readonly Lock LockObj = new Lock();
 #else
-    private static readonly object LockObj = new();
+    private static readonly object LockObj = new object();
 #endif
-    private static ushort _nextId;
+    private static ushort NextId;
 
     public static ushort GetId(Type type)
     {
@@ -18,9 +18,12 @@ internal static class ActorRelationType
         lock (LockObj)
 #endif
         {
-            if (RelationTypes.TryGetValue(type, out var exists)) return exists;
+            if (RelationTypes.TryGetValue(type, out ushort exists))
+            {
+                return exists;
+            }
 
-            var componentTypeId = _nextId++;
+            ushort componentTypeId = NextId++;
             RelationTypes[type] = componentTypeId;
 
             return componentTypeId;
@@ -35,12 +38,16 @@ internal static class ActorRelationType
         lock (LockObj)
 #endif
         {
-            foreach (var (type, existsId) in RelationTypes)
+            foreach ((Type type, ushort existsId) in RelationTypes)
             {
-                if (existsId == id) return type;
+                if (existsId == id)
+                {
+                    return type;
+                }
             }
 
             ActorError.RelationTypeNotFound(id);
+
             return null;
         }
     }

@@ -41,20 +41,27 @@ public abstract class UpdateSystem<T1> : UpdateSystem, IParallelJob
     /// </summary>
     /// <param name="time">Время мира</param>
     /// <returns>Если возвращает false, то обновление не происходит</returns>
-    protected virtual bool BeforeUpdate(in WorldTime time) => true;
+    protected virtual bool BeforeUpdate(in WorldTime time)
+    {
+        return true;
+    }
 
     public sealed override void Update(in WorldTime time)
     {
         if (Enabled)
         {
-            var length = Filter.Length;
+            int length = Filter.Length;
+
             if (length > 0)
             {
-                if (!BeforeUpdate(in time)) return;
+                if (!BeforeUpdate(in time))
+                {
+                    return;
+                }
 
                 if (_parallelWorker == null)
                 {
-                    foreach (var actor in Filter)
+                    foreach (ActorRef<T1> actor in Filter)
                     {
                         Update(in actor, in time);
                     }
@@ -76,17 +83,18 @@ public abstract class UpdateSystem<T1> : UpdateSystem, IParallelJob
 
     void IParallelJob.Execute(int workerIndex, int workersCount)
     {
-        var start = workerIndex * _currentBatchSize;
-        var length = _currentLength;
+        int start = workerIndex * _currentBatchSize;
+        int length = _currentLength;
 
         if ((uint)start < (uint)length)
         {
-            var batch = workerIndex == workersCount
+            ActorFilter<T1>.SkipTakeEnumerator batch = workerIndex == workersCount
                 ? Filter.Skip(start)
                 : Filter.Skip(start, _currentBatchSize);
 
-            ref readonly var currentTime = ref _currentTime;
-            foreach (var actor in batch)
+            ref readonly WorldTime currentTime = ref _currentTime;
+
+            foreach (ActorRef<T1> actor in batch)
             {
                 Update(in actor, in currentTime);
             }

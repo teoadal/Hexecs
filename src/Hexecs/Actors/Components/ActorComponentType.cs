@@ -2,13 +2,13 @@
 
 internal static class ActorComponentType
 {
-    private static readonly Dictionary<Type, ushort> ComponentTypes = new(128, ReferenceComparer<Type>.Instance);
+    private static readonly Dictionary<Type, ushort> ComponentTypes = new Dictionary<Type, ushort>(128, ReferenceComparer<Type>.Instance);
 #if NET9_0_OR_GREATER
-    private static readonly Lock LockObj = new();
+    private static readonly Lock LockObj = new Lock();
 #else
-    private static readonly object LockObj = new();
+    private static readonly object LockObj = new object();
 #endif
-    private static ushort _nextId;
+    private static ushort NextId;
 
     /// <summary>
     /// Получает уникальный идентификатор для указанного типа компонента.
@@ -23,9 +23,12 @@ internal static class ActorComponentType
         lock (LockObj)
 #endif
         {
-            if (ComponentTypes.TryGetValue(type, out var exists)) return exists;
+            if (ComponentTypes.TryGetValue(type, out ushort exists))
+            {
+                return exists;
+            }
 
-            var componentTypeId = _nextId++;
+            ushort componentTypeId = NextId++;
             ComponentTypes[type] = componentTypeId;
 
             return componentTypeId;
@@ -46,12 +49,16 @@ internal static class ActorComponentType
         lock (LockObj)
 #endif
         {
-            foreach (var (type, existsId) in ComponentTypes)
+            foreach ((Type type, ushort existsId) in ComponentTypes)
             {
-                if (existsId == id) return type;
+                if (existsId == id)
+                {
+                    return type;
+                }
             }
 
             ActorError.ComponentTypeNotFound(id);
+
             return null;
         }
     }

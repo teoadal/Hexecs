@@ -55,7 +55,11 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         _actors.Clear();
@@ -70,36 +74,43 @@ public sealed class ActorDictionary<TKey, T1> : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        if (clearBefore) OnCleared();
+        if (clearBefore)
+        {
+            OnCleared();
+        }
 
-        var poolEnumerator = _pool.GetEnumerator();
+        ActorComponentPool<T1>.Enumerator poolEnumerator = _pool.GetEnumerator();
+
         while (poolEnumerator.MoveNext())
         {
-            var actor = poolEnumerator.Current;
+            ActorRef<T1> actor = poolEnumerator.Current;
             _actors.Add(_keyExtractor(actor.Component1), actor.Id);
         }
     }
 
     public ActorRef<T1> GetActorRef(TKey key)
     {
-        if (!_disposed && _actors.TryGetValue(key, out var actorId))
+        if (!_disposed && _actors.TryGetValue(key, out ActorId actorId))
         {
             return new ActorRef<T1>(Context, actorId, ref _pool.Get(actorId));
         }
 
         ActorError.KeyNotFound();
+
         return ActorRef<T1>.Empty;
     }
 
     public bool TryGetActorRef(TKey key, out ActorRef<T1> actor)
     {
-        if (!_disposed && _actors.TryGetValue(key, out var actorId))
+        if (!_disposed && _actors.TryGetValue(key, out ActorId actorId))
         {
             actor = new ActorRef<T1>(Context, actorId, ref _pool.Get(actorId));
+
             return true;
         }
 
         actor = ActorRef<T1>.Empty;
+
         return false;
     }
 

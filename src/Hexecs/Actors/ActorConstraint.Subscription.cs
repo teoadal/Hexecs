@@ -6,7 +6,7 @@ public sealed partial class ActorConstraint
 {
     /// <summary>
     /// Внутренняя структура, представляющая подписку на события пула компонентов.
-    /// Используется для отслеживания изменений в компонентах актёров 
+    /// Используется для отслеживания изменений в компонентах актёров
     /// и применения ограничений в реальном времени.
     /// </summary>
     private readonly struct Subscription : IComparable<Subscription>, IEquatable<Subscription>
@@ -97,7 +97,8 @@ public sealed partial class ActorConstraint
         /// <returns>Результат сравнения</returns>
         public int CompareTo(Subscription other)
         {
-            var componentIdComparison = _pool.Id.CompareTo(other._pool.Id);
+            int componentIdComparison = _pool.Id.CompareTo(other._pool.Id);
+
             return componentIdComparison != 0
                 ? componentIdComparison
                 : _include.CompareTo(other._include);
@@ -108,21 +109,30 @@ public sealed partial class ActorConstraint
         /// </summary>
         /// <param name="other">Подписка для сравнения</param>
         /// <returns>Возвращает true, если подписки равны; иначе false</returns>
-        public bool Equals(Subscription other) => _include == other._include && 
-                                                  _pool.Id == other._pool.Id;
+        public bool Equals(Subscription other)
+        {
+            return _include == other._include &&
+                _pool.Id == other._pool.Id;
+        }
 
         /// <summary>
         /// Определяет, равен ли указанный объект текущей подписке.
         /// </summary>
         /// <param name="obj">Объект для сравнения</param>
         /// <returns>Возвращает true, если объекты равны; иначе false</returns>
-        public override bool Equals(object? obj) => obj is Subscription other && Equals(other);
+        public override bool Equals(object? obj)
+        {
+            return obj is Subscription other && Equals(other);
+        }
 
         /// <summary>
         /// Возвращает хеш-код для текущей подписки.
         /// </summary>
         /// <returns>Хеш-код</returns>
-        public override int GetHashCode() => HashCode.Combine(_pool.Id, _include ? 2 : 3);
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_pool.Id, _include ? 2 : 3);
+        }
 
         #endregion
     }

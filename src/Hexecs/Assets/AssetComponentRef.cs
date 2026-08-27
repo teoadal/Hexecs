@@ -8,7 +8,7 @@ public readonly struct AssetComponentRef<T>
     public static AssetComponentRef<T> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new();
+        get => new AssetComponentRef<T>();
     }
 
     public bool IsEmpty
@@ -28,8 +28,14 @@ public readonly struct AssetComponentRef<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Unwrap() => ref _pool.GetByIndex(_index);
+    public ref T Unwrap()
+    {
+        return ref _pool.GetByIndex(_index);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in AssetComponentRef<T> componentRef) => !componentRef.IsEmpty;
+    public static implicit operator bool(in AssetComponentRef<T> componentRef)
+    {
+        return !componentRef.IsEmpty;
+    }
 }

@@ -24,7 +24,7 @@ public readonly struct ActorId : IEquatable<ActorId>
     public static ActorId Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(EmptyId);
+        get => new ActorId(EmptyId);
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public readonly struct ActorId : IEquatable<ActorId>
 
     public override string ToString()
     {
-        return ActorMarshal.TryGetDebugContext(out var context)
+        return ActorMarshal.TryGetDebugContext(out ActorContext? context)
             ? context.GetDescription(this)
             : IsEmpty
                 ? StringUtils.EmptyValue
@@ -83,36 +83,66 @@ public readonly struct ActorId : IEquatable<ActorId>
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorId other) => Value == other.Value;
+    public bool Equals(ActorId other)
+    {
+        return Value == other.Value;
+    }
 
-    public override bool Equals(object? obj) => obj is ActorId other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        return obj is ActorId other && Equals(other);
+    }
 
-    public override int GetHashCode() => HashCode.Combine(Value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in ActorId left, in ActorId right) => left.Value == right.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in ActorId left, in ActorId right) => left.Value != right.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator <(in ActorId left, in ActorId right) => left.Value < right.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator >(in ActorId left, in ActorId right) => left.Value > right.Value;
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator <=(in ActorId left, in ActorId right) => left.Value <= right.Value;
+    public static bool operator ==(in ActorId left, in ActorId right)
+    {
+        return left.Value == right.Value;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator >=(in ActorId left, in ActorId right) => left.Value >= right.Value;
+    public static bool operator !=(in ActorId left, in ActorId right)
+    {
+        return left.Value != right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(in ActorId left, in ActorId right)
+    {
+        return left.Value < right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(in ActorId left, in ActorId right)
+    {
+        return left.Value > right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <=(in ActorId left, in ActorId right)
+    {
+        return left.Value <= right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >=(in ActorId left, in ActorId right)
+    {
+        return left.Value >= right.Value;
+    }
 
     #endregion
 
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in ActorId actor) => actor.IsNotEmpty;
+    public static implicit operator bool(in ActorId actor)
+    {
+        return actor.IsNotEmpty;
+    }
 
     #endregion
 }

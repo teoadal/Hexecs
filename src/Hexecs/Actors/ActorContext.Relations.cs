@@ -6,9 +6,9 @@ public sealed partial class ActorContext
 {
     private IActorRelationPool?[] _relationPools;
 #if NET9_0_OR_GREATER
-    private readonly Lock _relationPoolLock = new();
+    private readonly Lock _relationPoolLock = new Lock();
 #else
-    private readonly object _relationPoolLock = new();
+    private readonly object _relationPoolLock = new object();
 #endif
 
     /// <summary>
@@ -23,15 +23,15 @@ public sealed partial class ActorContext
     public ref T AddRelation<T>(ActorId subject, ActorId relative, in T relation)
         where T : struct
     {
-        var relationPool = GetOrCreateRelationPool<T>();
-        ref var addResult = ref relationPool.Add(subject, relative, in relation);
+        ActorRelationPool<T> relationPool = GetOrCreateRelationPool<T>();
+        ref T addResult = ref relationPool.Add(subject, relative, in relation);
 
-        var relationId = ActorRelationType<T>.Id;
+        ushort relationId = ActorRelationType<T>.Id;
 
-        ref var subjectRelations = ref GetOrAddComponent(subject, ActorRelationComponent.Create);
+        ref ActorRelationComponent subjectRelations = ref GetOrAddComponent(subject, ActorRelationComponent.Create);
         subjectRelations.TryAdd(relationId);
 
-        ref var relativeRelations = ref GetOrAddComponent(relative, ActorRelationComponent.Create);
+        ref ActorRelationComponent relativeRelations = ref GetOrAddComponent(relative, ActorRelationComponent.Create);
         relativeRelations.TryAdd(relationId);
 
         return ref addResult;
@@ -47,8 +47,13 @@ public sealed partial class ActorContext
     /// <exception cref="Exception">Вызывается, если отношение не найдено.</exception>
     public ref T GetRelation<T>(ActorId subject, ActorId relative) where T : struct
     {
-        var pool = GetRelationPool<T>();
-        if (pool == null) ActorError.RelationNotFound<T>(subject, relative);
+        ActorRelationPool<T>? pool = GetRelationPool<T>();
+
+        if (pool == null)
+        {
+            ActorError.RelationNotFound<T>(subject, relative);
+        }
+
         return ref pool.Get(subject, relative);
     }
 
@@ -61,7 +66,8 @@ public sealed partial class ActorContext
     /// <returns>True, если отношение существует, иначе false.</returns>
     public bool HasRelation<T>(ActorId subject, ActorId relative) where T : struct
     {
-        var pool = GetRelationPool<T>();
+        ActorRelationPool<T>? pool = GetRelationPool<T>();
+
         return pool != null && pool.Has(subject, relative);
     }
 
@@ -73,7 +79,7 @@ public sealed partial class ActorContext
     /// <returns>Перечислитель отношений.</returns>
     public ActorRelationEnumerator<T> Relations<T>(ActorId subject) where T : struct
     {
-        var pool = GetRelationPool<T>();
+        ActorRelationPool<T>? pool = GetRelationPool<T>();
 
         // ReSharper disable once MergeConditionalExpression
         return pool == null
@@ -104,31 +110,35 @@ public sealed partial class ActorContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool RemoveRelation<T>(ActorId subject, ActorId relative, out T relation) where T : struct
     {
-        var pool = GetRelationPool<T>();
+        ActorRelationPool<T>? pool = GetRelationPool<T>();
+
         if (pool == null)
         {
             relation = default;
+
             return false;
         }
 
-        var removeResult = pool.Remove(subject, relative, out relation);
+        bool removeResult = pool.Remove(subject, relative, out relation);
+
         if (!removeResult)
         {
             relation = default;
+
             return false;
         }
 
-        var relationId = ActorRelationType<T>.Id;
+        ushort relationId = ActorRelationType<T>.Id;
 
         if (pool.Count(subject) == 0)
         {
-            ref var subjectRelations = ref GetComponent<ActorRelationComponent>(subject);
+            ref ActorRelationComponent subjectRelations = ref GetComponent<ActorRelationComponent>(subject);
             subjectRelations.Remove(relationId);
         }
 
         if (pool.Count(relative) == 0)
         {
-            ref var relativeRelations = ref GetComponent<ActorRelationComponent>(relative);
+            ref ActorRelationComponent relativeRelations = ref GetComponent<ActorRelationComponent>(relative);
             relativeRelations.Remove(relationId);
         }
 
@@ -137,10 +147,15 @@ public sealed partial class ActorContext
 
     private ActorRelationPool<T>? GetRelationPool<T>() where T : struct
     {
-        var id = ActorRelationType<T>.Id;
+        ushort id = ActorRelationType<T>.Id;
 
-        if (id >= _relationPools.Length) return null;
-        var pool = _relationPools[id];
+        if (id >= _relationPools.Length)
+        {
+            return null;
+        }
+
+        IActorRelationPool? pool = _relationPools[id];
+
         return pool == null
             ? null
             : Unsafe.As<ActorRelationPool<T>>(pool);
@@ -148,11 +163,16 @@ public sealed partial class ActorContext
 
     private ActorRelationPool<T> GetOrCreateRelationPool<T>() where T : struct
     {
-        var relationId = ActorRelationType<T>.Id;
+        ushort relationId = ActorRelationType<T>.Id;
+
         if (relationId < _relationPools.Length)
         {
-            var existsPool = _relationPools[relationId];
-            if (existsPool != null) return Unsafe.As<ActorRelationPool<T>>(existsPool);
+            IActorRelationPool? existsPool = _relationPools[relationId];
+
+            if (existsPool != null)
+            {
+                return Unsafe.As<ActorRelationPool<T>>(existsPool);
+            }
         }
 
 #if NET9_0_OR_GREATER
@@ -162,7 +182,7 @@ public sealed partial class ActorContext
 #endif
         {
             ArrayUtils.EnsureCapacity(ref _relationPools, relationId);
-            ref var pool = ref _relationPools[relationId];
+            ref IActorRelationPool? pool = ref _relationPools[relationId];
             pool ??= new ActorRelationPool<T>(this);
 
             return Unsafe.As<ActorRelationPool<T>>(pool);

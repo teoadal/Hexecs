@@ -163,8 +163,11 @@ internal static class ActorError
     /// </summary>
     /// <param name="actorId">Идентификатор актёра</param>
     [DoesNotReturn]
-    public static void NotFound(ActorId actorId) => NotFound(actorId.Value);
-    
+    public static void NotFound(ActorId actorId)
+    {
+        NotFound(actorId.Value);
+    }
+
     /// <summary>
     /// Генерирует исключение, когда актёр с указанным идентификатором не найден.
     /// </summary>

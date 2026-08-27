@@ -47,7 +47,10 @@ public abstract class ActorMessageHandler<TMessage>(ActorContext context) : IMes
     public abstract void Handle(in TMessage message);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType().Name);
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType().Name);
+    }
 }

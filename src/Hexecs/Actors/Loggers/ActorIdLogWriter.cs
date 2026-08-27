@@ -4,7 +4,7 @@ namespace Hexecs.Actors.Loggers;
 
 internal sealed class ActorIdLogWriter : ILogValueWriter<ActorId>
 {
-    public static readonly ActorIdLogWriter Instance = new();
+    public static readonly ActorIdLogWriter Instance = new ActorIdLogWriter();
 
     private ActorIdLogWriter()
     {
@@ -18,7 +18,7 @@ internal sealed class ActorIdLogWriter : ILogValueWriter<ActorId>
         }
         else
         {
-            if (ActorMarshal.TryGetDebugContext(out var context))
+            if (ActorMarshal.TryGetDebugContext(out ActorContext? context))
             {
                 context.GetDescription(actor, ref stringBuilder);
             }

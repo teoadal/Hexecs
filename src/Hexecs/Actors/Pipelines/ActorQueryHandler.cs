@@ -47,7 +47,10 @@ public abstract class ActorQueryHandler<TQuery, TResult>(ActorContext context) :
     public abstract TResult Handle(in TQuery query);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType().Name);
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType().Name);
+    }
 }

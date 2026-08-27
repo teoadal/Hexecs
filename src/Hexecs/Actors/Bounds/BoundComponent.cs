@@ -30,7 +30,7 @@ internal readonly struct BoundComponent(AssetId assetId) : IActorComponent
 
     public override string ToString()
     {
-        return AssetMarshal.TryGetDebugContext(out var context)
+        return AssetMarshal.TryGetDebugContext(out AssetContext? context)
             ? context.GetDescription(AssetId)
             : AssetId.IsEmpty
                 ? StringUtils.EmptyValue

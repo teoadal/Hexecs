@@ -16,13 +16,22 @@ public sealed partial class ActorFilter<T1, T2, T3>
         public bool IsClear => Type == TypeClear;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Add(ActorId id) => new(id, TypeAdd);
+        public static Operation Add(ActorId id)
+        {
+            return new Operation(id, TypeAdd);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Remove(ActorId id) => new(id, TypeRemove);
+        public static Operation Remove(ActorId id)
+        {
+            return new Operation(id, TypeRemove);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Clear() => new(ActorId.Empty, TypeClear);
+        public static Operation Clear()
+        {
+            return new Operation(ActorId.Empty, TypeClear);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Operation(ActorId id, byte type)

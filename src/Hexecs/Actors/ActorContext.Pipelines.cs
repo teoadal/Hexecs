@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+
 using Hexecs.Pipelines;
 using Hexecs.Pipelines.Commands;
 using Hexecs.Pipelines.Messages;
@@ -27,7 +28,8 @@ public sealed partial class ActorContext
     public TResult Ask<TQuery, TResult>(in TQuery query)
         where TQuery : struct, IQuery<TResult>
     {
-        var handler = GetQueryHandler<TQuery, TResult>();
+        IQueryHandler<TQuery, TResult> handler = GetQueryHandler<TQuery, TResult>();
+
         return handler.Handle(in query);
     }
 
@@ -42,7 +44,8 @@ public sealed partial class ActorContext
     public Result Execute<TCommand>(in TCommand command)
         where TCommand : struct, ICommand
     {
-        var handler = GetCommandHandler<TCommand, Result>();
+        ICommandHandler<TCommand, Result> handler = GetCommandHandler<TCommand, Result>();
+
         return handler.Handle(in command);
     }
 
@@ -58,7 +61,8 @@ public sealed partial class ActorContext
     public TResult Execute<TCommand, TResult>(in TCommand command)
         where TCommand : struct, ICommand<TResult>
     {
-        var handler = GetCommandHandler<TCommand, TResult>();
+        ICommandHandler<TCommand, TResult> handler = GetCommandHandler<TCommand, TResult>();
+
         return handler.Handle(in command);
     }
 
@@ -71,13 +75,15 @@ public sealed partial class ActorContext
     public ICommandHandler<TCommand, TResult> GetCommandHandler<TCommand, TResult>()
         where TCommand : struct, ICommand<TResult>
     {
-        var id = CommandType<TCommand>.Id;
+        ushort id = CommandType<TCommand>.Id;
+
         if (id < _commands.Length && _commands[id] is ICommandHandler<TCommand, TResult> handler)
         {
             return handler;
         }
 
         PipelineError.CommandHandlerNotRegistered(typeof(TCommand));
+
         return null!;
     }
 
@@ -90,13 +96,15 @@ public sealed partial class ActorContext
     public IQueryHandler<TQuery, TResult> GetQueryHandler<TQuery, TResult>()
         where TQuery : struct, IQuery<TResult>
     {
-        var id = QueryType<TQuery>.Id;
+        ushort id = QueryType<TQuery>.Id;
+
         if (id < _queries.Length && _queries[id] is IQueryHandler<TQuery, TResult> handler)
         {
             return handler;
         }
 
         PipelineError.QueryHandlerNotRegistered(typeof(TQuery));
+
         return null!;
     }
 
@@ -108,13 +116,15 @@ public sealed partial class ActorContext
     public INotificationHandler<TNotification> GetNotificationHandler<TNotification>()
         where TNotification : struct, INotification
     {
-        var id = NotificationType<TNotification>.Id;
+        ushort id = NotificationType<TNotification>.Id;
+
         if (id < _notifications.Length && _notifications[id] is INotificationHandler<TNotification> handler)
         {
             return handler;
         }
 
         PipelineError.NotificationHandlerNotRegistered(typeof(TNotification));
+
         return null!;
     }
 
@@ -126,13 +136,15 @@ public sealed partial class ActorContext
     public IMessageQueue<TMessage> GetMessageQueue<TMessage>()
         where TMessage : struct, IMessage
     {
-        var id = MessageType<TMessage>.Id;
+        uint id = MessageType<TMessage>.Id;
+
         if (id < _messages.Length && _messages[id] is IMessageQueue<TMessage> queue)
         {
             return queue;
         }
 
         PipelineError.MessageHandlerNotRegistered(typeof(TMessage));
+
         return null!;
     }
 
@@ -143,7 +155,7 @@ public sealed partial class ActorContext
     /// <returns>Группа очередей сообщений или ошибка, если группа не найдена.</returns>
     public IMessageQueue GetMessageQueueGroup(string queueName)
     {
-        return _messageGroups.TryGetValue(queueName, out var messageQueue)
+        return _messageGroups.TryGetValue(queueName, out MessageQueueGroup? messageQueue)
             ? messageQueue
             : PipelineError.QueueNotFound(queueName);
     }
@@ -158,7 +170,7 @@ public sealed partial class ActorContext
     public void Publish<TNotification>(in TNotification notification)
         where TNotification : struct, INotification
     {
-        var handler = GetNotificationHandler<TNotification>();
+        INotificationHandler<TNotification> handler = GetNotificationHandler<TNotification>();
         handler.Handle(in notification);
     }
 
@@ -176,7 +188,7 @@ public sealed partial class ActorContext
     public void Send<TMessage>(in TMessage message)
         where TMessage : struct, IMessage
     {
-        var queue = GetMessageQueue<TMessage>();
+        IMessageQueue<TMessage> queue = GetMessageQueue<TMessage>();
         queue.Enqueue(in message);
     }
 
@@ -191,10 +203,11 @@ public sealed partial class ActorContext
     public bool TrySend<TMessage>(in TMessage message)
         where TMessage : struct, IMessage
     {
-        var queue = GetMessageQueue<TMessage>();
+        IMessageQueue<TMessage> queue = GetMessageQueue<TMessage>();
+
         return queue.TryEnqueue(in message);
     }
-    
+
     internal void LoadPipelines(
         ICommandHandler?[] commands,
         IQueryHandler?[] queries,

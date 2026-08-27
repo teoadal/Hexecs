@@ -20,16 +20,20 @@ public sealed partial class ActorContext
     /// </remarks>
     public Actor BuildActor(in Asset asset, Args? args = null)
     {
-        var actorIdRaw = GetNextActorId();
+        uint actorIdRaw = GetNextActorId();
 
         AddEntry(actorIdRaw);
 
         var actor = new Actor(this, new ActorId(actorIdRaw));
 
-        if (asset.IsEmpty) return actor;
-        
+        if (asset.IsEmpty)
+        {
+            return actor;
+        }
+
         args ??= Args.Rent();
-        foreach (var builder in _builders)
+
+        foreach (IActorBuilder builder in _builders)
         {
             builder.Build(in actor, in asset, args);
         }

@@ -29,6 +29,9 @@ public sealed partial class ActorContextBuilder
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TResult Invoke(ActorContext context) => _instance ?? _builder(context);
+        public TResult Invoke(ActorContext context)
+        {
+            return _instance ?? _builder(context);
+        }
     }
 }

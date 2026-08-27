@@ -1,4 +1,5 @@
-﻿using Hexecs.Actors.Nodes;
+﻿using Hexecs.Actors.Components;
+using Hexecs.Actors.Nodes;
 using Hexecs.Actors.Relations;
 
 namespace Hexecs.Actors;
@@ -23,39 +24,44 @@ public sealed partial class ActorContext
 
     private ref Entry AddEntry(uint actorId)
     {
-        ref var entry = ref TryAddEntry(actorId);
+        ref Entry entry = ref TryAddEntry(actorId);
+
         if (!Unsafe.IsNullRef(ref entry))
         {
             Created?.Invoke(new ActorId(actorId));
+
             return ref entry;
         }
 
         ActorError.AlreadyExists(actorId); // выбрасывает ошибку
+
         return ref Unsafe.NullRef<Entry>();
     }
 
     private void ClearEntry(uint actorIdRaw, ref Entry entry)
     {
         var actorId = new ActorId(actorIdRaw);
-        ref var node = ref TryGetComponentRef<ActorNodeComponent>(actorId);
+        ref ActorNodeComponent node = ref TryGetComponentRef<ActorNodeComponent>(actorId);
+
         if (!Unsafe.IsNullRef(ref node))
         {
             OnNodeRemoving(ref node);
         }
-        
-        ref var relationsComponent = ref TryGetComponentRef<ActorRelationComponent>(actorId);
+
+        ref ActorRelationComponent relationsComponent = ref TryGetComponentRef<ActorRelationComponent>(actorId);
+
         if (!Unsafe.IsNullRef(ref relationsComponent))
         {
-            foreach (var relationId in relationsComponent)
+            foreach (uint relationId in relationsComponent)
             {
-                var relationPool = _relationPools[relationId];
+                IActorRelationPool? relationPool = _relationPools[relationId];
                 relationPool?.Remove(actorId);
             }
         }
 
-        foreach (var componentId in entry)
+        foreach (ushort componentId in entry)
         {
-            var componentPool = _componentPools[componentId];
+            IActorComponentPool? componentPool = _componentPools[componentId];
             componentPool?.Remove(actorId);
         }
 
@@ -64,15 +70,15 @@ public sealed partial class ActorContext
 
     private void ClearEntries()
     {
-        var dense = _dense;
-        var values = _values;
-        var sparsePages = _sparsePages;
+        uint[] dense = _dense;
+        Entry[] values = _values;
+        uint[]?[] sparsePages = _sparsePages;
 
         for (var i = 0; i < _count; i++)
         {
-            var key = dense[i];
+            uint key = dense[i];
 
-            ref var entry = ref values[i];
+            ref Entry entry = ref values[i];
             entry.Dispose();
 
             var pageIndex = (int)(key >> PageBits);
@@ -86,7 +92,7 @@ public sealed partial class ActorContext
     {
         if (_count >= _dense.Length)
         {
-            var newSize = _dense.Length * 2;
+            int newSize = _dense.Length * 2;
             Array.Resize(ref _dense, newSize);
             Array.Resize(ref _values, newSize);
         }
@@ -96,7 +102,7 @@ public sealed partial class ActorContext
     {
         if (pageIndex >= _sparsePages.Length)
         {
-            var newSize = Math.Max(_sparsePages.Length * 2, pageIndex + 1);
+            int newSize = Math.Max(_sparsePages.Length * 2, pageIndex + 1);
             Array.Resize(ref _sparsePages, newSize);
         }
     }
@@ -105,15 +111,19 @@ public sealed partial class ActorContext
     private ref Entry GetEntryRef(uint actorId)
     {
         var pageIndex = (int)(actorId >> PageBits);
+
         if ((uint)pageIndex < (uint)_sparsePages.Length)
         {
-            var page = _sparsePages[pageIndex];
+            uint[]? page = _sparsePages[pageIndex];
+
             if (page != null)
             {
-                var denseIndexPlusOne = page[actorId & PageMask];
+                uint denseIndexPlusOne = page[actorId & PageMask];
+
                 if (denseIndexPlusOne != 0)
                 {
-                    var index = (int)denseIndexPlusOne - 1;
+                    int index = (int)denseIndexPlusOne - 1;
+
                     if (_dense[index] == actorId)
                     {
                         return ref _values[index];
@@ -127,48 +137,67 @@ public sealed partial class ActorContext
 
     private ref Entry GetEntryRefExact(uint key)
     {
-        ref var entry = ref GetEntryRef(key);
+        ref Entry entry = ref GetEntryRef(key);
+
         if (!Unsafe.IsNullRef(ref entry))
         {
             return ref entry;
         }
 
         ActorError.NotFound(key); // exception
+
         return ref Unsafe.NullRef<Entry>();
     }
 
     private bool RemoveEntry(uint actorId)
     {
         var pageIndex = (int)(actorId >> PageBits);
-        if ((uint)pageIndex >= (uint)_sparsePages.Length) return false;
 
-        var page = _sparsePages[pageIndex];
-        if (page == null) return false;
+        if ((uint)pageIndex >= (uint)_sparsePages.Length)
+        {
+            return false;
+        }
+
+        uint[]? page = _sparsePages[pageIndex];
+
+        if (page == null)
+        {
+            return false;
+        }
 
         var offset = (int)(actorId & PageMask);
-        var denseIndexPlusOne = page[offset];
-        if (denseIndexPlusOne == 0) return false;
+        uint denseIndexPlusOne = page[offset];
 
-        var denseIndex = (int)denseIndexPlusOne - 1;
-        if (_dense[denseIndex] != actorId) return false;
+        if (denseIndexPlusOne == 0)
+        {
+            return false;
+        }
+
+        int denseIndex = (int)denseIndexPlusOne - 1;
+
+        if (_dense[denseIndex] != actorId)
+        {
+            return false;
+        }
 
         // 1. Уведомляем системы ПЕРЕД какими-либо изменениями структуры
         Destroying?.Invoke(new ActorId(actorId));
 
         // 2. Очищаем данные сущности (пулы компонентов и т.д.)
-        ref var entryToRemove = ref _values[denseIndex];
+        ref Entry entryToRemove = ref _values[denseIndex];
         ClearEntry(actorId, ref entryToRemove);
 
-        var lastIndex = _count - 1;
+        int lastIndex = _count - 1;
+
         if (denseIndex != lastIndex)
         {
-            var lastKey = _dense[lastIndex];
+            uint lastKey = _dense[lastIndex];
 
             // Переносим ключ
             _dense[denseIndex] = lastKey;
 
-            // ВАЖНО: Переносим данные. 
-            // Поскольку мы уже вызвали ClearEntry для entryToRemove, 
+            // ВАЖНО: Переносим данные.
+            // Поскольку мы уже вызвали ClearEntry для entryToRemove,
             // мы можем просто перезаписать её.
             _values[denseIndex] = _values[lastIndex];
 
@@ -178,8 +207,8 @@ public sealed partial class ActorContext
         }
 
         // 3. ОБЯЗАТЕЛЬНО обнуляем хвост, чтобы не было дубликатов ссылок на массивы
-        _values[lastIndex] = default; 
-            
+        _values[lastIndex] = default;
+
         // 4. Финализируем удаление
         page[offset] = 0;
         _count = lastIndex;
@@ -191,15 +220,17 @@ public sealed partial class ActorContext
     private ref Entry TryAddEntry(uint actorId)
     {
         var pageIndex = (int)(actorId >> PageBits);
-        var pages = _sparsePages;
+        uint[]?[] pages = _sparsePages;
 
         // Максимально компактная проверка на готовность страницы и места
         if ((uint)pageIndex < (uint)pages.Length)
         {
-            var page = pages[pageIndex];
+            uint[]? page = pages[pageIndex];
+
             if (page != null && (uint)_count < (uint)_dense.Length)
             {
-                ref var slot = ref page[actorId & PageMask];
+                ref uint slot = ref page[actorId & PageMask];
+
                 if (slot == 0) // Чистая вставка (самый частый случай в ECS)
                 {
                     var idx = (uint)_count;
@@ -228,14 +259,16 @@ public sealed partial class ActorContext
         var pageIndex = (int)(actorId >> PageBits);
         EnsurePageArraySize(pageIndex);
 
-        ref var page = ref _sparsePages[pageIndex];
+        ref uint[]? page = ref _sparsePages[pageIndex];
+
         if (page == null)
         {
             page = ArrayUtils.Create<uint>(PageSize);
             Array.Clear(page, 0, page.Length);
         }
 
-        ref var denseIndexPlusOne = ref page[actorId & PageMask];
+        ref uint denseIndexPlusOne = ref page[actorId & PageMask];
+
         if (denseIndexPlusOne != 0)
         {
             if (_dense[denseIndexPlusOne - 1] == actorId)

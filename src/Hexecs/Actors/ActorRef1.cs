@@ -89,7 +89,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="component">Компонент для добавления.</param>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден в контексте или компонент уже существует.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add<T>(in T component) where T : struct, IActorComponent => Context.AddComponent(Id, in component);
+    public void Add<T>(in T component) where T : struct, IActorComponent
+    {
+        Context.AddComponent(Id, in component);
+    }
 
     /// <summary>
     /// Добавляет дочернего актёра к текущему.
@@ -97,7 +100,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="child">Дочерний актёр.</param>
     /// <exception cref="Exception">Выбрасывается, если один из актёров не найден или дочерний актёр уже добавлен.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddChild(in Actor child) => Context.AddChild(Id, child.Id);
+    public void AddChild(in Actor child)
+    {
+        Context.AddChild(Id, child.Id);
+    }
 
     /// <summary>
     /// Добавляет отношение между текущим актёром и указанным родственным актёром.
@@ -154,7 +160,10 @@ public readonly ref struct ActorRef<T1>
     /// <returns>Ссылка на компонент.</returns>
     /// <exception cref="Exception">Выбрасывается, если актёр не найден или не содержит указанный компонент.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get<T>() where T : struct, IActorComponent => ref Context.GetComponent<T>(Id);
+    public ref T Get<T>() where T : struct, IActorComponent
+    {
+        return ref Context.GetComponent<T>(Id);
+    }
 
     /// <summary>
     /// Получает ассет, связанный с актёром.
@@ -392,24 +401,33 @@ public readonly ref struct ActorRef<T1>
     /// <param name="other">Ссылка на актёра для сравнения.</param>
     /// <returns>Возвращает true, если ссылки на актёров равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorRef<T1> other) => Id == other.Id && Context == other.Context;
+    public bool Equals(ActorRef<T1> other)
+    {
+        return Id == other.Id && Context == other.Context;
+    }
 
     /// <summary>
     /// Проверяет равенство с другим объектом.
     /// </summary>
     /// <param name="obj">Объект для сравнения.</param>
     /// <returns>Возвращает true, если объекты равны; иначе false.</returns>
-    public override bool Equals(object? obj) => obj switch
+    public override bool Equals(object? obj)
     {
-        Actor actor => actor.IsRef<T1>(out var expected) && Equals(expected),
-        _ => false
-    };
+        return obj switch
+        {
+            Actor actor => actor.IsRef(out ActorRef<T1> expected) && Equals(expected),
+            _ => false
+        };
+    }
 
     /// <summary>
     /// Возвращает хеш-код для ссылки на актёра.
     /// </summary>
     /// <returns>Хеш-код ссылки на актёра.</returns>
-    public override int GetHashCode() => HashCode.Combine(Id);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
 
     /// <summary>
     /// Сравнивает две ссылки на актёров на равенство.
@@ -418,7 +436,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="right">Правая ссылка на актёра.</param>
     /// <returns>Возвращает true, если ссылки на актёров равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in ActorRef<T1> left, in ActorRef<T1> right) => left.Equals(right);
+    public static bool operator ==(in ActorRef<T1> left, in ActorRef<T1> right)
+    {
+        return left.Equals(right);
+    }
 
     /// <summary>
     /// Сравнивает две ссылки на актёров на неравенство.
@@ -427,7 +448,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="right">Правая ссылка на актёра.</param>
     /// <returns>Возвращает true, если ссылки на актёров не равны; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in ActorRef<T1> left, in ActorRef<T1> right) => !left.Equals(right);
+    public static bool operator !=(in ActorRef<T1> left, in ActorRef<T1> right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
@@ -439,7 +463,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="actor">Ссылка на актёра для преобразования.</param>
     /// <returns>Возвращает true, если ссылка на актёра не пустая; иначе false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in ActorRef<T1> actor) => !actor.IsEmpty;
+    public static implicit operator bool(in ActorRef<T1> actor)
+    {
+        return !actor.IsEmpty;
+    }
 
     /// <summary>
     /// Неявное преобразование ссылки на актёра в ActorId.
@@ -447,7 +474,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="actor">Ссылка на актёра для преобразования.</param>
     /// <returns>Идентификатор актёра.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ActorId(in ActorRef<T1> actor) => actor.Id;
+    public static implicit operator ActorId(in ActorRef<T1> actor)
+    {
+        return actor.Id;
+    }
 
     /// <summary>
     /// Неявное преобразование ссылки на актёра в актёра.
@@ -455,7 +485,10 @@ public readonly ref struct ActorRef<T1>
     /// <param name="actor">Ссылка на актёра для преобразования.</param>
     /// <returns>Актёр.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Actor(in ActorRef<T1> actor) => new(actor.Context, actor.Id);
+    public static implicit operator Actor(in ActorRef<T1> actor)
+    {
+        return new Actor(actor.Context, actor.Id);
+    }
 
     #endregion
 }

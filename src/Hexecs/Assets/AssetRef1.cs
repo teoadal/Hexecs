@@ -20,7 +20,7 @@ public readonly ref struct AssetRef<T1> : IEquatable<Asset>
     public static AssetRef<T1> Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(null!, AssetId.Empty, ref Unsafe.NullRef<T1>());
+        get => new AssetRef<T1>(null!, AssetId.Empty, ref Unsafe.NullRef<T1>());
     }
 
     /// <summary>
@@ -67,7 +67,10 @@ public readonly ref struct AssetRef<T1> : IEquatable<Asset>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IAssetComponent => Context.HasComponent<T>(Id);
+    public bool Has<T>() where T : struct, IAssetComponent
+    {
+        return Context.HasComponent<T>(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRef<T>(out AssetRef<T> asset) where T : struct, IAssetComponent
@@ -75,44 +78,74 @@ public readonly ref struct AssetRef<T1> : IEquatable<Asset>
         return Context.TryGetAssetRef(Id, out asset);
     }
 
-    public override string ToString() => Context == null
-        ? StringUtils.EmptyValue
-        : Context.GetDescription(Id);
+    public override string ToString()
+    {
+        return Context == null
+            ? StringUtils.EmptyValue
+            : Context.GetDescription(Id);
+    }
 
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(Asset other) => Id == other.Id && ReferenceEquals(Context, other.Context);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(AssetRef<T1> other) => Id == other.Id && ReferenceEquals(Context, other.Context);
-
-    public override bool Equals(object? obj) => obj switch
+    public bool Equals(Asset other)
     {
-        Asset asset => asset.IsRef<T1>(out var expected) && Equals(expected),
-        _ => false
-    };
-
-    public override int GetHashCode() => HashCode.Combine(Id);
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in AssetRef<T1> left, in AssetRef<T1> right) => left.Equals(right);
+    public bool Equals(AssetRef<T1> other)
+    {
+        return Id == other.Id && ReferenceEquals(Context, other.Context);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj switch
+        {
+            Asset asset => asset.IsRef<T1>(out AssetRef<T1> expected) && Equals(expected),
+            _ => false
+        };
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in AssetRef<T1> left, in AssetRef<T1> right) => !left.Equals(right);
+    public static bool operator ==(in AssetRef<T1> left, in AssetRef<T1> right)
+    {
+        return left.Equals(right);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(in AssetRef<T1> left, in AssetRef<T1> right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in AssetRef<T1> asset) => !asset.IsEmpty;
+    public static implicit operator bool(in AssetRef<T1> asset)
+    {
+        return !asset.IsEmpty;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator AssetId(in AssetRef<T1> asset) => asset.Id;
+    public static implicit operator AssetId(in AssetRef<T1> asset)
+    {
+        return asset.Id;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Asset(in AssetRef<T1> asset) => new(asset.Context, asset.Id);
+    public static implicit operator Asset(in AssetRef<T1> asset)
+    {
+        return new Asset(asset.Context, asset.Id);
+    }
 
     #endregion
 }

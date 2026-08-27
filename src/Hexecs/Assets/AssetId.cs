@@ -23,7 +23,7 @@ public readonly struct AssetId : IEquatable<AssetId>
     public static AssetId Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(EmptyId);
+        get => new AssetId(EmptyId);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public readonly struct AssetId : IEquatable<AssetId>
 
     public override string ToString()
     {
-        return AssetMarshal.TryGetDebugContext(out var context)
+        return AssetMarshal.TryGetDebugContext(out AssetContext? context)
             ? context.GetDescription(this)
             : IsEmpty
                 ? StringUtils.EmptyValue
@@ -82,36 +82,66 @@ public readonly struct AssetId : IEquatable<AssetId>
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(AssetId other) => Value == other.Value;
+    public bool Equals(AssetId other)
+    {
+        return Value == other.Value;
+    }
 
-    public override bool Equals(object? obj) => obj is AssetId other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        return obj is AssetId other && Equals(other);
+    }
 
-    public override int GetHashCode() => HashCode.Combine(Value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in AssetId left, in AssetId right) => left.Value == right.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in AssetId left, in AssetId right) => left.Value != right.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator <(in AssetId left, in AssetId right) => left.Value < right.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator >(in AssetId left, in AssetId right) => left.Value > right.Value;
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator <=(in AssetId left, in AssetId right) => left.Value <= right.Value;
+    public static bool operator ==(in AssetId left, in AssetId right)
+    {
+        return left.Value == right.Value;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator >=(in AssetId left, in AssetId right) => left.Value >= right.Value;
+    public static bool operator !=(in AssetId left, in AssetId right)
+    {
+        return left.Value != right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(in AssetId left, in AssetId right)
+    {
+        return left.Value < right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(in AssetId left, in AssetId right)
+    {
+        return left.Value > right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <=(in AssetId left, in AssetId right)
+    {
+        return left.Value <= right.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >=(in AssetId left, in AssetId right)
+    {
+        return left.Value >= right.Value;
+    }
 
     #endregion
 
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in AssetId asset) => asset.IsNotEmpty;
+    public static implicit operator bool(in AssetId asset)
+    {
+        return asset.IsNotEmpty;
+    }
 
     #endregion
 }

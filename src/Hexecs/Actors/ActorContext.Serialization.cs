@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+
 using Hexecs.Actors.Components;
 using Hexecs.Actors.Relations;
 using Hexecs.Serializations;
@@ -27,7 +28,7 @@ public sealed partial class ActorContext
     {
         writer.WriteStartArray();
 
-        foreach (var pool in _componentPools)
+        foreach (IActorComponentPool? pool in _componentPools)
         {
             pool?.Serialize(writer);
         }
@@ -39,9 +40,12 @@ public sealed partial class ActorContext
     {
         writer.WriteStartArray();
 
-        foreach (var pool in _componentPools)
+        foreach (IActorComponentPool? pool in _componentPools)
         {
-            if (pool == null) continue;
+            if (pool == null)
+            {
+                continue;
+            }
 
             writer.WriteStartObject();
 
@@ -59,17 +63,18 @@ public sealed partial class ActorContext
     {
         writer.WriteStartArray();
 
-        var count = _count;
-        var dense = _dense;
-        var values = _values;
+        int count = _count;
+        uint[] dense = _dense;
+        Entry[] values = _values;
 
         for (var i = 0; i < count; i++)
         {
             // Извлекаем ID из плотного массива ключей
-            var actorId = dense[i];
+            uint actorId = dense[i];
+
             // Получаем ссылку на данные по тому же индексу
-            ref readonly var entry = ref values[i];
-                
+            ref readonly Entry entry = ref values[i];
+
             entry.Serialize(actorId, writer);
         }
 
@@ -80,7 +85,7 @@ public sealed partial class ActorContext
     {
         writer.WriteStartArray();
 
-        foreach (var pool in _relationPools)
+        foreach (IActorRelationPool? pool in _relationPools)
         {
             pool?.Serialize(writer);
         }
@@ -92,9 +97,12 @@ public sealed partial class ActorContext
     {
         writer.WriteStartArray();
 
-        foreach (var pool in _relationPools)
+        foreach (IActorRelationPool? pool in _relationPools)
         {
-            if (pool == null) continue;
+            if (pool == null)
+            {
+                continue;
+            }
 
             writer.WriteStartObject();
 

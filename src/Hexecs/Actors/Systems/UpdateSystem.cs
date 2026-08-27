@@ -47,9 +47,12 @@ public abstract class UpdateSystem(ActorContext context) : IUpdateSystem
     public abstract void Update(in WorldTime time);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ContextLogger CreateLogger() => Context
-        .GetRequiredService<LogService>()
-        .CreateContext(GetType());
+    private ContextLogger CreateLogger()
+    {
+        return Context
+            .GetRequiredService<LogService>()
+            .CreateContext(GetType());
+    }
 
     ActorContext IUpdateSystem.Context => Context;
 }

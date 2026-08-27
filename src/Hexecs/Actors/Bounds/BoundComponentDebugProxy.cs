@@ -13,10 +13,11 @@ internal sealed class BoundComponentDebugProxy
         if (bound.AssetId.IsEmpty)
         {
             Components = [];
+
             return;
         }
 
-        Components = AssetMarshal.TryGetDebugContext(out var assetContext)
+        Components = AssetMarshal.TryGetDebugContext(out AssetContext? assetContext)
             ? assetContext.Components(bound.AssetId).ToArray()
             : [];
     }

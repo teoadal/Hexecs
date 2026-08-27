@@ -14,11 +14,13 @@ public static class ActorContextBuilderExtensions
         /// <typeparam name="T">Тип строителя актёров.</typeparam>
         /// <returns>Этот же экземпляр ActorContextBuilder для цепочки вызовов.</returns>
         public ActorContextBuilder CreateBuilder<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
-                                        DynamicallyAccessedMemberTypes.PublicConstructors)]
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.Interfaces |
+                DynamicallyAccessedMemberTypes.PublicConstructors)]
             T>() where T : class, IActorBuilder
         {
             builder.CreateBuilder(static ctx => (IActorBuilder)ctx.Activate(typeof(T)));
+
             return builder;
         }
 
@@ -29,14 +31,14 @@ public static class ActorContextBuilderExtensions
         /// Использует рефлексию.
         /// </remarks>
         public ActorContextBuilder CreateCommandHandler<
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
-                                            DynamicallyAccessedMemberTypes.PublicConstructors)]
-                THandler>
-            ()
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.Interfaces |
+                DynamicallyAccessedMemberTypes.PublicConstructors)]
+            THandler>()
             where THandler : class, ICommandHandler
         {
-            var commandType = PipelineUtils.GetCommandType(typeof(THandler));
-            var commandId = CommandType.GetId(commandType);
+            Type commandType = PipelineUtils.GetCommandType(typeof(THandler));
+            ushort commandId = CommandType.GetId(commandType);
 
             builder.InsertCommandHandlerEntry(
                 commandId,
@@ -54,11 +56,11 @@ public static class ActorContextBuilderExtensions
         /// Использует рефлексию.
         /// </remarks>
         public ActorContextBuilder CreateDrawSystem<
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-                TSystem>
-            () where TSystem : class, IDrawSystem
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+            TSystem>() where TSystem : class, IDrawSystem
         {
             builder.CreateDrawSystem(static ctx => (IDrawSystem)ctx.Activate(typeof(TSystem)));
+
             return builder;
         }
 
@@ -69,11 +71,11 @@ public static class ActorContextBuilderExtensions
         /// Использует рефлексию.
         /// </remarks>
         public ActorContextBuilder CreateUpdateSystem<
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-                TSystem>
-            () where TSystem : class, IUpdateSystem
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+            TSystem>() where TSystem : class, IUpdateSystem
         {
             builder.CreateUpdateSystem(static ctx => (IUpdateSystem)ctx.Activate(typeof(TSystem)));
+
             return builder;
         }
     }
@@ -85,11 +87,11 @@ public static class ActorContextBuilderExtensions
     /// Использует рефлексию.
     /// </remarks>
     public static ActorContextBuilder.ParallelSystemBuilder CreateUpdateSystem<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-            TSystem>
-        (this ActorContextBuilder.ParallelSystemBuilder builder) where TSystem : class, IUpdateSystem
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        TSystem>(this ActorContextBuilder.ParallelSystemBuilder builder) where TSystem : class, IUpdateSystem
     {
         builder.Create(static ctx => (IUpdateSystem)ctx.Activate(typeof(TSystem)));
+
         return builder;
     }
 }

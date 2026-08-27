@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+
 using Hexecs.Serializations;
 
 namespace Hexecs.Actors.Components;
@@ -22,9 +23,9 @@ internal sealed partial class ActorComponentPool<T>
     {
         writer.WriteStartArray();
 
-        var count = _count;
-        var keys = _dense;
-        var values = _values;
+        int count = _count;
+        uint[] keys = _dense;
+        T[] values = _values;
 
         for (var i = 0; i < count; i++)
         {

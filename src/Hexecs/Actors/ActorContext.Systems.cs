@@ -14,7 +14,7 @@ public sealed partial class ActorContext
     /// <param name="time">Время мира.</param>
     public void Draw(in WorldTime time)
     {
-        foreach (var system in _drawSystems)
+        foreach (IDrawSystem system in _drawSystems)
         {
             system.Draw(in time);
         }
@@ -28,68 +28,81 @@ public sealed partial class ActorContext
     /// <exception cref="Exception">Если система не найдена</exception>
     public T GetDrawSystem<T>() where T : class, IDrawSystem
     {
-        foreach (var exists in _drawSystems)
+        foreach (IDrawSystem exists in _drawSystems)
         {
-            if (exists is T expected) return expected;
+            if (exists is T expected)
+            {
+                return expected;
+            }
         }
 
         ActorError.DrawSystemNotFound<T>();
+
         return null;
     }
-    
+
     public T GetUpdateSystem<T>() where T : class, IUpdateSystem
     {
-        foreach (var exists in _updateSystems)
+        foreach (IUpdateSystem exists in _updateSystems)
         {
             switch (exists)
             {
                 case T expected:
                     return expected;
-                case ParallelSystem parallelSystem when parallelSystem.TryGetSystem<T>(out var parallel):
+                case ParallelSystem parallelSystem when parallelSystem.TryGetSystem<T>(out T? parallel):
                     return parallel;
             }
         }
 
         ActorError.UpdateSystemNotFound<T>();
+
         return null;
     }
 
     public bool TryGetDrawSystem<T>([NotNullWhen(true)] out T? system) where T : class, IDrawSystem
     {
-        foreach (var exists in _drawSystems)
+        foreach (IDrawSystem exists in _drawSystems)
         {
-            if (exists is not T expected) continue;
-            
+            if (exists is not T expected)
+            {
+                continue;
+            }
+
             system = expected;
+
             return true;
         }
 
         system = null;
+
         return false;
     }
-    
+
     public bool TryGetUpdateSystem<T>([NotNullWhen(true)] out T? system) where T : class, IUpdateSystem
     {
-        foreach (var exists in _updateSystems)
+        foreach (IUpdateSystem exists in _updateSystems)
         {
             switch (exists)
             {
                 case T expected:
                     system = expected;
+
                     return true;
-                case ParallelSystem parallelSystem when parallelSystem.TryGetSystem<T>(out var parallel):
+                case ParallelSystem parallelSystem when parallelSystem.TryGetSystem<T>(out T? parallel):
                     system = parallel;
+
                     return true;
             }
         }
 
         system = null;
+
         return false;
     }
 
     public void Update(in WorldTime time)
     {
-        foreach (var system in _updateSystems)
+        foreach (IUpdateSystem system in _updateSystems)
         {
             system.Update(in time);
         }

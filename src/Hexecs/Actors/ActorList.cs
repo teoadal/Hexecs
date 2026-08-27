@@ -32,7 +32,7 @@ public sealed partial class ActorList<T> : IDisposable
         int capacity = 8)
     {
         _arrayPool = arrayPool ?? ArrayPool<ActorId>.Shared;
-        
+
         _array = capacity == 0
             ? []
             : _arrayPool.Rent(capacity);
@@ -44,12 +44,18 @@ public sealed partial class ActorList<T> : IDisposable
         context.Cleared += OnCleared;
     }
 
-    public void Add(in ActorRef<T> actor) => Add(actor.Id);
+    public void Add(in ActorRef<T> actor)
+    {
+        Add(actor.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(ActorId actorId)
     {
-        if (_disposed) ActorError.Disposed(typeof(ActorList<T>));
+        if (_disposed)
+        {
+            ActorError.Disposed(typeof(ActorList<T>));
+        }
 
         ArrayUtils.Insert(ref _array, _arrayPool, _length, actorId);
         _length++;
@@ -57,7 +63,10 @@ public sealed partial class ActorList<T> : IDisposable
 
     public void Clear()
     {
-        if (_array.Length > 0) _arrayPool.Return(_array);
+        if (_array.Length > 0)
+        {
+            _arrayPool.Return(_array);
+        }
 
         _array = [];
         _length = 0;
@@ -76,7 +85,11 @@ public sealed partial class ActorList<T> : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         Clear();
@@ -101,8 +114,12 @@ public sealed partial class ActorList<T> : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Remove(ActorId actorId)
     {
-        var index = Array.IndexOf(_array, actorId, 0, _length);
-        if (index == -1) return false;
+        int index = Array.IndexOf(_array, actorId, 0, _length);
+
+        if (index == -1)
+        {
+            return false;
+        }
 
         ArrayUtils.Cut(_array, index);
         _length--;
@@ -111,11 +128,17 @@ public sealed partial class ActorList<T> : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Span<ActorId> AsSpan() => _length == 0
-        ? Span<ActorId>.Empty
-        : _array.AsSpan(0, _length);
+    private Span<ActorId> AsSpan()
+    {
+        return _length == 0
+            ? Span<ActorId>.Empty
+            : _array.AsSpan(0, _length);
+    }
 
-    private void OnCleared() => Clear();
+    private void OnCleared()
+    {
+        Clear();
+    }
 
     private void OnRemoved(ActorId actorId)
     {

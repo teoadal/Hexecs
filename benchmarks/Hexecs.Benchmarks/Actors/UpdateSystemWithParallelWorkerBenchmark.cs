@@ -162,15 +162,18 @@ public class UpdateSystemWithParallelWorkerBenchmark
         {
         }
 
-        protected override void Update(in ActorRef<Attack, Defence, Speed> actor, in WorldTime time)
+        protected override void Update(ActorFilter<Attack, Defence, Speed>.SkipTakeEnumerator batch, in WorldTime time)
         {
-            ref Attack attack = ref actor.Component1;
-            ref Defence defence = ref actor.Component2;
-            ref Speed speed = ref actor.Component3;
+            foreach (ActorRef<Attack, Defence, Speed> actor in batch)
+            {
+                ref Attack attack = ref actor.Component1;
+                ref Defence defence = ref actor.Component2;
+                ref Speed speed = ref actor.Component3;
 
-            attack.Value++;
-            defence.Value++;
-            speed.Value++;
+                attack.Value++;
+                defence.Value++;
+                speed.Value++;
+            }
         }
     }
 

@@ -3,8 +3,6 @@ using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Spawn.Components;
 using Hexecs.Threading;
 using Hexecs.Worlds;
-using Microsoft.Xna.Framework;
-using System.Runtime.CompilerServices;
 
 namespace Hexecs.Benchmarks.Spawn.Systems;
 

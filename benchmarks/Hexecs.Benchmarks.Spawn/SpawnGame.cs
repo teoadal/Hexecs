@@ -27,7 +27,7 @@ internal sealed class SpawnGame : Game
             PreferredBackBufferHeight = 720,
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
-            SynchronizeWithVerticalRetrace = true,
+            SynchronizeWithVerticalRetrace = false,
             IsFullScreen = true,
             HardwareModeSwitch = false
         };

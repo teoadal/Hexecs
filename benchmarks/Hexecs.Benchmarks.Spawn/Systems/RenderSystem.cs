@@ -60,7 +60,6 @@ public sealed class RenderSystem : DrawSystem
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
     public override void Draw(in WorldTime time)
     {

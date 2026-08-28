@@ -20,15 +20,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Content\terrain_atlas.png">
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </None>
-        <None Update="Content\terrain_atlas.xnb">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
         <None Update="Content\DebugFont.xnb">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="Content\Instancing.mgfx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ClCompile Include="Content\Instancing.fx"/>
     </ItemGroup>
 
 </Project>

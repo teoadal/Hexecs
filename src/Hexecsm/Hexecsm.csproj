@@ -26,11 +26,35 @@
       <Compile Update="World.Entry.cs">
         <DependentUpon>World.cs</DependentUpon>
       </Compile>
-      <Compile Update="Utils\ActorDictionary.Accessor.cs">
-        <DependentUpon>ActorDictionary.cs</DependentUpon>
-      </Compile>
       <Compile Update="World.ComponentPools.cs">
         <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Errors.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Handlers.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Operations.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Filters\Filter2.Errors.cs">
+        <DependentUpon>Filter2.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Filters\Filter2.Handlers.cs">
+        <DependentUpon>Filter2.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Filters\Filter2.Listeners.cs">
+        <DependentUpon>Filter2.cs</DependentUpon>
+      </Compile>
+      <Compile Update="World.Events.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Producer.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Subscriptions.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 

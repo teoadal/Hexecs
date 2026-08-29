@@ -2,22 +2,34 @@
 
 internal static class ComponentType
 {
-    private static readonly Dictionary<Type, ushort> ComponentTypeIds = [];
-    private static readonly Dictionary<ushort, Type> ComponentIdTypes = [];
+    private static readonly Dictionary<Type, ComponentTypeId> ComponentTypeIds = [];
+    private static readonly Dictionary<ComponentTypeId, Type> ComponentIdTypes = [];
     private static readonly Lock Locker = new Lock();
 
     private static ushort NextTypeId = 0;
 
-    public static ushort GetTypeId(Type componentType)
+    public static ComponentTypeId GetId<T>()
+        where T : struct, IComponent
+    {
+        return ComponentType<T>.Id;
+    }
+
+    public static ushort GetIdRaw<T>()
+        where T : struct, IComponent
+    {
+        return ComponentType<T>.IdRaw;
+    }
+
+    public static ComponentTypeId GetId(Type componentType)
     {
         using (Locker.EnterScope())
         {
-            if (ComponentTypeIds.TryGetValue(componentType, out ushort existsTypeId))
+            if (ComponentTypeIds.TryGetValue(componentType, out ComponentTypeId existsTypeId))
             {
                 return existsTypeId;
             }
 
-            ushort typeId = NextTypeId++;
+            ComponentTypeId typeId = ComponentTypeId.Unsafe(++NextTypeId);
 
             ComponentTypeIds[componentType] = typeId;
             ComponentIdTypes[typeId] = componentType;
@@ -26,7 +38,7 @@ internal static class ComponentType
         }
     }
 
-    public static Type GetTypeFromId(ushort typeId)
+    public static Type GetType(ComponentTypeId typeId)
     {
         using (Locker.EnterScope())
         {
@@ -36,7 +48,7 @@ internal static class ComponentType
             }
         }
 
-        Throw($"Type with id {typeId} isn't registered");
+        Throw($"Type with id '{typeId.Value}' isn't registered");
 
         return null!;
     }
@@ -50,5 +62,11 @@ internal static class ComponentType
 internal static class ComponentType<T>
     where T : struct, IComponent
 {
-    public static readonly ushort Id = ComponentType.GetTypeId(typeof(T));
+    public static readonly ComponentTypeId Id = ComponentType.GetId(typeof(T));
+
+    public static ushort IdRaw
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Id.Value;
+    }
 }

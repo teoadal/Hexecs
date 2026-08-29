@@ -1,4 +1,4 @@
-﻿using Hexecsm.Utils;
+﻿using Hexecsm.Accessors;
 
 namespace Hexecsm.Components;
 
@@ -9,7 +9,7 @@ internal sealed partial class ComponentPool<T>
     {
         if (_storage.TryAdd(actorId, in component))
         {
-            RaiseAddedEvent(actorId, in component);
+            ProduceAddedEvent(actorId, in component);
 
             return;
         }
@@ -20,15 +20,16 @@ internal sealed partial class ComponentPool<T>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ClearHandler()
     {
-        RaiseClearingEvent();
+        ProduceClearingEvent();
 
         if (disposeHandler != null)
         {
-            ActorDictionary<T>.Accessor values = _storage.GetAccessor();
+            KeyValueAccessor<T> values = _storage.GetAccessor();
 
-            foreach (ActorId actorId in _storage.Keys)
+            for (var i = 0; i < values.Length; i++)
             {
-                disposeHandler.Invoke(actorId, in values[actorId]);
+                KeyValueRef<T> keyValue = values[i];
+                disposeHandler.Invoke(keyValue.Key, in keyValue.Value);
             }
         }
 
@@ -40,7 +41,7 @@ internal sealed partial class ComponentPool<T>
     {
         if (_storage.TryAdd(targetId, in component))
         {
-            RaiseAddedEvent(targetId, in component);
+            ProduceAddedEvent(targetId, in component);
 
             return;
         }
@@ -55,7 +56,7 @@ internal sealed partial class ComponentPool<T>
 
         if (_storage.Remove(actorId, clear: hasDisposeHandler, out T removed))
         {
-            RaiseRemovedEvent(actorId, in removed);
+            ProduceRemovedEvent(actorId, in removed);
             disposeHandler?.Invoke(actorId, in removed);
 
             return;
@@ -71,7 +72,7 @@ internal sealed partial class ComponentPool<T>
 
         if (!Unsafe.IsNullRef(ref exists))
         {
-            RaiseUpdatingEvent(actorId, in exists, in expected);
+            ProduceUpdatingEvent(actorId, in exists, in expected);
 
             return;
         }

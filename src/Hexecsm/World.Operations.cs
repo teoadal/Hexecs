@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 
-using Hexecsm.Components;
-
 namespace Hexecsm;
 
 public sealed partial class World
@@ -39,11 +37,6 @@ public sealed partial class World
                     break;
                 }
             }
-        }
-
-        foreach (IComponentPool? componentPool in _componentPools)
-        {
-            componentPool?.ProcessPostponedOperations();
         }
     }
 

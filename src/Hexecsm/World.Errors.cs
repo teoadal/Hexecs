@@ -2,6 +2,13 @@
 
 public sealed partial class World
 {
+    [StackTraceHidden]
+    [DoesNotReturn]
+    private static void ThrowAlreadyExists(ActorId actorId)
+    {
+        throw new Exception($"Actor '{actorId.Value}' already exists in the world");
+    }
+
     [DoesNotReturn]
     [StackTraceHidden]
     private static void ThrowActorNotFound(ActorId actorId)

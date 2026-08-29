@@ -1,39 +1,35 @@
-﻿namespace Hexecsm;
+namespace Hexecsm.Components;
 
 /// <summary>
-/// Структура, представляющая собой идентификатор актёра в системе.
+/// Структура, представляющая собой идентификатор типа компонента в системе.
 /// </summary>
-/// <remarks>
-/// Это легковесная структура, которая хранит только идентификатор актёра
-/// и используется для указания на актёра без хранения контекста.
-/// </remarks>
 [DebuggerDisplay("{ToString()}")]
-public readonly struct ActorId : IEquatable<ActorId>
+public readonly struct ComponentTypeId : IEquatable<ComponentTypeId>
 {
     /// <summary>
-    /// Константа, представляющая собой пустой номер актёра.
+    /// Константа, представляющая собой пустой номер типа компонента.
     /// </summary>
-    internal const uint EmptyId = 0;
+    private const ushort EmptyId = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ActorId Unsafe(uint actorId)
+    public static ComponentTypeId Unsafe(ushort componentTypeId)
     {
-        return new ActorId(actorId);
+        return new ComponentTypeId(componentTypeId);
     }
 
     /// <summary>
     /// Пустой идентификатор актёра, используемый по умолчанию.
     /// </summary>
-    public static ActorId Empty
+    public static ComponentTypeId Empty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new ActorId(EmptyId);
+        get => new ComponentTypeId(EmptyId);
     }
 
     /// <summary>
     /// Значение идентификатора актёра.
     /// </summary>
-    public readonly uint Value;
+    public readonly ushort Value;
 
     /// <summary>
     /// Проверяет, является ли идентификатор пустым.
@@ -58,7 +54,7 @@ public readonly struct ActorId : IEquatable<ActorId>
     /// </summary>
     /// <param name="value">Значение идентификатора.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ActorId(uint value)
+    private ComponentTypeId(ushort value)
     {
         Value = value;
     }
@@ -66,14 +62,14 @@ public readonly struct ActorId : IEquatable<ActorId>
     #region Equality
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(ActorId other)
+    public bool Equals(ComponentTypeId other)
     {
         return Value == other.Value;
     }
 
     public override bool Equals(object? obj)
     {
-        return obj is ActorId other && Equals(other);
+        return obj is ComponentTypeId other && Equals(other);
     }
 
     public override int GetHashCode()
@@ -82,37 +78,37 @@ public readonly struct ActorId : IEquatable<ActorId>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(in ActorId left, in ActorId right)
+    public static bool operator ==(in ComponentTypeId left, in ComponentTypeId right)
     {
         return left.Value == right.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(in ActorId left, in ActorId right)
+    public static bool operator !=(in ComponentTypeId left, in ComponentTypeId right)
     {
         return left.Value != right.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator <(in ActorId left, in ActorId right)
+    public static bool operator <(in ComponentTypeId left, in ComponentTypeId right)
     {
         return left.Value < right.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator >(in ActorId left, in ActorId right)
+    public static bool operator >(in ComponentTypeId left, in ComponentTypeId right)
     {
         return left.Value > right.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator <=(in ActorId left, in ActorId right)
+    public static bool operator <=(in ComponentTypeId left, in ComponentTypeId right)
     {
         return left.Value <= right.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator >=(in ActorId left, in ActorId right)
+    public static bool operator >=(in ComponentTypeId left, in ComponentTypeId right)
     {
         return left.Value >= right.Value;
     }
@@ -122,7 +118,7 @@ public readonly struct ActorId : IEquatable<ActorId>
     #region Implicit
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator bool(in ActorId actor)
+    public static implicit operator bool(in ComponentTypeId actor)
     {
         return actor.IsNotEmpty;
     }

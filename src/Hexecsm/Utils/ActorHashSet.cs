@@ -1,17 +1,10 @@
-﻿using Hexecsm.Accessors;
+using Hexecsm.Accessors;
 
 namespace Hexecsm.Utils;
 
-internal sealed class ActorDictionary<TValue>(int initialCapacity)
-    where TValue : struct
+internal sealed class ActorHashSet(int initialCapacity)
 {
     private const uint EmptySlot = 0;
-
-    public int Length
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _count;
-    }
 
     public KeyAccessor Keys
     {
@@ -19,30 +12,24 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
         get => new KeyAccessor(keys: new ReadOnlySpan<ActorId>(_dense, 0, _count));
     }
 
-    public ValueAccessor<TValue> Values
+    public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get =>
-            new ValueAccessor<TValue>(
-                mapping: _sparse,
-                values: new Span<TValue>(_values, 0, _count));
+        get => _count;
     }
 
     private uint[] _sparse = new uint[initialCapacity];
     private ActorId[] _dense = new ActorId[initialCapacity];
-    private TValue[] _values = new TValue[initialCapacity];
     private int _count = 0;
 
     public void Clear()
     {
         uint[] sparse = _sparse;
         ActorId[] dense = _dense;
-        TValue[] values = _values;
 
         for (var i = 0; i < _count; i++)
         {
             sparse[dense[i].Value] = 0;
-            values[i] = default;
         }
 
         _count = 0;
@@ -64,15 +51,7 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
         return false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public KeyValueAccessor<TValue> GetAccessor()
-    {
-        return new KeyValueAccessor<TValue>(
-            keys: new ReadOnlySpan<ActorId>(_dense, 0, _count),
-            values: new Span<TValue>(_values, 0, _count));
-    }
-
-    public bool Remove(ActorId key, bool clear, out TValue value)
+    public bool Remove(ActorId key)
     {
         uint keyRaw = key.Value;
         uint[] sparse = _sparse;
@@ -81,27 +60,18 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
         {
             uint slot = sparse[keyRaw];
 
-            if (slot != EmptySlot)
+            if (slot != 0)
             {
                 int denseIndex = (int)slot - 1;
 
                 if (_dense[denseIndex] == key)
                 {
-                    ref TValue valueRef = ref _values[denseIndex];
-                    value = valueRef; // copy
-
-                    if (clear)
-                    {
-                        valueRef = default;
-                    }
-
                     int lastIndex = _count - 1;
 
                     if (denseIndex != lastIndex)
                     {
                         ActorId lastKey = _dense[lastIndex];
                         _dense[denseIndex] = lastKey;
-                        _values[denseIndex] = _values[lastIndex];
                         _sparse[lastKey.Value] = slot;
                     }
 
@@ -113,20 +83,15 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
             }
         }
 
-        value = default;
-
         return false;
     }
 
-    /// <summary>
-    /// Fast Path: если <paramref name="key"/> влезает в массив и есть место в dense
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAdd(ActorId key, in TValue value)
+    public bool TryAdd(ActorId key)
     {
         uint keyRaw = key.Value;
 
-        if (keyRaw < (uint)_sparse.Length && (uint)_count < (uint)_dense.Length)
+        if ((uint)keyRaw < (uint)_sparse.Length && (uint)_count < (uint)_dense.Length)
         {
             ref uint slot = ref _sparse[keyRaw];
 
@@ -135,7 +100,6 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
                 var idx = (uint)_count;
                 slot = idx + 1;
                 _dense[idx] = key;
-                _values[idx] = value;
 
                 _count++;
 
@@ -148,44 +112,17 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
             }
         }
 
-        return TryAddSlow(key, in value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TValue TryGetRef(ActorId key)
-    {
-        uint keyRaw = key.Value;
-        uint[] sparse = _sparse;
-
-        if (keyRaw < (uint)sparse.Length)
-        {
-            uint denseIndex = sparse[keyRaw];
-
-            if (denseIndex != 0)
-            {
-                int index = (int)denseIndex - 1;
-
-                if (_dense[index] == key)
-                {
-                    return ref _values[index];
-                }
-            }
-        }
-
-        return ref Unsafe.NullRef<TValue>();
+        return TryAddSlow(key);
     }
 
     private void EnsureCapacity(uint capacity)
     {
-        // Проверка емкости плотных массивов (количество элементов)
         if (_count >= _dense.Length)
         {
             int newSize = _dense.Length * 2;
             Array.Resize(ref _dense, newSize);
-            Array.Resize(ref _values, newSize);
         }
 
-        // Проверка емкости разреженного массива (максимальный ID)
         if (capacity >= (uint)_sparse.Length)
         {
             uint newSize = Math.Max((uint)_sparse.Length * 2, capacity + 1);
@@ -194,7 +131,7 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private bool TryAddSlow(ActorId key, in TValue value)
+    private bool TryAddSlow(ActorId key)
     {
         uint keyRaw = key.Value;
 
@@ -215,7 +152,6 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
         denseIndexPlusOne = denseIndex + 1;
 
         _dense[denseIndex] = key;
-        _values[denseIndex] = value;
 
         _count++;
 

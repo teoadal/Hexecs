@@ -1,4 +1,5 @@
-﻿using Hexecsm.Handlers;
+﻿using Hexecsm.Accessors;
+using Hexecsm.Handlers;
 using Hexecsm.Utils;
 
 namespace Hexecsm.Components;
@@ -9,10 +10,24 @@ internal sealed partial class ComponentPool<T>(
     int initialCapacity) : IComponentPool
     where T : struct, IComponent
 {
+    public readonly ComponentTypeId ComponentTypeId = ComponentType<T>.Id;
+
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _storage.Length;
+    }
+
+    public KeyAccessor Keys
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _storage.Keys;
+    }
+
+    public ValueAccessor<T> Values
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _storage.Values;
     }
 
     private readonly ActorDictionary<T> _storage = new ActorDictionary<T>(initialCapacity);
@@ -75,11 +90,11 @@ internal sealed partial class ComponentPool<T>(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ComponentAccess<T> GetComponents()
+    public KeyValueAccessor<T> GetComponents()
     {
         ObjectDisposedException.ThrowIf(_disposed, typeof(ComponentPool<T>));
 
-        return new ComponentAccess<T>(_storage.GetAccessor());
+        return _storage.GetAccessor();
     }
 
     public ref T GetRef(ActorId actorId)

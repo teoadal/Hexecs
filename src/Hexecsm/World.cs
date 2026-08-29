@@ -1,4 +1,5 @@
-﻿using Hexecsm.Utils;
+﻿using Hexecsm.Components;
+using Hexecsm.Utils;
 
 namespace Hexecsm;
 
@@ -17,5 +18,15 @@ public sealed partial class World(int initialCapacity)
 
     public void Stop()
     {
+    }
+
+    public void Update()
+    {
+        ProcessPostponedOperations();
+
+        foreach (IComponentPool? componentPool in _componentPools)
+        {
+            componentPool?.ProcessPostponedOperations();
+        }
     }
 }

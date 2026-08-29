@@ -9,15 +9,17 @@ public sealed partial class World
     private readonly Lock _componentPoolLock = new Lock();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ComponentPool<T> CreateComponentPool<T>(ushort id)
+    private ComponentPool<T> CreateComponentPool<T>()
         where T : struct, IComponent
     {
+        ushort componentTypeIdRaw = ComponentType<T>.IdRaw;
+
         using (_componentPoolLock.EnterScope())
         {
             // Повторная проверка под локом (Double-Check Locking)
-            if (id < _componentPools.Length)
+            if (componentTypeIdRaw < _componentPools.Length)
             {
-                IComponentPool? existsPool = _componentPools[id];
+                IComponentPool? existsPool = _componentPools[componentTypeIdRaw];
 
                 if (existsPool != null)
                 {
@@ -25,8 +27,8 @@ public sealed partial class World
                 }
             }
 
-            ArrayUtils.EnsureCapacity(ref _componentPools, id);
-            ref IComponentPool? pool = ref _componentPools[id];
+            ArrayUtils.EnsureCapacity(ref _componentPools, componentTypeIdRaw);
+            ref IComponentPool? pool = ref _componentPools[componentTypeIdRaw];
             pool ??= new ComponentPool<T>(
                 cloneHandler: null,
                 disposeHandler: null,
@@ -39,12 +41,12 @@ public sealed partial class World
     private ComponentPool<T>? GetComponentPool<T>()
         where T : struct, IComponent
     {
-        ushort id = ComponentType<T>.Id;
+        ushort componentTypeIdRaw = ComponentType<T>.IdRaw;
         IComponentPool?[] pools = _componentPools;
 
-        if (id < pools.Length)
+        if (componentTypeIdRaw < pools.Length)
         {
-            IComponentPool? pool = pools[id];
+            IComponentPool? pool = pools[componentTypeIdRaw];
 
             return pool == null
                 ? null
@@ -57,12 +59,12 @@ public sealed partial class World
     private ComponentPool<T> GetOrAddComponentPool<T>()
         where T : struct, IComponent
     {
-        ushort id = ComponentType<T>.Id;
+        ushort componentTypeIdRaw = ComponentType<T>.IdRaw;
         IComponentPool?[] pools = _componentPools;
 
-        if ((uint)id < (uint)pools.Length)
+        if ((uint)componentTypeIdRaw < (uint)pools.Length)
         {
-            IComponentPool? existsPool = pools[id];
+            IComponentPool? existsPool = pools[componentTypeIdRaw];
 
             if (existsPool != null)
             {
@@ -70,6 +72,6 @@ public sealed partial class World
             }
         }
 
-        return CreateComponentPool<T>(id);
+        return CreateComponentPool<T>();
     }
 }

@@ -1,11 +1,13 @@
 using Hexecsm.Accessors;
 using Hexecsm.Components;
+using Hexecsm.Components.Messages;
+using Hexecsm.Events;
 using Hexecsm.Utils;
+using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Filters;
 
-public sealed partial class Filter<T1, T2>
-    : IComponentAddedListener, IComponentRemovedListener, IWorldClearingListener, IDisposable
+public sealed partial class Filter<T1, T2> : IFilter, IConsumer<WorldClearing>, IDisposable
     where T1 : struct, IComponent
     where T2 : struct, IComponent
 {
@@ -21,28 +23,20 @@ public sealed partial class Filter<T1, T2>
 
     internal Filter(
         ComponentPool<T1> componentPool1,
-        ComponentPool<T2> componentPool2)
+        ComponentPool<T2> componentPool2,
+        EventBus eventBus)
     {
         _componentPool1 = componentPool1;
         _componentPool2 = componentPool2;
 
+        _consumer1 = new Consumer1(eventBus, this);
+        _consumer2 = new Consumer2(eventBus, this);
+
         _hashSet = new ActorHashSet(128);
-
-        componentPool1.SubscribeAdded(this);
-        componentPool1.SubscribeRemoved(this);
-
-        componentPool2.SubscribeAdded(this);
-        componentPool2.SubscribeRemoved(this);
     }
 
     public void Dispose()
     {
-        _componentPool1.UnsubscribeAdded(this);
-        _componentPool1.UnsubscribeRemoved(this);
-
-        _componentPool2.UnsubscribeAdded(this);
-        _componentPool2.UnsubscribeRemoved(this);
-
         _hashSet.Clear();
     }
 

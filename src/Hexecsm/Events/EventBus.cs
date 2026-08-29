@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Hexecsm.Events;
 
 internal sealed class EventBus
@@ -45,7 +47,7 @@ internal sealed class EventBus
         }
     }
 
-    private sealed class Producer<TMessage> : IProducer<TMessage>
+    private sealed class Producer<TMessage> : IProducer<TMessage>, IDisposable
         where TMessage : struct, IMessage
     {
         private readonly List<IConsumer<TMessage>> _consumers = [];
@@ -65,16 +67,22 @@ internal sealed class EventBus
             _consumers.Clear();
         }
 
-        public void Produce(params ReadOnlySpan<TMessage> messages)
+        public void Produce(TMessage message)
         {
-            foreach (IConsumer<TMessage> consumer in _consumers)
+            ObjectDisposedException.ThrowIf(_disposed, typeof(Producer<TMessage>));
+
+            Span<IConsumer<TMessage>> consumers = CollectionsMarshal.AsSpan(_consumers);
+
+            foreach (IConsumer<TMessage> consumer in consumers)
             {
-                consumer.Handle(messages);
+                consumer.Handle(message);
             }
         }
 
         public void Subscribe(IConsumer<TMessage> consumer)
         {
+            ObjectDisposedException.ThrowIf(_disposed, typeof(Producer<TMessage>));
+
             using (_lock.EnterScope())
             {
                 _consumers.Add(consumer);
@@ -83,6 +91,8 @@ internal sealed class EventBus
 
         public void Unsubscribe(IConsumer<TMessage> consumer)
         {
+            ObjectDisposedException.ThrowIf(_disposed, typeof(Producer<TMessage>));
+
             using (_lock.EnterScope())
             {
                 _consumers.Remove(consumer);

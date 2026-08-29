@@ -1,7 +1,7 @@
 ﻿using Hexecsm.Components;
 using Hexecsm.Utils;
 
-namespace Hexecsm;
+namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
@@ -27,11 +27,12 @@ public sealed partial class World
                 }
             }
 
-            ArrayUtils.EnsureCapacity(ref _componentPools, componentTypeIdRaw);
+            ArrayUtils.EnsureCapacity(ref _componentPools, componentTypeIdRaw + 1);
             ref IComponentPool? pool = ref _componentPools[componentTypeIdRaw];
             pool ??= new ComponentPool<T>(
                 cloneHandler: null,
                 disposeHandler: null,
+                eventBus: _eventBus,
                 initialCapacity: 256);
 
             return Unsafe.As<ComponentPool<T>>(pool);

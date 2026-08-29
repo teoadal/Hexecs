@@ -1,4 +1,5 @@
 ﻿using Hexecsm.Accessors;
+using Hexecsm.Events;
 using Hexecsm.Handlers;
 using Hexecsm.Utils;
 
@@ -7,6 +8,7 @@ namespace Hexecsm.Components;
 internal sealed partial class ComponentPool<T>(
     ComponentCloneHandler<T>? cloneHandler,
     ComponentDisposeHandler<T>? disposeHandler,
+    EventBus eventBus,
     int initialCapacity) : IComponentPool
     where T : struct, IComponent
 {

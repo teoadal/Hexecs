@@ -1,6 +1,6 @@
 ﻿using Hexecsm.Components;
 
-namespace Hexecsm;
+namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
@@ -9,6 +9,14 @@ public sealed partial class World
     {
         ComponentPool<T> componentPool = GetOrAddComponentPool<T>();
         componentPool.Add(actorId, in component);
+    }
+
+    public bool HasComponent<T>(ActorId actorId)
+        where T : struct, IComponent
+    {
+        ComponentPool<T>? componentPool = GetComponentPool<T>();
+
+        return componentPool != null && componentPool.Contains(actorId);
     }
 
     public ref T GetComponent<T>(ActorId actorId)
@@ -20,7 +28,7 @@ public sealed partial class World
         {
             ref T component = ref componentPool.GetRef(actorId);
 
-            if (!Unsafe.IsNullRef<T>(ref component))
+            if (!Unsafe.IsNullRef(ref component))
             {
                 return ref component;
             }

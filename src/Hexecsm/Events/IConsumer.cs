@@ -1,7 +1,7 @@
 namespace Hexecsm.Events;
 
-public interface IConsumer<TMessage>
+internal interface IConsumer<in TMessage>
     where TMessage : struct, IMessage
 {
-    void Handle(ReadOnlySpan<TMessage> message);
+    void Handle(TMessage message);
 }

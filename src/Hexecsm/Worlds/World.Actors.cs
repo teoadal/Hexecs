@@ -1,4 +1,4 @@
-﻿namespace Hexecsm;
+﻿namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
@@ -11,6 +11,11 @@ public sealed partial class World
         PostponeOperation(Operation.Add(result));
 
         return result;
+    }
+
+    public bool IsAlive(ActorId actorId)
+    {
+        return _storage.Contains(actorId);
     }
 
     public void DestroyActor(ActorId actorId)

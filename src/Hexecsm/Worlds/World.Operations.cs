@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Hexecsm;
+namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
@@ -19,7 +19,7 @@ public sealed partial class World
             {
                 case OperationType.AddActor:
                 {
-                    AddHandler(operation.ActorId);
+                    ActorAddHandler(operation.ActorId);
 
                     break;
                 }
@@ -32,7 +32,7 @@ public sealed partial class World
                 }
                 case OperationType.DestroyActor:
                 {
-                    DestroyHandler(operation.ActorId);
+                    ActorDestroyHandler(operation.ActorId);
 
                     break;
                 }

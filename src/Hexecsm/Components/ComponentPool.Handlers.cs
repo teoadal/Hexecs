@@ -4,7 +4,7 @@ namespace Hexecsm.Components;
 
 internal sealed partial class ComponentPool<T>
 {
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddHandler(ActorId actorId, in T component)
     {
         if (_storage.TryAdd(actorId, in component))
@@ -17,11 +17,9 @@ internal sealed partial class ComponentPool<T>
         ThrowAlreadyExists(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ClearHandler()
     {
-        ProduceClearingEvent();
-
         if (disposeHandler != null)
         {
             KeyValueAccessor<T> values = _storage.GetAccessor();
@@ -36,7 +34,7 @@ internal sealed partial class ComponentPool<T>
         _storage.Clear();
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CloneHandler(ActorId targetId, in T component)
     {
         if (_storage.TryAdd(targetId, in component))
@@ -49,7 +47,7 @@ internal sealed partial class ComponentPool<T>
         ThrowAlreadyExists(targetId);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveHandler(ActorId actorId)
     {
         bool hasDisposeHandler = disposeHandler != null;
@@ -65,7 +63,7 @@ internal sealed partial class ComponentPool<T>
         ThrowComponentNotFound(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UpdateHandler(ActorId actorId, in T expected)
     {
         ref T exists = ref _storage.TryGetRef(actorId);

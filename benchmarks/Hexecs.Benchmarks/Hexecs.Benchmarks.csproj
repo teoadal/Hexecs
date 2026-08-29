@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\Hexecsm\Hexecsm.csproj" />
         <ProjectReference Include="..\..\src\Hexecs\Hexecs.csproj" />
     </ItemGroup>
 

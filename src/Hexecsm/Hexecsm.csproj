@@ -8,27 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Update="World.Operations.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.Actors.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.Handlers.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.Errors.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.Components.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.Entry.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.ComponentPools.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
       <Compile Update="Components\ComponentPool.Errors.cs">
         <DependentUpon>ComponentPool.cs</DependentUpon>
       </Compile>
@@ -41,20 +20,23 @@
       <Compile Update="Filters\Filter2.Errors.cs">
         <DependentUpon>Filter2.cs</DependentUpon>
       </Compile>
+      <Compile Update="Filters\Filter2.Consumers.cs">
+        <DependentUpon>Filter2.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Producers.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
+      </Compile>
       <Compile Update="Filters\Filter2.Handlers.cs">
         <DependentUpon>Filter2.cs</DependentUpon>
       </Compile>
-      <Compile Update="Filters\Filter2.Listeners.cs">
-        <DependentUpon>Filter2.cs</DependentUpon>
-      </Compile>
-      <Compile Update="World.Events.cs">
+      <Compile Update="Worlds\World.Producers.cs">
         <DependentUpon>World.cs</DependentUpon>
       </Compile>
-      <Compile Update="Components\ComponentPool.Producer.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
+      <Compile Update="Worlds\World.Consumers.cs">
+        <DependentUpon>World.cs</DependentUpon>
       </Compile>
-      <Compile Update="Components\ComponentPool.Subscriptions.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
+      <Compile Update="Worlds\World.Filters.cs">
+        <DependentUpon>World.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 

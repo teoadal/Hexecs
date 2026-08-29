@@ -7,7 +7,12 @@ public sealed partial class Filter<T1, T2>
     {
         if (_componentPool2.Contains(actorId))
         {
-            _hashSet.TryAdd(actorId);
+            if (_hashSet.TryAdd(actorId))
+            {
+                return;
+            }
+
+            ThrowAlreadyExists(actorId);
         }
     }
 
@@ -16,7 +21,12 @@ public sealed partial class Filter<T1, T2>
     {
         if (_componentPool1.Contains(actorId))
         {
-            _hashSet.TryAdd(actorId);
+            if (_hashSet.TryAdd(actorId))
+            {
+                return;
+            }
+
+            ThrowAlreadyExists(actorId);
         }
     }
 
@@ -29,6 +39,11 @@ public sealed partial class Filter<T1, T2>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemovedHandler(ActorId actorId)
     {
-        _hashSet.Remove(actorId);
+        if (_hashSet.Remove(actorId))
+        {
+            return;
+        }
+
+        ThrowNotFound(actorId);
     }
 }

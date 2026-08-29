@@ -1,7 +1,7 @@
 ﻿using Hexecsm.Components;
 using Hexecsm.Utils;
 
-namespace Hexecsm;
+namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {

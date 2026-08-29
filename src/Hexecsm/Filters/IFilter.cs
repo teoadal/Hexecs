@@ -1,3 +1,3 @@
 namespace Hexecsm.Filters;
 
-public interface IFilter;
+public interface IFilter : IDisposable;

@@ -26,7 +26,6 @@ public sealed partial class World
                 case OperationType.ClearWorld:
                 {
                     ClearHandler();
-                    _postponedOperations.Clear();
 
                     return;
                 }

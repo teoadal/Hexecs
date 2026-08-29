@@ -22,13 +22,6 @@ internal sealed partial class ComponentPool<T>
 
                     break;
                 }
-                case OperationType.ClearPool:
-                {
-                    ClearHandler();
-                    _postponedOperations.Clear();
-
-                    return;
-                }
                 case OperationType.Clone:
                 {
                     CloneHandler(actorId, in operation.Component);
@@ -70,12 +63,6 @@ internal sealed partial class ComponentPool<T>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Clear()
-        {
-            return new Operation(OperationType.ClearPool);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Operation Clone(ActorId target, in T component)
         {
             return new Operation(target, in component, OperationType.Clone);
@@ -105,13 +92,6 @@ internal sealed partial class ComponentPool<T>
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SkipLocalsInit]
-        private Operation(OperationType type)
-        {
-            Type = type;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [SkipLocalsInit]
         private Operation(ActorId actorId, OperationType type)
         {
             ActorId = actorId;
@@ -131,7 +111,6 @@ internal sealed partial class ComponentPool<T>
     private enum OperationType : byte
     {
         Add,
-        ClearPool,
         Clone,
         Remove,
         Update

@@ -1,8 +1,14 @@
 ﻿using DefaultEcs;
+
 using Friflo.Engine.ECS;
+
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Utils;
 using Hexecs.Worlds;
+
+using Hexecsm.Accessors;
+
+using ActorId = Hexecsm.ActorId;
 using Entity = DefaultEcs.Entity;
 using World = Hexecs.Worlds.World;
 
@@ -64,7 +70,8 @@ namespace Hexecs.Benchmarks.Actors;
 [BenchmarkCategory("Actors")]
 public class ActorFilter2EnumerationBenchmark
 {
-    [Params(10_000, 100_000)] public int Count;
+    [Params(10_000, 100_000)]
+    public int Count;
 
     private ActorContext _context = null!;
     private ActorFilter<Attack, Defence> _filter = null!;
@@ -76,32 +83,70 @@ public class ActorFilter2EnumerationBenchmark
     private EntityStore _frifloWorld = null!;
     private ArchetypeQuery<Attack, Defence> _frifloQuery = null!;
 
+    private Hexecsm.Worlds.World _mWorld = null!;
+    private Hexecsm.Filters.Filter<Attack, Defence> _mFilter = null!;
+
+    // [Benchmark(Baseline = true)]
+    // public int Hexecs()
+    // {
+    //     var result = 0;
+    //
+    //     foreach (ActorRef<Attack, Defence> actor in _filter)
+    //     {
+    //         result += actor.Component1.Value +
+    //             actor.Component2.Value;
+    //     }
+    //
+    //     return result;
+    // }
+    //
+    // [Benchmark]
+    // public int Hexecs_ComponentAccess()
+    // {
+    //     var result = 0;
+    //
+    //     ComponentsAccess<Attack> attacks = _context.GetComponents<Attack>();
+    //     ComponentsAccess<Defence> defences = _context.GetComponents<Defence>();
+    //
+    //     foreach (uint actorId in _filter.Keys)
+    //     {
+    //         result +=
+    //             attacks[actorId].Value +
+    //             defences[actorId].Value;
+    //     }
+    //
+    //     return result;
+    // }
+
+    // [Benchmark]
+    // public int Hexecs_M()
+    // {
+    //     var result = 0;
+    //
+    //     foreach (Hexecsm.ActorRef<Attack, Defence> actorRef in _mFilter)
+    //     {
+    //         result +=
+    //             actorRef.Component1.Value +
+    //             actorRef.Component2.Value;
+    //     }
+    //
+    //     return result;
+    // }
+
     [Benchmark(Baseline = true)]
-    public int Hexecs()
+    public int Hexecs_M_ComponentAccess()
     {
         var result = 0;
 
-        foreach (ActorRef<Attack, Defence> actor in _filter)
+        ReadOnlySpan<ActorId> keys = _mFilter.Keys.AsReadOnlySpan();
+        ValueAccessor<Attack> attacks = _mFilter.GetComponents1();
+        ValueAccessor<Defence> defences = _mFilter.GetComponents2();
+
+        foreach (ActorId actorId in keys)
         {
-            result += actor.Component1.Value +
-                      actor.Component2.Value;
-        }
-
-        return result;
-    }
-
-    [Benchmark]
-    public int Hexecs_ComponentAccess()
-    {
-        var result = 0;
-
-        ComponentsAccess<Attack> attacks = _context.GetComponents<Attack>();
-        ComponentsAccess<Defence> defences = _context.GetComponents<Defence>();
-
-        foreach (uint actorId in _filter.Keys)
-        {
-            result += attacks[actorId].Value +
-                      defences[actorId].Value;
+            result +=
+                attacks.GetValue(actorId).Value +
+                defences.GetValue(actorId).Value;
         }
 
         return result;
@@ -137,26 +182,26 @@ public class ActorFilter2EnumerationBenchmark
 
         return result;
     }
-
-    [Benchmark]
-    public int FriFlo_Chunks()
-    {
-        var result = 0;
-
-        foreach (Chunks<Attack, Defence> queryChunk in _frifloQuery.Chunks)
-        {
-            Chunk<Attack> attacks = queryChunk.Chunk1;
-            Chunk<Defence> defences = queryChunk.Chunk2;
-
-            for (var i = 0; i < queryChunk.Length; i++)
-            {
-                result += attacks[i].Value +
-                          defences[i].Value;
-            }
-        }
-
-        return result;
-    }
+    //
+    // [Benchmark]
+    // public int FriFlo_Chunks()
+    // {
+    //     var result = 0;
+    //
+    //     foreach (Chunks<Attack, Defence> queryChunk in _frifloQuery.Chunks)
+    //     {
+    //         Chunk<Attack> attacks = queryChunk.Chunk1;
+    //         Chunk<Defence> defences = queryChunk.Chunk2;
+    //
+    //         for (var i = 0; i < queryChunk.Length; i++)
+    //         {
+    //             result += attacks[i].Value +
+    //                       defences[i].Value;
+    //         }
+    //     }
+    //
+    //     return result;
+    // }
 
     [GlobalCleanup]
     public void Cleanup()
@@ -166,6 +211,8 @@ public class ActorFilter2EnumerationBenchmark
 
         _world.Dispose();
         _world = null!;
+
+        _mWorld.Dispose();
     }
 
     [GlobalSetup]
@@ -180,13 +227,14 @@ public class ActorFilter2EnumerationBenchmark
         _filter = _world.Actors.Filter<Attack, Defence>();
         _frifloQuery = _frifloWorld.Query<Attack, Defence>();
 
-        ActorContext context = _world.Actors;
+        _mWorld = new Hexecsm.Worlds.World(128);
+        _mFilter = _mWorld.GetFilter<Attack, Defence>();
 
         for (var i = 0; i < Count; i++)
         {
             var attack = new Attack { Value = i };
 
-            Actor actor = context.CreateActor();
+            Actor actor = _context.CreateActor();
             actor.Add(in attack);
             actor.Add(new Defence());
 
@@ -194,7 +242,12 @@ public class ActorFilter2EnumerationBenchmark
             defaultEntity.Set(in attack);
             defaultEntity.Set<Defence>();
 
-            _frifloWorld.CreateEntity(attack, new Defence(), new Speed());
+            _frifloWorld.CreateEntity(attack, new Defence());
+
+            Hexecsm.ActorId actorId = _mWorld.CreateActor();
+            _mWorld.AddComponent(actorId, in attack);
+            _mWorld.AddComponent(actorId, new Defence());
+            _mWorld.Update();
         }
     }
 }

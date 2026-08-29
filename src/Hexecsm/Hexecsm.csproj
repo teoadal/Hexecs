@@ -38,6 +38,33 @@
       <Compile Update="Worlds\World.Filters.cs">
         <DependentUpon>World.cs</DependentUpon>
       </Compile>
+      <Compile Update="Worlds\World.Actors.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Worlds\World.ComponentPools.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Worlds\World.Components.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Worlds\World.Entry.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Worlds\World.Errors.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Worlds\World.Handlers.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Worlds\World.Operations.cs">
+        <DependentUpon>World.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Components\ComponentPool.Consumers.cs">
+        <DependentUpon>ComponentPool.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Filters\Filter2.Enumerator.cs">
+        <DependentUpon>Filter2.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 </Project>

@@ -31,12 +31,15 @@ public sealed partial class World
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ClearHandler()
     {
+        ProduceClearingEvent();
+
         foreach (ref Entry entry in _storage.Values.AsSpan())
         {
             entry.Dispose();
         }
 
         _storage.Clear();
+        _postponedOperations.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

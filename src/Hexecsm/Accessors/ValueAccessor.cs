@@ -1,4 +1,6 @@
-﻿namespace Hexecsm.Accessors;
+﻿using System.Runtime.InteropServices;
+
+namespace Hexecsm.Accessors;
 
 public readonly ref struct ValueAccessor<TValue>
     where TValue : struct
@@ -13,6 +15,7 @@ public readonly ref struct ValueAccessor<TValue>
     private readonly Span<TValue> _values;
 
     [SkipLocalsInit]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ValueAccessor(uint[] mapping, Span<TValue> values)
     {
         _mapping = mapping;
@@ -31,26 +34,10 @@ public readonly ref struct ValueAccessor<TValue>
         return _values;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TValue GetValue(ActorId actorId)
     {
-        uint keyRaw = actorId.Value;
-
-        if (keyRaw < (uint)_mapping.Length)
-        {
-            uint denseIndexPlusOne = _mapping[keyRaw];
-
-            if (denseIndexPlusOne != 0)
-            {
-                int index = (int)denseIndexPlusOne - 1;
-
-                if (index < _values.Length)
-                {
-                    return ref _values[index];
-                }
-            }
-        }
-
-        return ref Unsafe.NullRef<TValue>();
+        return ref _values[(int)_mapping[actorId.Value - 1]];
     }
 
     public ref TValue this[int index]

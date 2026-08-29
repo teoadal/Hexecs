@@ -2,10 +2,20 @@ using System.Runtime.InteropServices;
 
 namespace Hexecsm.Events;
 
-internal sealed class EventBus
+internal sealed class EventBus : IDisposable
 {
     private readonly Dictionary<Type, IProducer> _producers = [];
     private readonly Lock _producerLock = new Lock();
+
+    public void Dispose()
+    {
+        foreach (IProducer producer in _producers.Values)
+        {
+            producer.Dispose();
+        }
+
+        _producers.Clear();
+    }
 
     public IProducer<TMessage> GetProducer<TMessage>()
         where TMessage : struct, IMessage
@@ -47,7 +57,7 @@ internal sealed class EventBus
         }
     }
 
-    private sealed class Producer<TMessage> : IProducer<TMessage>, IDisposable
+    private sealed class Producer<TMessage> : IProducer<TMessage>
         where TMessage : struct, IMessage
     {
         private readonly List<IConsumer<TMessage>> _consumers = [];

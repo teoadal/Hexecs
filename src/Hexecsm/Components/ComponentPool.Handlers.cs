@@ -20,18 +20,19 @@ internal sealed partial class ComponentPool<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ClearHandler()
     {
-        if (disposeHandler != null)
+        if (_disposeHandler != null)
         {
             KeyValueAccessor<T> values = _storage.GetAccessor();
 
             for (var i = 0; i < values.Length; i++)
             {
                 KeyValueRef<T> keyValue = values[i];
-                disposeHandler.Invoke(keyValue.Key, in keyValue.Value);
+                _disposeHandler.Invoke(keyValue.Key, in keyValue.Value);
             }
         }
 
         _storage.Clear();
+        _postponedOperations.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,12 +51,12 @@ internal sealed partial class ComponentPool<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveHandler(ActorId actorId)
     {
-        bool hasDisposeHandler = disposeHandler != null;
+        bool hasDisposeHandler = _disposeHandler != null;
 
         if (_storage.Remove(actorId, clear: hasDisposeHandler, out T removed))
         {
             ProduceRemovedEvent(actorId, in removed);
-            disposeHandler?.Invoke(actorId, in removed);
+            _disposeHandler?.Invoke(actorId, in removed);
 
             return;
         }

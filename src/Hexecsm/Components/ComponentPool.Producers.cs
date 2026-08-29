@@ -5,13 +5,13 @@ namespace Hexecsm.Components;
 
 internal sealed partial class ComponentPool<T>
 {
-    private readonly IProducer<ComponentAdded<T>> _addedProducer = eventBus.GetProducer<ComponentAdded<T>>();
-    private readonly IProducer<ComponentAdded> _addedSimpleProducer = eventBus.GetProducer<ComponentAdded>();
+    private readonly IProducer<ComponentAdded<T>> _addedProducer;
+    private readonly IProducer<ComponentAdded> _addedSimpleProducer;
 
-    private readonly IProducer<ComponentRemoved<T>> _removedProducer = eventBus.GetProducer<ComponentRemoved<T>>();
-    private readonly IProducer<ComponentRemoved> _removedSimpleProducer = eventBus.GetProducer<ComponentRemoved>();
+    private readonly IProducer<ComponentRemoved<T>> _removedProducer;
+    private readonly IProducer<ComponentRemoved> _removedSimpleProducer;
 
-    private readonly IProducer<ComponentUpdating<T>> _updatingProducer = eventBus.GetProducer<ComponentUpdating<T>>();
+    private readonly IProducer<ComponentUpdating<T>> _updatingProducer;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ProduceAddedEvent(ActorId actorId, in T added)

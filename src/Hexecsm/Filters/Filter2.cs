@@ -1,13 +1,12 @@
 using Hexecsm.Accessors;
 using Hexecsm.Components;
-using Hexecsm.Components.Messages;
 using Hexecsm.Events;
 using Hexecsm.Utils;
 using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Filters;
 
-public sealed partial class Filter<T1, T2> : IFilter, IConsumer<WorldClearing>, IDisposable
+public sealed partial class Filter<T1, T2> : IFilter, IConsumer<WorldClearing>
     where T1 : struct, IComponent
     where T2 : struct, IComponent
 {
@@ -50,5 +49,14 @@ public sealed partial class Filter<T1, T2> : IFilter, IConsumer<WorldClearing>, 
     public ValueAccessor<T2> GetComponents2()
     {
         return _componentPool2.Values;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(
+            _hashSet.Keys.AsReadOnlySpan(),
+            _componentPool1.Values,
+            _componentPool2.Values);
     }
 }

@@ -1,19 +1,15 @@
 ﻿using Hexecsm.Accessors;
+using Hexecsm.Components.Messages;
 using Hexecsm.Events;
 using Hexecsm.Handlers;
 using Hexecsm.Utils;
+using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Components;
 
-internal sealed partial class ComponentPool<T>(
-    ComponentCloneHandler<T>? cloneHandler,
-    ComponentDisposeHandler<T>? disposeHandler,
-    EventBus eventBus,
-    int initialCapacity) : IComponentPool
+internal sealed partial class ComponentPool<T> : IComponentPool, IConsumer<WorldClearing>
     where T : struct, IComponent
 {
-    public readonly ComponentTypeId ComponentTypeId = ComponentType<T>.Id;
-
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,9 +28,32 @@ internal sealed partial class ComponentPool<T>(
         get => _storage.Values;
     }
 
-    private readonly ActorDictionary<T> _storage = new ActorDictionary<T>(initialCapacity);
+    private readonly ActorDictionary<T> _storage;
 
     private bool _disposed;
+    private readonly ComponentCloneHandler<T>? _cloneHandler;
+    private readonly ComponentDisposeHandler<T>? _disposeHandler;
+    private readonly EventBus _eventBus;
+
+    public ComponentPool(
+        ComponentCloneHandler<T>? cloneHandler,
+        ComponentDisposeHandler<T>? disposeHandler,
+        EventBus eventBus,
+        int initialCapacity)
+    {
+        _cloneHandler = cloneHandler;
+        _disposeHandler = disposeHandler;
+        _eventBus = eventBus;
+        _storage = new ActorDictionary<T>(initialCapacity);
+
+        _addedProducer = eventBus.GetProducer<ComponentAdded<T>>();
+        _addedSimpleProducer = eventBus.GetProducer<ComponentAdded>();
+        _removedProducer = eventBus.GetProducer<ComponentRemoved<T>>();
+        _removedSimpleProducer = eventBus.GetProducer<ComponentRemoved>();
+        _updatingProducer = eventBus.GetProducer<ComponentUpdating<T>>();
+
+        eventBus.Subscribe(this);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(ActorId actorId, in T component)
@@ -42,14 +61,6 @@ internal sealed partial class ComponentPool<T>(
         ObjectDisposedException.ThrowIf(_disposed, typeof(ComponentPool<T>));
 
         PostponeOperation(Operation.Add(actorId, in component));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, typeof(ComponentPool<T>));
-
-        PostponeOperation(Operation.Clear());
     }
 
     public void Clone(ActorId source, ActorId target)
@@ -60,7 +71,7 @@ internal sealed partial class ComponentPool<T>(
 
         if (!Unsafe.IsNullRef(ref exists))
         {
-            T clonedComponent = cloneHandler?.Invoke(source, target, in exists) ?? exists;
+            T clonedComponent = _cloneHandler?.Invoke(source, target, in exists) ?? exists;
             PostponeOperation(Operation.Clone(target, in clonedComponent));
 
             return;
@@ -86,9 +97,8 @@ internal sealed partial class ComponentPool<T>(
 
         _disposed = true;
 
-        _postponedOperations.Clear();
-
         ClearHandler();
+        _eventBus.Unsubscribe(this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

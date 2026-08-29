@@ -5,5 +5,10 @@ namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
-    private IProducer<WorldClearing> _clearingProducer;
+    private readonly IProducer<WorldClearing> _clearingProducer;
+
+    private void ProduceClearingEvent()
+    {
+        _clearingProducer.Produce(new WorldClearing());
+    }
 }

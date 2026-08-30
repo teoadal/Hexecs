@@ -139,8 +139,8 @@ public class ActorFilter2EnumerationBenchmark
         var result = 0;
 
         ReadOnlySpan<ActorId> keys = _mFilter.Keys.AsReadOnlySpan();
-        ValueAccessor<Attack> attacks = _mFilter.GetComponents1();
-        ValueAccessor<Defence> defences = _mFilter.GetComponents2();
+        ValueAccessor<Attack> attacks = _mWorld.GetComponents<Attack>();
+        ValueAccessor<Defence> defences = _mWorld.GetComponents<Defence>();
 
         foreach (ActorId actorId in keys)
         {
@@ -163,7 +163,7 @@ public class ActorFilter2EnumerationBenchmark
         foreach (Entity entity in _defaultEntitySet.GetEntities())
         {
             result += attacks[entity].Value +
-                      defences[entity].Value;
+                defences[entity].Value;
         }
 
         return result;
@@ -177,11 +177,12 @@ public class ActorFilter2EnumerationBenchmark
         _frifloQuery.ForEachEntity((ref attack, ref defence, _) =>
         {
             result += attack.Value +
-                      defence.Value;
+                defence.Value;
         });
 
         return result;
     }
+
     //
     // [Benchmark]
     // public int FriFlo_Chunks()

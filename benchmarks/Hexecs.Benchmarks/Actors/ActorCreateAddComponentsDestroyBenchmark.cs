@@ -5,6 +5,9 @@ using Friflo.Engine.ECS;
 using Hexecs.Benchmarks.Mocks.ActorComponents;
 using Hexecs.Worlds;
 
+using Hexecsm.Filters;
+
+using ActorId = Hexecsm.ActorId;
 using Entity = DefaultEcs.Entity;
 using World = Hexecs.Worlds.World;
 
@@ -82,86 +85,121 @@ public class ActorCreateAddComponentsDestroyBenchmark
     private List<IActorFilter> _hexecsFilters = null!;
     private World _hexecsWorld = null!;
 
+    private List<ActorId> _mHexecsActors = null!;
+    private Hexecsm.Worlds.World _mWorld = null!;
+    private List<IFilter> _mFilters = null!;
+
+    // [Benchmark(Baseline = true)]
+    // public int Hexecs_CreateAddDestroy()
+    // {
+    //     _hexecsActors.Clear();
+    //
+    //     for (var i = 0; i < Count; i++)
+    //     {
+    //         Actor actor = _hexecsContext.CreateActor();
+    //         actor.Add(new Attack { Value = i });
+    //         actor.Add(new Defence());
+    //         actor.Add(new Speed());
+    //
+    //         _hexecsActors.Add(actor);
+    //     }
+    //
+    //     foreach (Actor actor in _hexecsActors)
+    //     {
+    //         actor.Remove<Attack>();
+    //         actor.Remove<Defence>();
+    //         actor.Remove<Speed>();
+    //
+    //         actor.Destroy();
+    //     }
+    //
+    //     return _hexecsFilters.Sum(static x => x.Length);
+    // }
+
     [Benchmark(Baseline = true)]
-    public int Hexecs_CreateAddDestroy()
+    public int Hexes_M_CreateAddDestroy()
     {
-        _hexecsActors.Clear();
+        _mHexecsActors.Clear();
 
         for (var i = 0; i < Count; i++)
         {
-            Actor actor = _hexecsContext.CreateActor();
-            actor.Add(new Attack { Value = i });
-            actor.Add(new Defence());
-            actor.Add(new Speed());
+            ActorId actor = _mWorld.CreateActor();
+            _mWorld.AddComponent(actor, new Attack { Value = i });
+            _mWorld.AddComponent(actor, new Defence());
+            _mWorld.AddComponent(actor, new Speed());
 
-            _hexecsActors.Add(actor);
+            _mHexecsActors.Add(actor);
         }
 
-        foreach (Actor actor in _hexecsActors)
+        _mWorld.Update();
+
+        foreach (ActorId actor in _mHexecsActors)
         {
-            actor.Remove<Attack>();
-            actor.Remove<Defence>();
-            actor.Remove<Speed>();
+            _mWorld.RemoveComponent<Attack>(actor);
+            _mWorld.RemoveComponent<Defence>(actor);
+            _mWorld.RemoveComponent<Speed>(actor);
 
-            actor.Destroy();
+            _mWorld.DestroyActor(actor);
         }
 
-        return _hexecsFilters.Sum(static x => x.Length);
+        _mWorld.Update();
+
+        return _mFilters.Sum(static x => x.Length);
     }
 
-    [Benchmark]
-    public int DefaultEcs_CreateAddDestroy()
-    {
-        _defaultEntities.Clear();
-
-        for (var i = 0; i < Count; i++)
-        {
-            Entity entity = _defaultWorld.CreateEntity();
-            entity.Set(new Attack { Value = i });
-            entity.Set(new Defence());
-            entity.Set(new Speed());
-
-            _defaultEntities.Add(entity);
-        }
-
-        foreach (Entity entity in _defaultEntities)
-        {
-            entity.Remove<Attack>();
-            entity.Remove<Defence>();
-            entity.Remove<Speed>();
-
-            entity.Dispose();
-        }
-
-        return _defaultSets.Sum(static x => x.Count);
-    }
-
-    [Benchmark]
-    public int FriFlo_CreateAddDestroy()
-    {
-        _frifloEntities.Clear();
-
-        for (var i = 0; i < Count; i++)
-        {
-            Friflo.Engine.ECS.Entity entity = _frifloWorld.CreateEntity();
-            entity.AddComponent(new Attack { Value = i });
-            entity.AddComponent(new Defence());
-            entity.AddComponent(new Speed());
-
-            _frifloEntities.Add(entity);
-        }
-
-        foreach (Friflo.Engine.ECS.Entity entity in _frifloEntities)
-        {
-            entity.RemoveComponent<Attack>();
-            entity.RemoveComponent<Defence>();
-            entity.RemoveComponent<Speed>();
-
-            entity.DeleteEntity();
-        }
-
-        return _frifloQueries.Sum(static x => x.Count);
-    }
+    // [Benchmark]
+    // public int DefaultEcs_CreateAddDestroy()
+    // {
+    //     _defaultEntities.Clear();
+    //
+    //     for (var i = 0; i < Count; i++)
+    //     {
+    //         Entity entity = _defaultWorld.CreateEntity();
+    //         entity.Set(new Attack { Value = i });
+    //         entity.Set(new Defence());
+    //         entity.Set(new Speed());
+    //
+    //         _defaultEntities.Add(entity);
+    //     }
+    //
+    //     foreach (Entity entity in _defaultEntities)
+    //     {
+    //         entity.Remove<Attack>();
+    //         entity.Remove<Defence>();
+    //         entity.Remove<Speed>();
+    //
+    //         entity.Dispose();
+    //     }
+    //
+    //     return _defaultSets.Sum(static x => x.Count);
+    // }
+    //
+    // [Benchmark]
+    // public int FriFlo_CreateAddDestroy()
+    // {
+    //     _frifloEntities.Clear();
+    //
+    //     for (var i = 0; i < Count; i++)
+    //     {
+    //         Friflo.Engine.ECS.Entity entity = _frifloWorld.CreateEntity();
+    //         entity.AddComponent(new Attack { Value = i });
+    //         entity.AddComponent(new Defence());
+    //         entity.AddComponent(new Speed());
+    //
+    //         _frifloEntities.Add(entity);
+    //     }
+    //
+    //     foreach (Friflo.Engine.ECS.Entity entity in _frifloEntities)
+    //     {
+    //         entity.RemoveComponent<Attack>();
+    //         entity.RemoveComponent<Defence>();
+    //         entity.RemoveComponent<Speed>();
+    //
+    //         entity.DeleteEntity();
+    //     }
+    //
+    //     return _frifloQueries.Sum(static x => x.Count);
+    // }
 
     [GlobalCleanup]
     public void Cleanup()
@@ -218,6 +256,19 @@ public class ActorCreateAddComponentsDestroyBenchmark
             _hexecsContext.Filter<Attack, Defence, Speed>()
         ];
 
+        _mHexecsActors = new List<ActorId>();
+        _mWorld = new Hexecsm.Worlds.World(256);
+        _mFilters =
+        [
+            _mWorld.GetFilter<Attack>(),
+            _mWorld.GetFilter<Defence>(),
+            _mWorld.GetFilter<Speed>(),
+            _mWorld.GetFilter<Attack, Defence>(),
+            _mWorld.GetFilter<Attack, Speed>(),
+            _mWorld.GetFilter<Defence, Speed>(),
+            _mWorld.GetFilter<Attack, Defence, Speed>()
+        ];
+
         // warmup
         for (var i = 0; i < Count; i++)
         {
@@ -237,6 +288,11 @@ public class ActorCreateAddComponentsDestroyBenchmark
             actor.Add(new Speed());
 
             _hexecsActors.Add(actor);
+
+            ActorId actorId = _mWorld.CreateActor();
+            _mWorld.AddComponent(actorId, new Attack());
+            _mWorld.AddComponent(actorId, new Defence());
+            _mWorld.AddComponent(actorId, new Speed());
         }
 
         foreach (Entity entity in _defaultEntities)
@@ -252,6 +308,11 @@ public class ActorCreateAddComponentsDestroyBenchmark
         foreach (Actor actor in _hexecsActors)
         {
             actor.Destroy();
+        }
+
+        foreach (ActorId actorId in _mHexecsActors)
+        {
+            _mWorld.DestroyActor(actorId);
         }
 
         _defaultEntities.Clear();

@@ -5,6 +5,12 @@ namespace Hexecsm.Accessors;
 public readonly ref struct ValueAccessor<TValue>
     where TValue : struct
 {
+    public static ValueAccessor<TValue> Empty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new ValueAccessor<TValue>([], Span<TValue>.Empty);
+    }
+
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

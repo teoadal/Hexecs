@@ -20,7 +20,15 @@ public sealed partial class World
     {
         if (_storage.Remove(actorId, clear: true, out Entry entry))
         {
+            foreach (ComponentTypeId componentTypeId in entry)
+            {
+                IComponentPool componentPool = GetComponentPoolUnsafe(componentTypeId);
+                componentPool.Remove(actorId);
+            }
+
             entry.Dispose();
+
+            _freeIds.Enqueue(actorId);
 
             return;
         }

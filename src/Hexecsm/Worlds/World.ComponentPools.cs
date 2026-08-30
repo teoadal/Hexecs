@@ -57,6 +57,12 @@ public sealed partial class World
         return null;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private IComponentPool GetComponentPoolUnsafe(ComponentTypeId componentTypeId)
+    {
+        return _componentPools[componentTypeId.Value]!;
+    }
+
     private ComponentPool<T> GetOrAddComponentPool<T>()
         where T : struct, IComponent
     {

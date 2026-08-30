@@ -39,6 +39,7 @@ public sealed partial class World
         }
     }
 
+    [DebuggerDisplay("Type = {Type}, ActorId = {ActorId}")]
     private readonly struct Operation
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

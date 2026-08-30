@@ -3,7 +3,7 @@ namespace Hexecsm.Components;
 /// <summary>
 /// Структура, представляющая собой идентификатор типа компонента в системе.
 /// </summary>
-[DebuggerDisplay("{ToString()}")]
+[DebuggerDisplay("{Value}")]
 public readonly struct ComponentTypeId : IEquatable<ComponentTypeId>
 {
     /// <summary>

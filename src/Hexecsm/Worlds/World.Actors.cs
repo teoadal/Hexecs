@@ -1,16 +1,22 @@
-﻿namespace Hexecsm.Worlds;
+﻿using System.Collections.Concurrent;
+
+namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
+    private readonly ConcurrentQueue<ActorId> _freeIds = [];
     private uint _nextActorId;
 
     public ActorId CreateActor()
     {
-        ActorId result = ActorId.Unsafe(Interlocked.Increment(ref _nextActorId));
+        if (!_freeIds.TryDequeue(out ActorId actorId))
+        {
+            actorId = ActorId.Unsafe(Interlocked.Increment(ref _nextActorId));
+        }
 
-        PostponeOperation(Operation.Add(result));
+        PostponeOperation(Operation.Add(actorId));
 
-        return result;
+        return actorId;
     }
 
     public bool IsAlive(ActorId actorId)

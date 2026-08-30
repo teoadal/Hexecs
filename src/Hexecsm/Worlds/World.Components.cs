@@ -1,4 +1,5 @@
-﻿using Hexecsm.Components;
+﻿using Hexecsm.Accessors;
+using Hexecsm.Components;
 
 namespace Hexecsm.Worlds;
 
@@ -37,6 +38,16 @@ public sealed partial class World
         ThrowComponentNotFound<T>(actorId);
 
         return ref Unsafe.NullRef<T>();
+    }
+
+    public ValueAccessor<T> GetComponents<T>()
+        where T : struct, IComponent
+    {
+        ComponentPool<T>? componentPool = GetComponentPool<T>();
+
+        return componentPool != null
+            ? componentPool.Values
+            : ValueAccessor<T>.Empty;
     }
 
     public void RemoveComponent<T>(ActorId actorId)

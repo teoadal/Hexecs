@@ -5,21 +5,21 @@ namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
-    private struct Entry
+    [method: SkipLocalsInit]
+    [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private struct Entry()
     {
-        private InlineBucket<ComponentTypeId> _bucket;
-
-        [SkipLocalsInit]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Entry()
-        {
-            _bucket = new InlineBucket<ComponentTypeId>();
-        }
+        private InlineBucket<ComponentTypeId> _bucket = new InlineBucket<ComponentTypeId>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             _bucket.Dispose();
+        }
+
+        public InlineBucket<ComponentTypeId>.Enumerator GetEnumerator()
+        {
+            return _bucket.GetEnumerator();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

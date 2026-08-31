@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace Hexecsm.Events;
 
 internal sealed class EventBus : IDisposable

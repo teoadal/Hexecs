@@ -51,6 +51,16 @@ internal sealed class ActorHashSet(int initialCapacity)
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public KeyAccessor GetKeys(int start, int length)
+    {
+        return new KeyAccessor(
+            keys: new ReadOnlySpan<ActorId>(
+                _dense,
+                start: start,
+                length: length));
+    }
+
     public bool Remove(ActorId key)
     {
         uint keyRaw = key.Value;

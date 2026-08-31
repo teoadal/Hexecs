@@ -1,8 +1,8 @@
-using Hexecs.Actors;
+using Hexecsm;
 
 namespace Hexecs.Benchmarks.Spawn.Components;
 
-public struct Velocity : IActorComponent
+public struct Velocity : IComponent
 {
     public static Velocity Create(float x, float y)
     {

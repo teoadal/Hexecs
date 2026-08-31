@@ -1,16 +1,15 @@
-using Hexecs.Actors;
-using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Noise.Components;
-using Hexecs.Threading;
-using Hexecs.Worlds;
+
+using Hexecsm;
+using Hexecsm.Systems;
+using Hexecsm.Worlds;
 
 namespace Hexecs.Benchmarks.Noise.Systems;
 
 public sealed class MovementSystem(
-    ActorContext context,
-    IParallelWorker worker,
+    World context,
     int width,
-    int height) : UpdateSystem<Position, Velocity>(context, parallelWorker: worker)
+    int height) : ParallelUpdateSystem<Position, Velocity>(context)
 {
     private readonly Vector2 _bounds = new Vector2(width, height);
 

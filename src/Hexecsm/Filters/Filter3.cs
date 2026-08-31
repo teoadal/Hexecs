@@ -52,6 +52,8 @@ public sealed partial class Filter<T1, T2, T3>
         _consumer3 = new Consumer3(eventBus, this);
 
         _hashSet = new ActorHashSet(128);
+
+        Init();
     }
 
     public void Dispose()
@@ -73,5 +75,22 @@ public sealed partial class Filter<T1, T2, T3>
             _componentPool1.Values,
             _componentPool2.Values,
             _componentPool3.Values);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public KeyAccessor GetKeys(int start, int length)
+    {
+        return _hashSet.GetKeys(start, length);
+    }
+
+    private void Init()
+    {
+        foreach (ActorId actorId in _componentPool1.Keys.AsReadOnlySpan())
+        {
+            if (_componentPool2.Contains(actorId) && _componentPool3.Contains(actorId))
+            {
+                _hashSet.TryAdd(actorId);
+            }
+        }
     }
 }

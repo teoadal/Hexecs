@@ -1,8 +1,8 @@
-﻿using Hexecs.Actors;
+﻿using Hexecsm;
 
 namespace Hexecs.Benchmarks.Spawn.Components;
 
-public struct Lifetime : IActorComponent
+public struct Lifetime : IComponent
 {
     public static Lifetime Create(float seconds)
     {

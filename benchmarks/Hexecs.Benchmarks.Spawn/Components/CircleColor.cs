@@ -1,9 +1,9 @@
-using Hexecs.Actors;
-using Hexecs.Worlds;
+using Hexecsm;
+using Hexecsm.Utils;
 
 namespace Hexecs.Benchmarks.Spawn.Components;
 
-public struct CircleColor : IActorComponent
+public struct CircleColor : IComponent
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CircleColor CreateRgba(Dice random, byte? alpha = null)
@@ -26,8 +26,8 @@ public struct CircleColor : IActorComponent
         float factor = MathHelper.Clamp(speed / 550f, 0f, 1f);
 
         // Интерполяция между холодным синим (медленная скорость) и горячим оранжевым (высокая скорость)
-        var coldColor = new Color(0, 128, 255);   // Кислотно-синий
-        var hotColor = new Color(255, 110, 0);   // Огненно-рыжий
+        var coldColor = new Color(0, 128, 255); // Кислотно-синий
+        var hotColor = new Color(255, 110, 0); // Огненно-рыжий
 
         Color finalColor = Color.Lerp(coldColor, hotColor, factor);
 

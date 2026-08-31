@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 
-using Hexecs.Actors;
+using Hexecsm.Worlds;
 
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,8 +10,8 @@ namespace Hexecs.Benchmarks.Noise;
 
 internal sealed class BenchmarkCounter
 {
-    private readonly Func<ActorContext, int> _countResolver;
-    private readonly ActorContext _context;
+    private readonly Func<World, int> _countResolver;
+    private readonly World _context;
     private readonly int[] _fpsHistory;
 
     private double _frameTime;
@@ -33,8 +33,8 @@ internal sealed class BenchmarkCounter
     private readonly Vector2 _shadowPos = new Vector2(11, 11);
 
     public BenchmarkCounter(
-        Func<ActorContext, int> countResolver,
-        ActorContext context,
+        Func<World, int> countResolver,
+        World context,
         ContentManager contentManager,
         GraphicsDevice graphicsDevice)
     {

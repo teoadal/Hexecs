@@ -1,8 +1,8 @@
-using Hexecs.Actors;
+using Hexecsm;
 
 namespace Hexecs.Benchmarks.Spawn.Components;
 
-public struct Position : IActorComponent
+public struct Position : IComponent
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position Create(int x, int y)

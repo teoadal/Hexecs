@@ -1,8 +1,8 @@
-using Hexecs.Actors;
+using Hexecsm;
 
 namespace Hexecs.Benchmarks.Noise.Components;
 
-public readonly struct CircleColor(Color value) : IActorComponent
+public readonly struct CircleColor(Color value) : IComponent
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CircleColor CreateRgba(Random random, byte? alpha = null)

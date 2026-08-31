@@ -42,4 +42,11 @@ public sealed partial class World
     {
         throw new Exception($"Actor '{actorId.Value}' isn't have component '{typeof(T).Name}' in the world");
     }
+
+    [StackTraceHidden]
+    [DoesNotReturn]
+    private static void ThrowInvalidOperation(ActorId actorId, OperationType type)
+    {
+        throw new Exception($"Operation '{type}' for '{actorId.Value}' isn't supported");
+    }
 }

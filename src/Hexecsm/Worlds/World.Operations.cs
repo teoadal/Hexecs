@@ -1,10 +1,54 @@
-﻿using System.Collections.Concurrent;
+﻿using Hexecsm.Components;
+using Hexecsm.Utils;
 
 namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
-    private readonly ConcurrentQueue<Operation> _postponedOperations = [];
+    private readonly ThreadLocalQueue<Operation> _postponedOperations = new ThreadLocalQueue<Operation>(128);
+
+    private void ExecuteOperation(in Operation operation)
+    {
+        switch (operation.Type)
+        {
+            case OperationType.ActorAdd:
+            {
+                ActorAddHandler(operation.ActorId);
+
+                break;
+            }
+            case OperationType.ActorDestroy:
+            {
+                ActorDestroyHandler(operation.ActorId);
+
+                break;
+            }
+            case OperationType.ComponentAdd:
+            {
+                ComponentAddHandler(operation.ActorId, operation.ComponentTypeId);
+
+                break;
+            }
+            case OperationType.ComponentRemove:
+            {
+                ComponentRemoveHandler(operation.ActorId, operation.ComponentTypeId);
+
+                break;
+            }
+            case OperationType.ClearWorld:
+            {
+                ClearHandler();
+
+                return;
+            }
+            default:
+            {
+                ThrowInvalidOperation(operation.ActorId, operation.Type);
+
+                break;
+            }
+        }
+    }
 
     private void PostponeOperation(in Operation operation)
     {
@@ -13,29 +57,21 @@ public sealed partial class World
 
     private void ProcessPostponedOperations()
     {
-        while (_postponedOperations.TryDequeue(out Operation operation))
+        foreach (ref ThreadLocalQueue<Operation>.LocalQueue batch in _postponedOperations.GetBatches())
         {
-            switch (operation.Type)
+            foreach (ref Operation operation in batch.AsSpan())
             {
-                case OperationType.AddActor:
-                {
-                    ActorAddHandler(operation.ActorId);
+                ExecuteOperation(in operation);
 
-                    break;
-                }
-                case OperationType.ClearWorld:
+                if (operation.Type != OperationType.ClearWorld)
                 {
-                    ClearHandler();
-
-                    return;
+                    continue;
                 }
-                case OperationType.DestroyActor:
-                {
-                    ActorDestroyHandler(operation.ActorId);
 
-                    break;
-                }
+                return;
             }
+
+            batch.Clear();
         }
     }
 
@@ -43,9 +79,15 @@ public sealed partial class World
     private readonly struct Operation
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Add(ActorId actorId)
+        public static Operation AddActor(ActorId actorId)
         {
-            return new Operation(actorId, OperationType.AddActor);
+            return new Operation(actorId, OperationType.ActorAdd);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Operation AddComponent(ActorId actorId, ComponentTypeId componentTypeId)
+        {
+            return new Operation(actorId, componentTypeId, OperationType.ComponentAdd);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,12 +97,19 @@ public sealed partial class World
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Operation Destroy(ActorId actorId)
+        public static Operation DestroyActor(ActorId actorId)
         {
-            return new Operation(actorId, OperationType.DestroyActor);
+            return new Operation(actorId, OperationType.ActorDestroy);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Operation RemoveComponent(ActorId actorId, ComponentTypeId componentTypeId)
+        {
+            return new Operation(actorId, componentTypeId, OperationType.ComponentRemove);
         }
 
         public readonly ActorId ActorId;
+        public readonly ComponentTypeId ComponentTypeId;
         public readonly OperationType Type;
 
         [SkipLocalsInit]
@@ -75,12 +124,22 @@ public sealed partial class World
             ActorId = actorId;
             Type = type;
         }
+
+        [SkipLocalsInit]
+        private Operation(ActorId actorId, ComponentTypeId componentTypeId, OperationType type)
+        {
+            ActorId = actorId;
+            ComponentTypeId = componentTypeId;
+            Type = type;
+        }
     }
 
     private enum OperationType
     {
-        AddActor,
+        ActorAdd,
+        ActorDestroy,
         ClearWorld,
-        DestroyActor
+        ComponentAdd,
+        ComponentRemove,
     }
 }

@@ -1,50 +1,60 @@
-﻿using System.Collections.Concurrent;
+﻿using Hexecsm.Utils;
 
 namespace Hexecsm.Components;
 
 internal sealed partial class ComponentPool<T>
 {
-    private readonly ConcurrentQueue<Operation> _postponedOperations = [];
+    private readonly ThreadLocalQueue<Operation> _postponedOperations = new ThreadLocalQueue<Operation>(128);
 
     public void ProcessPostponedOperations()
     {
         ObjectDisposedException.ThrowIf(_disposed, typeof(ComponentPool<T>));
 
-        while (_postponedOperations.TryDequeue(out Operation operation))
+        foreach (ref ThreadLocalQueue<Operation>.LocalQueue batch in _postponedOperations.GetBatches())
         {
-            ActorId actorId = operation.ActorId;
-
-            switch (operation.Type)
+            foreach (ref Operation operation in batch.AsSpan())
             {
-                case OperationType.Add:
-                {
-                    AddHandler(actorId, in operation.Component);
-
-                    break;
-                }
-                case OperationType.Clone:
-                {
-                    CloneHandler(actorId, in operation.Component);
-
-                    break;
-                }
-                case OperationType.Remove:
-                {
-                    RemoveHandler(actorId);
-
-                    break;
-                }
-                case OperationType.Update:
-                {
-                    UpdateHandler(actorId, in operation.Component);
-
-                    break;
-                }
-                default:
-                    ThrowInvalidOperation(actorId, operation.Type);
-
-                    break;
+                ExecuteOperation(in operation);
             }
+
+            batch.Clear();
+        }
+    }
+
+    private void ExecuteOperation(in Operation operation)
+    {
+        ActorId actorId = operation.ActorId;
+
+        switch (operation.Type)
+        {
+            case OperationType.Add:
+            {
+                AddHandler(actorId, in operation.Component);
+
+                break;
+            }
+            case OperationType.Clone:
+            {
+                CloneHandler(actorId, in operation.Component);
+
+                break;
+            }
+            case OperationType.Remove:
+            {
+                RemoveHandler(actorId);
+
+                break;
+            }
+            case OperationType.Update:
+            {
+                UpdateHandler(actorId, in operation.Component);
+
+                break;
+            }
+            default:
+                ThrowInvalidOperation(actorId, operation.Type);
+
+                break;
         }
     }
 

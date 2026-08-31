@@ -1,9 +1,6 @@
-using Hexecs.Actors;
-using Hexecs.Benchmarks.Spawn.Components;
 using Hexecs.Benchmarks.Spawn.Systems;
-using Hexecs.Dependencies;
-using Hexecs.Threading;
-using Hexecs.Worlds;
+
+                                 using Hexecsm.Worlds;
 
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,7 +10,6 @@ namespace Hexecs.Benchmarks.Spawn;
 internal sealed class SpawnGame : Game
 {
     private BenchmarkCounter _benchmarkCounter = null!;
-    private ActorContext _context = null!;
     private readonly GraphicsDeviceManager _graphics;
     private World _world = null!;
 
@@ -28,7 +24,7 @@ internal sealed class SpawnGame : Game
             GraphicsProfile = GraphicsProfile.HiDef,
             PreferMultiSampling = true,
             SynchronizeWithVerticalRetrace = false,
-            IsFullScreen = true,
+            IsFullScreen = false,
             HardwareModeSwitch = false
         };
 
@@ -52,22 +48,15 @@ internal sealed class SpawnGame : Game
         int height = _graphics.PreferredBackBufferHeight;
 
         _world = new WorldBuilder()
-            .UseDefaultParallelWorker(Math.Min(6, Environment.ProcessorCount))
-            .UseDefaultActorContext(builder => builder
-                .Capacity(MaxEntityCount)
-                .ConfigureComponentPool<CircleColor>(static color => color.Capacity(MaxEntityCount))
-                .ConfigureComponentPool<Lifetime>(static lifetime => lifetime.Capacity(MaxEntityCount))
-                .ConfigureComponentPool<Position>(static position => position.Capacity(MaxEntityCount))
-                .ConfigureComponentPool<Velocity>(static velocity => velocity.Capacity(MaxEntityCount))
-                .CreateUpdateSystem(ctx => new MovementSystem(ctx, ctx.GetRequiredService<IParallelWorker>(), width, height))
-                .CreateUpdateSystem<LifetimeSystem>()
-                .CreateUpdateSystem<DestroySystem>()
-                .CreateUpdateSystem(ctx => new SpawnSystem(ctx, ctx.GetRequiredService<Dice>(), width, height))
-                .CreateDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2)))
+            .WithDegreeOfParallelism(Math.Min(6, Environment.ProcessorCount))
+            .AddUpdateSystem(ctx => new MovementSystem(ctx, width, height))
+            .AddUpdateSystem(ctx => new LifetimeSystem(ctx))
+            .AddUpdateSystem(ctx => new DestroySystem(ctx))
+            .AddUpdateSystem(ctx => new SpawnSystem(ctx, width, height))
+            .AddDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2))
             .Build();
 
-        _context = _world.Actors;
-        _benchmarkCounter = new BenchmarkCounter(static ctx => ctx.Length, _context, Content, GraphicsDevice);
+        _benchmarkCounter = new BenchmarkCounter(static ctx => ctx.Length, _world, Content, GraphicsDevice);
 
         base.Initialize();
     }

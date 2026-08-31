@@ -1,16 +1,22 @@
-using Hexecs.Actors;
-using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Spawn.Components;
-using Hexecs.Utils;
-using Hexecs.Worlds;
+
+using Hexecsm;
+using Hexecsm.Accessors;
+using Hexecsm.Filters;
+using Hexecsm.Systems;
+using Hexecsm.Worlds;
 
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Hexecs.Benchmarks.Spawn.Systems;
 
-public sealed class RenderSystem : DrawSystem
+public sealed class RenderSystem : IDrawSystem
 {
-    private readonly ActorFilter<Position, CircleColor, Lifetime> _filter;
+    public bool Enabled { get; set; } = true;
+
+    private readonly World _context;
+    private readonly Filter<Position, CircleColor, Lifetime> _filter;
+
     private readonly DynamicVertexBuffer _instanceBuffer;
     private readonly VertexBuffer _geometryBuffer;
     private readonly IndexBuffer _indexBuffer;
@@ -19,10 +25,10 @@ public sealed class RenderSystem : DrawSystem
     private readonly Effect? _shader;
     private readonly Matrix _projection;
 
-    public RenderSystem(ActorContext context, GraphicsDevice device, int maxEntities)
-        : base(context)
+    public RenderSystem(World context, GraphicsDevice device, int maxEntities)
     {
-        _filter = context.Filter<Position, CircleColor, Lifetime>();
+        _filter = context.GetFilter<Position, CircleColor, Lifetime>();
+        _context = context;
         _device = device;
         _hostBuffer = new InstanceData[maxEntities];
 
@@ -61,7 +67,7 @@ public sealed class RenderSystem : DrawSystem
     }
 
     [SkipLocalsInit]
-    public override void Draw(in WorldTime time)
+    public void Draw(in WorldTime time)
     {
         int count = _filter.Length;
 
@@ -70,13 +76,13 @@ public sealed class RenderSystem : DrawSystem
             return;
         }
 
-        ComponentsAccess<Position> positions = _filter.GetComponents1();
-        ComponentsAccess<CircleColor> colors = _filter.GetComponents2();
-        ComponentsAccess<Lifetime> lifetimes = _filter.GetComponents3();
+        ValueAccessor<Position> positions = _context.GetComponents<Position>();
+        ValueAccessor<CircleColor> colors = _context.GetComponents<CircleColor>();
+        ValueAccessor<Lifetime> lifetimes = _context.GetComponents<Lifetime>();
 
         var i = 0;
 
-        foreach (uint actorIdRaw in _filter.Keys)
+        foreach (ActorId actorId in _filter.Keys.AsReadOnlySpan())
         {
             if (i >= _hostBuffer.Length)
             {
@@ -85,14 +91,14 @@ public sealed class RenderSystem : DrawSystem
 
             ref InstanceData data = ref _hostBuffer[i];
 
-            Vector2 position = positions[actorIdRaw].Value;
-            float lifetime = lifetimes[actorIdRaw].Value;
+            Vector2 position = positions.GetValue(actorId).Value;
+            float lifetime = lifetimes.GetValue(actorId).Value;
 
             // Рассчитываем размер: от 1.0 до 6.0 пикселей в зависимости от возраста частицы
             float currentScale = MathHelper.Lerp(1.0f, 6.0f, MathHelper.Clamp(lifetime / 4.5f, 0f, 1f));
 
             data.PositionScale = new Vector4(position.X, position.Y, currentScale, 0f);
-            data.Color = colors[actorIdRaw].Value;
+            data.Color = colors.GetValue(actorId).Value;
             i++;
         }
 

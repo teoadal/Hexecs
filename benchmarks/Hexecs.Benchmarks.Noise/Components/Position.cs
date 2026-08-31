@@ -1,8 +1,8 @@
-using Hexecs.Actors;
+using Hexecsm;
 
 namespace Hexecs.Benchmarks.Noise.Components;
 
-public struct Position(Vector2 value) : IActorComponent
+public struct Position(Vector2 value) : IComponent
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position Create(int x, int y)

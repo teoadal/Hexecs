@@ -1,26 +1,30 @@
-﻿using Hexecs.Actors;
-using Hexecs.Actors.Systems;
-using Hexecs.Benchmarks.Spawn.Components;
-using Hexecs.Threading;
-using Hexecs.Worlds;
+﻿using Hexecs.Benchmarks.Spawn.Components;
+
+using Hexecsm;
+using Hexecsm.Accessors;
+using Hexecsm.Systems;
+using Hexecsm.Worlds;
 
 namespace Hexecs.Benchmarks.Spawn.Systems;
 
-internal sealed class LifetimeSystem(
-    ActorContext context,
-    IParallelWorker parallelWorker) : UpdateSystem<Lifetime, CircleColor>(context, parallelWorker: parallelWorker)
+internal sealed class LifetimeSystem(World context) : ParallelUpdateSystem<Lifetime, CircleColor>(context)
 {
     [SkipLocalsInit]
-    protected override void Update(ActorFilter<Lifetime, CircleColor>.SkipTakeEnumerator batch, in WorldTime time)
+    protected override void Update(
+        KeyAccessor batchKeys,
+        in ValueAccessor<Lifetime> components1,
+        in ValueAccessor<CircleColor> components2,
+        in WorldTime worldTime)
     {
-        float dt = time.DeltaTime;
+        float dt = worldTime.DeltaTime;
 
-        foreach (ActorRef<Lifetime, CircleColor> actor in batch)
+        foreach (ActorId actorId in batchKeys.AsReadOnlySpan())
         {
-            ref Lifetime lifetime = ref actor.Component1;
-            ref CircleColor circleColor = ref actor.Component2;
+            ref Lifetime lifetime = ref components1.GetValue(actorId);
+            ref CircleColor circleColor = ref components2.GetValue(actorId);
 
             lifetime.Value -= dt;
+
             if (lifetime.Value <= 0f)
             {
                 continue;
@@ -35,6 +39,7 @@ internal sealed class LifetimeSystem(
             // 2. Эффект остывания: со временем сдвигаем цвет в сторону фиолетового/синего спектра
             // Уменьшаем красный канал по мере старения частицы
             var r = (byte)MathHelper.Clamp(currentColor.R - (100f * dt), 0f, 255f);
+
             // Слегка подсвечиваем синий канал для старых частиц
             var b = (byte)MathHelper.Clamp(currentColor.B + (50f * dt), 0f, 255f);
 

@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace Hexecsm.Accessors;
+﻿namespace Hexecsm.Accessors;
 
 public readonly ref struct ValueAccessor<TValue>
     where TValue : struct

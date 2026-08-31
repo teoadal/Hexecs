@@ -40,6 +40,8 @@ public sealed partial class Filter<T1>
         _eventBus.Subscribe<ComponentRemoved<T1>>(this);
 
         _hashSet = new ActorHashSet(128);
+
+        Init();
     }
 
     public void Dispose()
@@ -56,5 +58,19 @@ public sealed partial class Filter<T1>
         return new Enumerator(
             _hashSet.Keys.AsReadOnlySpan(),
             _componentPool1.Values);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public KeyAccessor GetKeys(int start, int length)
+    {
+        return _hashSet.GetKeys(start, length);
+    }
+
+    private void Init()
+    {
+        foreach (ActorId actorId in _componentPool1.Keys.AsReadOnlySpan())
+        {
+            _hashSet.TryAdd(actorId);
+        }
     }
 }

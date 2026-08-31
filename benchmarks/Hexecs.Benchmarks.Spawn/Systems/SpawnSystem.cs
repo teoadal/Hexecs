@@ -1,37 +1,30 @@
-﻿using Hexecs.Actors;
-using Hexecs.Actors.Systems;
-using Hexecs.Benchmarks.Spawn.Components;
-using Hexecs.Worlds;
+﻿using Hexecs.Benchmarks.Spawn.Components;
+
+using Hexecsm;
+using Hexecsm.Systems;
+using Hexecsm.Utils;
+using Hexecsm.Worlds;
 
 using Microsoft.Xna.Framework.Input;
 
 namespace Hexecs.Benchmarks.Spawn.Systems;
 
-internal sealed class SpawnSystem : UpdateSystem
+internal sealed class SpawnSystem(
+    World context,
+    int screenWidth,
+    int screenHeight) : IUpdateSystem
 {
-    private readonly ActorContext _context;
-    private readonly Dice _dice;
-
-    private readonly Position _spawnPosition;
     private const int SpawnRatePerFrame = 2500;
 
-    private KeyboardState _previousKeyboardState;
+    public bool Enabled { get; set; } = true;
 
-    public SpawnSystem(
-        ActorContext context,
-        Dice dice,
-        int screenWidth,
-        int screenHeight) : base(context)
-    {
-        _context = context;
-        _dice = dice;
-        _spawnPosition = Position.Create(screenWidth / 2, screenHeight);
-        _previousKeyboardState = Keyboard.GetState();
-    }
+    private readonly Dice _dice = context.Dice;
+    private readonly Position _spawnPosition = Position.Create(screenWidth / 2, screenHeight);
+    private KeyboardState _previousKeyboardState = Keyboard.GetState();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public override void Update(in WorldTime time)
+    public void Update(in WorldTime time)
     {
         // 1. Получаем состояние клавиатуры в ТЕКУЩЕМ кадре
         KeyboardState currentKeyboardState = Keyboard.GetState();
@@ -42,8 +35,8 @@ internal sealed class SpawnSystem : UpdateSystem
             // Спавним огромную пачку частиц, разлетающихся во все стороны по кругу
             for (var i = 0; i < 20000; i++)
             {
-                Actor actor = _context.CreateActor();
-                actor.Add(_spawnPosition);
+                ActorId actor = context.CreateActor();
+                context.AddComponent(actor, in _spawnPosition);
 
                 // Математика кругового взрыва: случайный угол и случайная скорость
                 var angle = (float)(_dice.GetNextDouble() * Math.PI * 2);
@@ -52,11 +45,11 @@ internal sealed class SpawnSystem : UpdateSystem
                 float vx = (float)Math.Cos(angle) * speed;
                 float vy = (float)Math.Sin(angle) * speed;
 
-                actor.Add(Velocity.Create(vx, vy));
+                context.AddComponent(actor, Velocity.Create(vx, vy));
 
                 var lifetimeSeconds = (float)(_dice.GetNextDouble() * 2.0 + 2.5);
-                actor.Add(Lifetime.Create(lifetimeSeconds));
-                actor.Add(CircleColor.CreateFromVelocity(new Vector2(vx, vy)));
+                context.AddComponent(actor, Lifetime.Create(lifetimeSeconds));
+                context.AddComponent(actor, CircleColor.CreateFromVelocity(new Vector2(vx, vy)));
             }
         }
 
@@ -66,17 +59,17 @@ internal sealed class SpawnSystem : UpdateSystem
             // Обычный спавн стандартного фонтана (ваш текущий код)
             for (var i = 0; i < SpawnRatePerFrame; i++)
             {
-                Actor actor = _context.CreateActor();
-                actor.Add(_spawnPosition);
+                ActorId actor = context.CreateActor();
+                context.AddComponent(actor, in _spawnPosition);
 
                 var vx = (float)(_dice.GetNextDouble() * 500.0 - 250.0);
                 var vy = (float)(_dice.GetNextDouble() * -600.0 - 150.0);
 
-                actor.Add(Velocity.Create(vx, vy));
+                context.AddComponent(actor, Velocity.Create(vx, vy));
 
                 var lifetimeSeconds = (float)(_dice.GetNextDouble() * 2.0 + 2.5);
-                actor.Add(Lifetime.Create(lifetimeSeconds));
-                actor.Add(CircleColor.CreateFromVelocity(new Vector2(vx, vy)));
+                context.AddComponent(actor, Lifetime.Create(lifetimeSeconds));
+                context.AddComponent(actor, CircleColor.CreateFromVelocity(new Vector2(vx, vy)));
             }
         }
 

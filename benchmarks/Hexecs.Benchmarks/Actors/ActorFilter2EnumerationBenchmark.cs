@@ -3,7 +3,6 @@
 using Friflo.Engine.ECS;
 
 using Hexecs.Benchmarks.Mocks.ActorComponents;
-using Hexecs.Utils;
 using Hexecs.Worlds;
 
 using Hexecsm.Accessors;
@@ -228,7 +227,7 @@ public class ActorFilter2EnumerationBenchmark
         _filter = _world.Actors.Filter<Attack, Defence>();
         _frifloQuery = _frifloWorld.Query<Attack, Defence>();
 
-        _mWorld = new Hexecsm.Worlds.World(128);
+        _mWorld = new Hexecsm.Worlds.World(128, 4);
         _mFilter = _mWorld.GetFilter<Attack, Defence>();
 
         for (var i = 0; i < Count; i++)

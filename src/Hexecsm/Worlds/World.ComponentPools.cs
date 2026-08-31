@@ -63,7 +63,7 @@ public sealed partial class World
         return _componentPools[componentTypeId.Value]!;
     }
 
-    private ComponentPool<T> GetOrAddComponentPool<T>()
+    internal ComponentPool<T> GetOrAddComponentPool<T>()
         where T : struct, IComponent
     {
         ushort componentTypeIdRaw = ComponentType<T>.IdRaw;

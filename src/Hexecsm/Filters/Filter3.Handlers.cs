@@ -53,11 +53,9 @@ public sealed partial class Filter<T1, T2, T3>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemovedHandler(ActorId actorId)
     {
-        if (_hashSet.Remove(actorId))
-        {
-            return;
-        }
+        // Don't check remove method result.
+        // Is can be call many times, because there are 3 subscriptions
 
-        ThrowNotFound(actorId);
+        _hashSet.Remove(actorId);
     }
 }

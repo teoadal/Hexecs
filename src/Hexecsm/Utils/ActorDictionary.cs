@@ -72,6 +72,48 @@ internal sealed class ActorDictionary<TValue>(int initialCapacity)
             values: new Span<TValue>(_values, 0, _count));
     }
 
+    public bool Remove(ActorId key, bool clear)
+    {
+        uint keyRaw = key.Value;
+        uint[] sparse = _sparse;
+
+        if ((uint)keyRaw < (uint)sparse.Length)
+        {
+            uint slot = sparse[keyRaw];
+
+            if (slot != EmptySlot)
+            {
+                int denseIndex = (int)slot - 1;
+
+                if (_dense[denseIndex] == key)
+                {
+                    if (clear)
+                    {
+                        ref TValue valueRef = ref _values[denseIndex];
+                        valueRef = default;
+                    }
+
+                    int lastIndex = _count - 1;
+
+                    if (denseIndex != lastIndex)
+                    {
+                        ActorId lastKey = _dense[lastIndex];
+                        _dense[denseIndex] = lastKey;
+                        _values[denseIndex] = _values[lastIndex];
+                        _sparse[lastKey.Value] = slot;
+                    }
+
+                    _sparse[keyRaw] = 0;
+                    _count = lastIndex;
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public bool Remove(ActorId key, bool clear, out TValue value)
     {
         uint keyRaw = key.Value;

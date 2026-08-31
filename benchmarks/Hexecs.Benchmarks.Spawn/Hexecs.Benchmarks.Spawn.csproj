@@ -16,10 +16,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Hexecs\Hexecs.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <None Update="Content\Instancing.mgfx">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
@@ -30,6 +26,10 @@
 
     <ItemGroup>
         <ClCompile Include="Content\Instancing.fx"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Hexecsm\Hexecsm.csproj" />
     </ItemGroup>
 
 </Project>

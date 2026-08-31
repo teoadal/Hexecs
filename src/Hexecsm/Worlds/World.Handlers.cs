@@ -18,7 +18,7 @@ public sealed partial class World
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ActorDestroyHandler(ActorId actorId)
     {
-        if (_storage.Remove(actorId, clear: true, out Entry entry))
+        if (_storage.Remove(actorId, true, out Entry entry))
         {
             foreach (ComponentTypeId componentTypeId in entry)
             {
@@ -51,7 +51,7 @@ public sealed partial class World
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ComponentAddedHandler(ActorId actorId, ComponentTypeId componentTypeId)
+    private void ComponentAddHandler(ActorId actorId, ComponentTypeId componentTypeId)
     {
         ref Entry entry = ref _storage.TryGetRef(actorId);
 
@@ -69,7 +69,7 @@ public sealed partial class World
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ComponentRemovedHandler(ActorId actorId, ComponentTypeId componentTypeId)
+    private void ComponentRemoveHandler(ActorId actorId, ComponentTypeId componentTypeId)
     {
         ref Entry entry = ref _storage.TryGetRef(actorId);
 

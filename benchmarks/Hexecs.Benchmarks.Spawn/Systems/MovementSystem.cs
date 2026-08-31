@@ -1,38 +1,35 @@
-using Hexecs.Actors;
-using Hexecs.Actors.Systems;
 using Hexecs.Benchmarks.Spawn.Components;
-using Hexecs.Threading;
-using Hexecs.Worlds;
+
+using Hexecsm;
+using Hexecsm.Accessors;
+using Hexecsm.Systems;
+using Hexecsm.Worlds;
 
 namespace Hexecs.Benchmarks.Spawn.Systems;
 
-public sealed class MovementSystem : UpdateSystem<Position, Velocity>
+public sealed class MovementSystem(World context, int width, int height) : ParallelUpdateSystem<Position, Velocity>(context)
 {
     private const float Gravity = 350f;
 
     // Коэффициент упругости: 0.75f означает, что частица теряет 25% энергии при каждом ударе
     private const float BounceRestitution = 0.75f;
 
-    private readonly float _width;
-    private readonly float _height;
-
-    // Передаем полные размеры экрана из настроек SpawnGame (1280x720)
-    public MovementSystem(ActorContext context, IParallelWorker parallelWorker, int width, int height)
-        : base(context, parallelWorker: parallelWorker)
-    {
-        _width = width;
-        _height = height;
-    }
+    private readonly float _width = width;
+    private readonly float _height = height;
 
     [SkipLocalsInit]
-    protected override void Update(ActorFilter<Position, Velocity>.SkipTakeEnumerator batch, in WorldTime time)
+    protected override void Update(
+        KeyAccessor batchKeys,
+        in ValueAccessor<Position> components1,
+        in ValueAccessor<Velocity> components2,
+        in WorldTime worldTime)
     {
-        float dt = time.DeltaTime;
+        float dt = worldTime.DeltaTime;
 
-        foreach (ActorRef<Position, Velocity> actor in batch)
+        foreach (ActorId actorId in batchKeys.AsReadOnlySpan())
         {
-            ref Vector2 position = ref actor.Component1.Value;
-            ref Vector2 velocity = ref actor.Component2.Value;
+            ref Vector2 position = ref components1.GetValue(actorId).Value;
+            ref Vector2 velocity = ref components2.GetValue(actorId).Value;
 
             // 1. Физика гравитации
             velocity.Y += Gravity * dt;

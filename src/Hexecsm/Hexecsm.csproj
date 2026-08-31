@@ -8,63 +8,87 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Update="Components\ComponentPool.Errors.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Components\ComponentPool.Handlers.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Components\ComponentPool.Operations.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Filters\Filter2.Errors.cs">
-        <DependentUpon>Filter2.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Filters\Filter2.Consumers.cs">
-        <DependentUpon>Filter2.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Components\ComponentPool.Producers.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Filters\Filter2.Handlers.cs">
-        <DependentUpon>Filter2.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Producers.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Consumers.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Filters.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Actors.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.ComponentPools.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Components.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Entry.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Errors.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Handlers.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Worlds\World.Operations.cs">
-        <DependentUpon>World.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Components\ComponentPool.Consumers.cs">
-        <DependentUpon>ComponentPool.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Filters\Filter2.Enumerator.cs">
-        <DependentUpon>Filter2.cs</DependentUpon>
-      </Compile>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Hexecs.Benchmarks</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>$(MSBuildProjectName).Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Components\ComponentPool.Errors.cs">
+            <DependentUpon>ComponentPool.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Components\ComponentPool.Handlers.cs">
+            <DependentUpon>ComponentPool.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Components\ComponentPool.Operations.cs">
+            <DependentUpon>ComponentPool.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter2.Errors.cs">
+            <DependentUpon>Filter2.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter2.Consumers.cs">
+            <DependentUpon>Filter2.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Components\ComponentPool.Producers.cs">
+            <DependentUpon>ComponentPool.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter2.Handlers.cs">
+            <DependentUpon>Filter2.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.Producers.cs">
+            <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.ComponentPools.cs">
+            <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.Entry.cs">
+            <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.Errors.cs">
+            <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.Handlers.cs">
+            <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.Operations.cs">
+            <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Components\ComponentPool.Consumers.cs">
+            <DependentUpon>ComponentPool.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter2.Enumerator.cs">
+            <DependentUpon>Filter2.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter1.Consumers.cs">
+            <DependentUpon>Filter1.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter1.Enumerator.cs">
+            <DependentUpon>Filter1.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter1.Errors.cs">
+            <DependentUpon>Filter1.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter1.Handlers.cs">
+            <DependentUpon>Filter1.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter3.Consumers.cs">
+            <DependentUpon>Filter3.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter3.Enumerator.cs">
+            <DependentUpon>Filter3.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter3.Errors.cs">
+            <DependentUpon>Filter3.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Filters\Filter3.Handlers.cs">
+            <DependentUpon>Filter3.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\World.Systems.cs">
+          <DependentUpon>World.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
 </Project>

@@ -1,51 +1,26 @@
 ﻿using BenchmarkDotNet.Running;
 
-using Hexecs.Benchmarks.Actors;
-using Hexecs.Benchmarks.Mocks.ActorComponents;
+using Hexecs.Benchmarks.Collections;
 
-using Hexecsm.Filters;
-using Hexecsm.Worlds;
+// var q = new ThreadLocalQueue<int>(32);
+//
+// for (var i = 0; i < 3128; i++)
+// {
+//     q.Enqueue(i);
+// }
+//
+// foreach (ThreadLocalQueue<int>.LocalQueue batch in q.GetBatches())
+// {
+//     foreach (int i in batch.AsSpan())
+//     {
+//         Console.WriteLine(i);
+//     }
+//
+//     batch.Clear();
+// }
 
-using ActorId = Hexecsm.ActorId;
-
-//BenchmarkRunner.Run<ActorCreateAddComponentsDestroyBenchmark>();
-
+BenchmarkRunner.Run<QueueBenchmark>();
+//BenchmarkRunner.Run<QueueBenchmark>(new DebugBuildConfig());
 //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
-using var world = new World(256);
-
-Filter<Attack, Defence> filter = world.GetFilter<Attack, Defence>();
-
-ActorId actorId = world.CreateActor();
-world.AddComponent(actorId, new Attack { Value = 1 });
-world.AddComponent(actorId, new Defence { Value = 2 });
-
-Check(actorId, world);
-
-world.Update();
-
-
-Check(actorId, world);
-
-foreach (Hexecsm.ActorRef<Attack, Defence> actorRef in filter)
-{
-    Console.WriteLine(actorRef.Id.Value);
-}
-
-world.DestroyActor(actorId);
-
-world.Update();
-
-return;
-
-static void Check(ActorId actorId, World world)
-{
-    Print("Is Alive", world.IsAlive(actorId));
-    Print($"Has {nameof(Attack)}", world.HasComponent<Attack>(actorId));
-    Print($"Has {nameof(Defence)}", world.HasComponent<Defence>(actorId));
-}
-
-static void Print(string message, object value)
-{
-    Console.WriteLine($"{message}: {value}");
-}
+//Playground.Do();

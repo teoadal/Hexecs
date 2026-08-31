@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Hexecs\Hexecs.csproj"/>
+        <ProjectReference Include="..\..\src\Hexecsm\Hexecsm.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

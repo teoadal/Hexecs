@@ -12,8 +12,10 @@ public abstract class ParallelUpdateSystem<T1>(World world) : IUpdateSystem, IPa
     public bool Enabled { get; set; } = true;
 
     private readonly ComponentPool<T1> _componentPool1 = world.GetOrAddComponentPool<T1>();
-    private readonly int _degreeOfParallelism = world.ParallelWorker.DegreeOfParallelism;
+
     private readonly Filter<T1> _filter = world.GetFilter<T1>();
+
+    private readonly int _degreeOfParallelism = world.ParallelWorker.DegreeOfParallelism;
     private readonly IParallelWorker _parallelWorker = world.ParallelWorker;
 
     private int _currentLength;

@@ -17,7 +17,7 @@ public abstract class ParallelUpdateSystem<T1, T2, T3>(World world) : IUpdateSys
     private readonly ComponentPool<T2> _componentPool2 = world.GetOrAddComponentPool<T2>();
     private readonly ComponentPool<T3> _componentPool3 = world.GetOrAddComponentPool<T3>();
 
-    private readonly Filter<T1, T2> _filter = world.GetFilter<T1, T2>();
+    private readonly Filter<T1, T2, T3> _filter = world.GetFilter<T1, T2, T3>();
 
     private readonly int _degreeOfParallelism = world.ParallelWorker.DegreeOfParallelism;
     private readonly IParallelWorker _parallelWorker = world.ParallelWorker;

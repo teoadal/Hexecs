@@ -80,7 +80,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
 
     private void ExecuteWorker(int workerIndex, CountdownEvent startupLatch)
     {
-        int lastWorkerIndex = _workers.Length - 1;
+        int workersCount = _workers.Length;
 
         // Сигнализируем конструктору, что данный поток готов
         startupLatch.Signal();
@@ -93,7 +93,7 @@ public sealed class DefaultParallelWorker : IParallelWorker
                 _barrier.SignalAndWait(_cancellationToken);
 
                 // Выполняем работу (проверяем job на null на случай отмены)
-                _job?.Execute(workerIndex, lastWorkerIndex);
+                _job?.Execute(workerIndex, workersCount);
 
                 // Точка ожидания 2: Сигнализируем о завершении и ждем остальных воркеров + Главный поток
                 _barrier.SignalAndWait(_cancellationToken);

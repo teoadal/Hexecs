@@ -51,7 +51,6 @@ internal sealed class SpawnGame : Game
             .WithDegreeOfParallelism(Math.Min(6, Environment.ProcessorCount))
             .AddUpdateSystem(ctx => new MovementSystem(ctx, width, height))
             .AddUpdateSystem(ctx => new LifetimeSystem(ctx))
-            .AddUpdateSystem(ctx => new DestroySystem(ctx))
             .AddUpdateSystem(ctx => new SpawnSystem(ctx, width, height))
             .AddDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2))
             .Build();

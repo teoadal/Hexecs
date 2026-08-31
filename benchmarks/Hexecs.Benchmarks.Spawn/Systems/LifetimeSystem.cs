@@ -7,8 +7,10 @@ using Hexecsm.Worlds;
 
 namespace Hexecs.Benchmarks.Spawn.Systems;
 
-internal sealed class LifetimeSystem(World context) : ParallelUpdateSystem<Lifetime, CircleColor>(context)
+internal sealed class LifetimeSystem(World world) : ParallelUpdateSystem<Lifetime, CircleColor>(world)
 {
+    private World _world = world;
+
     [SkipLocalsInit]
     protected override void Update(
         KeyAccessor batchKeys,
@@ -27,6 +29,8 @@ internal sealed class LifetimeSystem(World context) : ParallelUpdateSystem<Lifet
 
             if (lifetime.Value <= 0f)
             {
+                _world.DestroyActor(actorId);
+
                 continue;
             }
 

@@ -41,7 +41,9 @@ public readonly ref struct ValueAccessor<TValue>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TValue GetValue(ActorId actorId)
     {
-        return ref _values[(int)_mapping[actorId.Value - 1]];
+        var index = (int)_mapping[actorId.Value];
+
+        return ref _values[index - 1];
     }
 
     public ref TValue this[int index]

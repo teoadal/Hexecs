@@ -18,10 +18,10 @@ public abstract class ParallelUpdateSystem<T1, T2>(World world) : IUpdateSystem,
     private readonly Filter<T1, T2> _filter = world.GetFilter<T1, T2>();
     private readonly IParallelWorker _parallelWorker = world.ParallelWorker;
 
-    private int _currentBatchSize;
     private int _currentLength;
     private WorldTime _currentTime;
 
+    [SkipLocalsInit]
     public void Update(in WorldTime time)
     {
         int length = _filter.Length;
@@ -29,13 +29,24 @@ public abstract class ParallelUpdateSystem<T1, T2>(World world) : IUpdateSystem,
         if (length > 0)
         {
             _currentTime = time;
-            _currentLength = length;
-            _currentBatchSize = length / _degreeOfParallelism;
 
-            _parallelWorker.Run(this);
+            if (length >= _degreeOfParallelism)
+            {
+                _currentLength = length;
+                _parallelWorker.Run(this);
+            }
+            else
+            {
+                KeyAccessor keys = _filter.Keys;
+                ValueAccessor<T1> components1 = _componentPool1.Values;
+                ValueAccessor<T2> components2 = _componentPool2.Values;
+
+                Update(keys, in components1, in components2, in _currentTime);
+            }
         }
     }
 
+    [SkipLocalsInit]
     protected virtual void Update(
         KeyAccessor batchKeys,
         in ValueAccessor<T1> components1,
@@ -57,18 +68,22 @@ public abstract class ParallelUpdateSystem<T1, T2>(World world) : IUpdateSystem,
     {
     }
 
+    [SkipLocalsInit]
     void IParallelJob.Execute(int workerIndex, int workersCount)
     {
-        int start = workerIndex * _currentBatchSize;
-        int length = _currentLength;
+        int baseBatchSize = _currentLength / workersCount;
+        int remainder = _currentLength % workersCount;
 
-        if (start < length)
-        {
-            KeyAccessor keys = _filter.GetKeys(start, _currentBatchSize);
-            ValueAccessor<T1> components1 = _componentPool1.Values;
-            ValueAccessor<T2> components2 = _componentPool2.Values;
+        int start = workerIndex * baseBatchSize + (workerIndex < remainder
+            ? workerIndex
+            : remainder);
 
-            Update(keys, in components1, in components2, in _currentTime);
-        }
+        int actualBatchSize = baseBatchSize + (workerIndex < remainder ? 1 : 0);
+
+        KeyAccessor keys = _filter.GetKeys(start, actualBatchSize);
+        ValueAccessor<T1> components1 = _componentPool1.Values;
+        ValueAccessor<T2> components2 = _componentPool2.Values;
+
+        Update(keys, in components1, in components2, in _currentTime);
     }
 }

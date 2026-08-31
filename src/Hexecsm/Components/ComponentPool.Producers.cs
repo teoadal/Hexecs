@@ -6,11 +6,7 @@ namespace Hexecsm.Components;
 internal sealed partial class ComponentPool<T>
 {
     private readonly IProducer<ComponentAdded<T>> _addedProducer;
-    private readonly IProducer<ComponentAdded> _addedSimpleProducer;
-
     private readonly IProducer<ComponentRemoved<T>> _removedProducer;
-    private readonly IProducer<ComponentRemoved> _removedSimpleProducer;
-
     private readonly IProducer<ComponentUpdating<T>> _updatingProducer;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -19,7 +15,6 @@ internal sealed partial class ComponentPool<T>
         var message = new ComponentAdded<T>(actorId, in added);
 
         _addedProducer.Produce(message);
-        _addedSimpleProducer.Produce(message);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -28,7 +23,6 @@ internal sealed partial class ComponentPool<T>
         var message = new ComponentRemoved<T>(actorId, in removed);
 
         _removedProducer.Produce(message);
-        _removedSimpleProducer.Produce(message);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

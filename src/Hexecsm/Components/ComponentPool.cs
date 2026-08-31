@@ -47,9 +47,7 @@ internal sealed partial class ComponentPool<T> : IComponentPool, IConsumer<World
         _storage = new ActorDictionary<T>(initialCapacity);
 
         _addedProducer = eventBus.GetProducer<ComponentAdded<T>>();
-        _addedSimpleProducer = eventBus.GetProducer<ComponentAdded>();
         _removedProducer = eventBus.GetProducer<ComponentRemoved<T>>();
-        _removedSimpleProducer = eventBus.GetProducer<ComponentRemoved>();
         _updatingProducer = eventBus.GetProducer<ComponentUpdating<T>>();
 
         eventBus.Subscribe(this);

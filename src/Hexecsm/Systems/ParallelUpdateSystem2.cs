@@ -47,26 +47,11 @@ public abstract class ParallelUpdateSystem<T1, T2>(World world) : IUpdateSystem,
     }
 
     [SkipLocalsInit]
-    protected virtual void Update(
+    protected abstract void Update(
         KeyAccessor batchKeys,
         in ValueAccessor<T1> components1,
         in ValueAccessor<T2> components2,
-        in WorldTime worldTime)
-    {
-        foreach (ActorId actorId in batchKeys.AsReadOnlySpan())
-        {
-            var actorRef = new ActorRef<T1, T2>(
-                id: actorId,
-                component1: ref components1.GetValue(actorId),
-                component2: ref components2.GetValue(actorId));
-
-            Update(actorRef, worldTime);
-        }
-    }
-
-    protected virtual void Update(in ActorRef<T1, T2> actorRef, in WorldTime worldTime)
-    {
-    }
+        in WorldTime worldTime);
 
     [SkipLocalsInit]
     void IParallelJob.Execute(int workerIndex, int workersCount)

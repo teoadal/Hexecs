@@ -89,6 +89,15 @@
         <Compile Update="Worlds\World.Systems.cs">
           <DependentUpon>World.cs</DependentUpon>
         </Compile>
+        <Compile Update="Worlds\World.Operation.cs">
+          <DependentUpon>World.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Components\ComponentPool.Operation.cs">
+          <DependentUpon>ComponentPool.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Events\EventBus.Producer.cs">
+          <DependentUpon>EventBus.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
 </Project>

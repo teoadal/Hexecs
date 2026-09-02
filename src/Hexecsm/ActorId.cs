@@ -7,7 +7,7 @@
 /// Это легковесная структура, которая хранит только идентификатор актёра
 /// и используется для указания на актёра без хранения контекста.
 /// </remarks>
-[DebuggerDisplay("{Value}")]
+[DebuggerDisplay("Id = {Value}")]
 public readonly struct ActorId : IEquatable<ActorId>
 {
     /// <summary>

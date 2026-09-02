@@ -5,7 +5,9 @@ namespace Hexecsm.Components;
 
 internal sealed partial class ComponentPool<T>
 {
-    void IConsumer<WorldClearing>.Handle(WorldClearing message)
+    private readonly ConsumerDelegate<WorldClearing> _worldClearingConsumer;
+
+    private void Handle(in WorldClearing _)
     {
         ClearHandler();
     }

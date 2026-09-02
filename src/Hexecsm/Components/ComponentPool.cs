@@ -7,7 +7,7 @@ using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Components;
 
-internal sealed partial class ComponentPool<T> : IComponentPool, IConsumer<WorldClearing>
+internal sealed partial class ComponentPool<T> : IComponentPool
     where T : struct, IComponent
 {
     public int Length
@@ -50,7 +50,7 @@ internal sealed partial class ComponentPool<T> : IComponentPool, IConsumer<World
         _removedProducer = eventBus.GetProducer<ComponentRemoved<T>>();
         _updatingProducer = eventBus.GetProducer<ComponentUpdating<T>>();
 
-        eventBus.Subscribe(this);
+        _eventBus.Subscribe(_worldClearingConsumer = Handle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -96,7 +96,7 @@ internal sealed partial class ComponentPool<T> : IComponentPool, IConsumer<World
         _disposed = true;
 
         ClearHandler();
-        _eventBus.Unsubscribe(this);
+        _eventBus.Unsubscribe(_worldClearingConsumer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

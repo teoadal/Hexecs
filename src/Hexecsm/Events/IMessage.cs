@@ -1,3 +1,3 @@
 namespace Hexecsm.Events;
 
-internal interface IMessage;
+public interface IMessage;

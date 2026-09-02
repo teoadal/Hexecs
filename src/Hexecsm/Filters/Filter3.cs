@@ -7,11 +7,7 @@ using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Filters;
 
-public sealed partial class Filter<T1, T2, T3>
-    : IFilter,
-        IConsumer<ComponentAdded<T1>>,
-        IConsumer<ComponentRemoved<T1>>,
-        IConsumer<WorldClearing>
+public sealed partial class Filter<T1, T2, T3> : IFilter
     where T1 : struct, IComponent
     where T2 : struct, IComponent
     where T3 : struct, IComponent
@@ -45,11 +41,14 @@ public sealed partial class Filter<T1, T2, T3>
         _componentPool3 = componentPool3;
 
         _eventBus = eventBus;
-        _eventBus.Subscribe<ComponentAdded<T1>>(this);
-        _eventBus.Subscribe<ComponentRemoved<T1>>(this);
 
-        _consumer2 = new Consumer2(eventBus, this);
-        _consumer3 = new Consumer3(eventBus, this);
+        _eventBus.Subscribe(_component1AddedConsumer = Handle);
+        _eventBus.Subscribe(_component1AddedRemovedConsumer = Handle);
+        _eventBus.Subscribe(_component2AddedConsumer = Handle);
+        _eventBus.Subscribe(_component2AddedRemovedConsumer = Handle);
+        _eventBus.Subscribe(_component3AddedConsumer = Handle);
+        _eventBus.Subscribe(_component3AddedRemovedConsumer = Handle);
+        _eventBus.Subscribe(_worldClearingConsumer = Handle);
 
         _hashSet = new ActorHashSet(128);
 
@@ -60,11 +59,13 @@ public sealed partial class Filter<T1, T2, T3>
     {
         _hashSet.Clear();
 
-        _eventBus.Unsubscribe<ComponentAdded<T1>>(this);
-        _eventBus.Unsubscribe<ComponentRemoved<T1>>(this);
-
-        _consumer2.Dispose();
-        _consumer3.Dispose();
+        _eventBus.Unsubscribe(_component1AddedConsumer);
+        _eventBus.Unsubscribe(_component1AddedRemovedConsumer);
+        _eventBus.Unsubscribe(_component2AddedConsumer);
+        _eventBus.Unsubscribe(_component2AddedRemovedConsumer);
+        _eventBus.Unsubscribe(_component3AddedConsumer);
+        _eventBus.Unsubscribe(_component3AddedRemovedConsumer);
+        _eventBus.Unsubscribe(_worldClearingConsumer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

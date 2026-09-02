@@ -6,52 +6,34 @@ namespace Hexecsm.Filters;
 
 public sealed partial class Filter<T1, T2>
 {
-    private readonly Consumer2 _consumer2;
+    private readonly ConsumerDelegate<ComponentAdded<T1>> _component1AddedConsumer;
+    private readonly ConsumerDelegate<ComponentRemoved<T1>> _component1AddedRemovedConsumer;
+    private readonly ConsumerDelegate<ComponentAdded<T2>> _component2AddedConsumer;
+    private readonly ConsumerDelegate<ComponentRemoved<T2>> _component2AddedRemovedConsumer;
+    private readonly ConsumerDelegate<WorldClearing> _worldClearingConsumer;
 
-    void IConsumer<ComponentAdded<T1>>.Handle(ComponentAdded<T1> message)
+    private void Handle(in ComponentAdded<T1> message)
     {
         AddedHandler1(message.ActorId);
     }
 
-    void IConsumer<ComponentRemoved<T1>>.Handle(ComponentRemoved<T1> message)
+    private void Handle(in ComponentRemoved<T1> message)
     {
         RemovedHandler(message.ActorId);
     }
 
-    void IConsumer<WorldClearing>.Handle(WorldClearing message)
+    private void Handle(in ComponentAdded<T2> message)
     {
-        ClearingHandler();
+        AddedHandler2(message.ActorId);
     }
 
-    private sealed class Consumer2
-        : IConsumer<ComponentAdded<T2>>, IConsumer<ComponentRemoved<T2>>, IDisposable
+    private void Handle(in ComponentRemoved<T2> message)
     {
-        private readonly EventBus _eventBus;
-        private readonly Filter<T1, T2> _filter;
+        RemovedHandler(message.ActorId);
+    }
 
-        public Consumer2(EventBus eventBus, Filter<T1, T2> filter)
-        {
-            _eventBus = eventBus;
-            _filter = filter;
-
-            _eventBus.Subscribe<ComponentAdded<T2>>(this);
-            _eventBus.Subscribe<ComponentRemoved<T2>>(this);
-        }
-
-        public void Dispose()
-        {
-            _eventBus.Unsubscribe<ComponentAdded<T2>>(this);
-            _eventBus.Unsubscribe<ComponentRemoved<T2>>(this);
-        }
-
-        public void Handle(ComponentAdded<T2> message)
-        {
-            _filter.AddedHandler2(message.ActorId);
-        }
-
-        public void Handle(ComponentRemoved<T2> message)
-        {
-            _filter.RemovedHandler(message.ActorId);
-        }
+    private void Handle(in WorldClearing _)
+    {
+        ClearingHandler();
     }
 }

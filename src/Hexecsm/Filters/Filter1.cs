@@ -7,11 +7,7 @@ using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Filters;
 
-public sealed partial class Filter<T1>
-    : IFilter,
-        IConsumer<ComponentAdded<T1>>,
-        IConsumer<ComponentRemoved<T1>>,
-        IConsumer<WorldClearing>
+public sealed partial class Filter<T1> : IFilter
     where T1 : struct, IComponent
 {
     public KeyAccessor Keys
@@ -36,8 +32,10 @@ public sealed partial class Filter<T1>
     {
         _componentPool1 = componentPool1;
         _eventBus = eventBus;
-        _eventBus.Subscribe<ComponentAdded<T1>>(this);
-        _eventBus.Subscribe<ComponentRemoved<T1>>(this);
+
+        _eventBus.Subscribe(_component1AddedConsumer = Handle);
+        _eventBus.Subscribe(_component1AddedRemovedConsumer = Handle);
+        _eventBus.Subscribe(_worldClearingConsumer = Handle);
 
         _hashSet = new ActorHashSet(128);
 
@@ -48,8 +46,9 @@ public sealed partial class Filter<T1>
     {
         _hashSet.Clear();
 
-        _eventBus.Unsubscribe<ComponentAdded<T1>>(this);
-        _eventBus.Unsubscribe<ComponentRemoved<T1>>(this);
+        _eventBus.Unsubscribe(_component1AddedConsumer);
+        _eventBus.Unsubscribe(_component1AddedRemovedConsumer);
+        _eventBus.Unsubscribe(_worldClearingConsumer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

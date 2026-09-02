@@ -23,17 +23,17 @@ namespace Hexecs.Benchmarks.Actors;
 //
 //     | Method                      | Count  | Mean         | Ratio | Gen0     | Allocated  | Alloc Ratio |
 //     |---------------------------- |------- |-------------:|------:|---------:|-----------:|------------:|
-//     | FriFlo_CreateAddDestroy     | 1000   |     160.3 us |  0.31 |        - |          - |          NA |
-//     | DefaultEcs_CreateAddDestroy | 1000   |     401.6 us |  0.77 |   1.4648 |    32000 B |          NA |
-//     | Hexecs_CreateAddDestroy     | 1000   |     521.4 us |  1.00 |        - |          - |          NA |
+//     | FriFlo_CreateAddDestroy     | 1000   |     163.1 us |  0.43 |        - |          - |          NA |
+//     | Hexes_M_CreateAddDestroy    | 1000   |     378.4 us |  1.00 |        - |          - |          NA |
+//     | DefaultEcs_CreateAddDestroy | 1000   |     426.8 us |  1.13 |   1.4648 |    32000 B |          NA |
 //     |                             |        |              |       |          |            |             |
-//     | FriFlo_CreateAddDestroy     | 100000 |  16,367.5 us |  0.25 |        - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 100000 |  64,667.0 us |  1.00 |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 100000 |  88,922.5 us |  1.38 | 166.6667 |  3200040 B |   80,001.00 |
+//     | FriFlo_CreateAddDestroy     | 100000 |  16,323.7 us |  0.33 |        - |       40 B |        1.00 |
+//     | Hexes_M_CreateAddDestroy    | 100000 |  49,862.3 us |  1.00 |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 100000 |  85,081.9 us |  1.71 | 166.6667 |  3200040 B |   80,001.00 |
 //     |                             |        |              |       |          |            |             |
-//     | FriFlo_CreateAddDestroy     | 500000 |  84,863.0 us |  0.16 |        - |       40 B |        1.00 |
-//     | Hexecs_CreateAddDestroy     | 500000 | 545,966.3 us |  1.00 |        - |       40 B |        1.00 |
-//     | DefaultEcs_CreateAddDestroy | 500000 | 676,605.1 us |  1.24 |        - | 16000040 B |  400,001.00 |
+//     | FriFlo_CreateAddDestroy     | 500000 |  81,879.1 us |  0.23 |        - |       40 B |        1.00 |
+//     | Hexes_M_CreateAddDestroy    | 500000 | 363,193.4 us |  1.00 |        - |       40 B |        1.00 |
+//     | DefaultEcs_CreateAddDestroy | 500000 | 544,384.8 us |  1.50 |        - | 16000040 B |  400,001.00 |
 //
 // ---------------------------------------------------------------------------------------------------------
 //
@@ -80,41 +80,9 @@ public class ActorCreateAddComponentsDestroyBenchmark
     private List<ArchetypeQuery> _frifloQueries = null!;
     private EntityStore _frifloWorld = null!;
 
-    private List<Actor> _hexecsActors = null!;
-    private ActorContext _hexecsContext = null!;
-    private List<IActorFilter> _hexecsFilters = null!;
-    private World _hexecsWorld = null!;
-
     private List<ActorId> _mHexecsActors = null!;
     private Hexecsm.Worlds.World _mWorld = null!;
     private List<IFilter> _mFilters = null!;
-
-    // [Benchmark(Baseline = true)]
-    // public int Hexecs_CreateAddDestroy()
-    // {
-    //     _hexecsActors.Clear();
-    //
-    //     for (var i = 0; i < Count; i++)
-    //     {
-    //         Actor actor = _hexecsContext.CreateActor();
-    //         actor.Add(new Attack { Value = i });
-    //         actor.Add(new Defence());
-    //         actor.Add(new Speed());
-    //
-    //         _hexecsActors.Add(actor);
-    //     }
-    //
-    //     foreach (Actor actor in _hexecsActors)
-    //     {
-    //         actor.Remove<Attack>();
-    //         actor.Remove<Defence>();
-    //         actor.Remove<Speed>();
-    //
-    //         actor.Destroy();
-    //     }
-    //
-    //     return _hexecsFilters.Sum(static x => x.Length);
-    // }
 
     [Benchmark(Baseline = true)]
     public int Hexes_M_CreateAddDestroy()
@@ -209,8 +177,8 @@ public class ActorCreateAddComponentsDestroyBenchmark
 
         _frifloWorld = null!;
 
-        _hexecsWorld.Dispose();
-        _hexecsWorld = null!;
+        _mWorld.Dispose();
+        _mWorld = null!;
     }
 
     [GlobalSetup]
@@ -242,20 +210,6 @@ public class ActorCreateAddComponentsDestroyBenchmark
             _frifloWorld.Query<Attack, Defence, Speed>()
         ];
 
-        _hexecsActors = new List<Actor>(Count);
-        _hexecsWorld = new WorldBuilder().Build();
-        _hexecsContext = _hexecsWorld.Actors;
-        _hexecsFilters =
-        [
-            _hexecsContext.Filter<Attack>(),
-            _hexecsContext.Filter<Defence>(),
-            _hexecsContext.Filter<Speed>(),
-            _hexecsContext.Filter<Attack, Defence>(),
-            _hexecsContext.Filter<Attack, Speed>(),
-            _hexecsContext.Filter<Defence, Speed>(),
-            _hexecsContext.Filter<Attack, Defence, Speed>()
-        ];
-
         _mHexecsActors = new List<ActorId>();
         _mWorld = new Hexecsm.Worlds.World(256, 4);
         _mFilters =
@@ -282,18 +236,13 @@ public class ActorCreateAddComponentsDestroyBenchmark
             Friflo.Engine.ECS.Entity frifloEntity = _frifloWorld.CreateEntity(new Attack(), new Defence(), new Speed());
             _frifloEntities.Add(frifloEntity);
 
-            Actor actor = _hexecsContext.CreateActor();
-            actor.Add(new Attack());
-            actor.Add(new Defence());
-            actor.Add(new Speed());
-
-            _hexecsActors.Add(actor);
-
             ActorId actorId = _mWorld.CreateActor();
             _mWorld.AddComponent(actorId, new Attack());
             _mWorld.AddComponent(actorId, new Defence());
             _mWorld.AddComponent(actorId, new Speed());
         }
+
+        _mWorld.Update();
 
         foreach (Entity entity in _defaultEntities)
         {
@@ -305,18 +254,15 @@ public class ActorCreateAddComponentsDestroyBenchmark
             entity.DeleteEntity();
         }
 
-        foreach (Actor actor in _hexecsActors)
-        {
-            actor.Destroy();
-        }
-
         foreach (ActorId actorId in _mHexecsActors)
         {
             _mWorld.DestroyActor(actorId);
         }
 
+        _mWorld.Update();
+
         _defaultEntities.Clear();
         _frifloEntities.Clear();
-        _hexecsActors.Clear();
+        _mHexecsActors.Clear();
     }
 }

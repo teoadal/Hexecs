@@ -2,7 +2,7 @@ namespace Hexecsm.Filters;
 
 public sealed partial class Filter<T1, T2>
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void AddedHandler1(ActorId actorId)
     {
         if (_componentPool2.Contains(actorId))
@@ -16,7 +16,7 @@ public sealed partial class Filter<T1, T2>
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void AddedHandler2(ActorId actorId)
     {
         if (_componentPool1.Contains(actorId))

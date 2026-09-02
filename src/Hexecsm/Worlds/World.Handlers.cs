@@ -4,7 +4,7 @@ namespace Hexecsm.Worlds;
 
 public sealed partial class World
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ActorAddHandler(ActorId actorId)
     {
         if (_storage.TryAdd(actorId, new Entry()))
@@ -15,7 +15,7 @@ public sealed partial class World
         ThrowAlreadyExists(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ActorDestroyHandler(ActorId actorId)
     {
         if (_storage.Remove(actorId, true, out Entry entry))
@@ -36,7 +36,7 @@ public sealed partial class World
         ThrowActorNotFound(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ClearHandler()
     {
         ProduceClearingEvent();
@@ -50,7 +50,7 @@ public sealed partial class World
         _postponedOperations.Clear();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ComponentAddHandler(ActorId actorId, ComponentTypeId componentTypeId)
     {
         ref Entry entry = ref _storage.TryGetRef(actorId);
@@ -68,7 +68,7 @@ public sealed partial class World
         ThrowActorNotFound(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ComponentRemoveHandler(ActorId actorId, ComponentTypeId componentTypeId)
     {
         ref Entry entry = ref _storage.TryGetRef(actorId);

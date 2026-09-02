@@ -1,7 +1,7 @@
 namespace Hexecsm.Events;
 
-internal interface IConsumer<in TMessage>
+internal interface IConsumer<TMessage>
     where TMessage : struct, IMessage
 {
-    void Handle(TMessage message);
+    void Handle(in TMessage message);
 }

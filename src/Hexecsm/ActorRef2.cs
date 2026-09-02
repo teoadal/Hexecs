@@ -1,5 +1,6 @@
 namespace Hexecsm;
 
+[DebuggerDisplay("Id = {Id.Value}")]
 public readonly ref struct ActorRef<T1, T2>
     where T1 : struct, IComponent
     where T2 : struct, IComponent

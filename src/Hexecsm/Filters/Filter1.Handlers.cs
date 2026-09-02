@@ -2,7 +2,7 @@ namespace Hexecsm.Filters;
 
 public sealed partial class Filter<T1>
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void AddedHandler1(ActorId actorId)
     {
         if (_hashSet.TryAdd(actorId))

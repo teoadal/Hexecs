@@ -14,7 +14,7 @@ internal sealed partial class ComponentPool<T>
     {
         var message = new ComponentAdded<T>(actorId, in added);
 
-        _addedProducer.Produce(message);
+        _addedProducer.Produce(in message);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -22,7 +22,7 @@ internal sealed partial class ComponentPool<T>
     {
         var message = new ComponentRemoved<T>(actorId, in removed);
 
-        _removedProducer.Produce(message);
+        _removedProducer.Produce(in message);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -33,6 +33,6 @@ internal sealed partial class ComponentPool<T>
             exists: in exists,
             expected: in expected);
 
-        _updatingProducer.Produce(message);
+        _updatingProducer.Produce(in message);
     }
 }

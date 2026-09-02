@@ -1,8 +1,10 @@
+using Hexecsm.Utils;
+
 namespace Hexecsm.Events;
 
-internal sealed class EventBus : IDisposable
+internal sealed partial class EventBus : IDisposable
 {
-    private readonly Dictionary<Type, IProducer> _producers = [];
+    private readonly Dictionary<Type, IProducer> _producers = new Dictionary<Type, IProducer>(ReferenceComparer<Type>.Instance);
     private readonly Lock _producerLock = new Lock();
 
     public void Dispose()
@@ -21,14 +23,14 @@ internal sealed class EventBus : IDisposable
         return GetOrCreateProducer<TMessage>();
     }
 
-    public void Subscribe<TMessage>(IConsumer<TMessage> consumer)
+    public void Subscribe<TMessage>(ConsumerDelegate<TMessage> consumer)
         where TMessage : struct, IMessage
     {
         Producer<TMessage> producer = GetOrCreateProducer<TMessage>();
         producer.Subscribe(consumer);
     }
 
-    public void Unsubscribe<TMessage>(IConsumer<TMessage> consumer)
+    public void Unsubscribe<TMessage>(ConsumerDelegate<TMessage> consumer)
         where TMessage : struct, IMessage
     {
         Producer<TMessage> producer = GetOrCreateProducer<TMessage>();
@@ -52,59 +54,6 @@ internal sealed class EventBus : IDisposable
             _producers[type] = producer;
 
             return producer;
-        }
-    }
-
-    private sealed class Producer<TMessage> : IProducer<TMessage>
-        where TMessage : struct, IMessage
-    {
-        private readonly List<IConsumer<TMessage>> _consumers = [];
-        private readonly Lock _lock = new Lock();
-
-        private bool _disposed;
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-
-            _consumers.Clear();
-        }
-
-        public void Produce(TMessage message)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, typeof(Producer<TMessage>));
-
-            Span<IConsumer<TMessage>> consumers = CollectionsMarshal.AsSpan(_consumers);
-
-            foreach (IConsumer<TMessage> consumer in consumers)
-            {
-                consumer.Handle(message);
-            }
-        }
-
-        public void Subscribe(IConsumer<TMessage> consumer)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, typeof(Producer<TMessage>));
-
-            using (_lock.EnterScope())
-            {
-                _consumers.Add(consumer);
-            }
-        }
-
-        public void Unsubscribe(IConsumer<TMessage> consumer)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, typeof(Producer<TMessage>));
-
-            using (_lock.EnterScope())
-            {
-                _consumers.Remove(consumer);
-            }
         }
     }
 }

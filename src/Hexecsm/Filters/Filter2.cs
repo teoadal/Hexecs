@@ -7,11 +7,7 @@ using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Filters;
 
-public sealed partial class Filter<T1, T2>
-    : IFilter,
-        IConsumer<ComponentAdded<T1>>,
-        IConsumer<ComponentRemoved<T1>>,
-        IConsumer<WorldClearing>
+public sealed partial class Filter<T1, T2> : IFilter
     where T1 : struct, IComponent
     where T2 : struct, IComponent
 {
@@ -41,10 +37,12 @@ public sealed partial class Filter<T1, T2>
         _componentPool2 = componentPool2;
 
         _eventBus = eventBus;
-        _eventBus.Subscribe<ComponentAdded<T1>>(this);
-        _eventBus.Subscribe<ComponentRemoved<T1>>(this);
 
-        _consumer2 = new Consumer2(eventBus, this);
+        _eventBus.Subscribe(_component1AddedConsumer = Handle);
+        _eventBus.Subscribe(_component1AddedRemovedConsumer = Handle);
+        _eventBus.Subscribe(_component2AddedConsumer = Handle);
+        _eventBus.Subscribe(_component2AddedRemovedConsumer = Handle);
+        _eventBus.Subscribe(_worldClearingConsumer = Handle);
 
         _hashSet = new ActorHashSet(128);
 
@@ -55,10 +53,13 @@ public sealed partial class Filter<T1, T2>
     {
         _hashSet.Clear();
 
-        _eventBus.Unsubscribe<ComponentAdded<T1>>(this);
-        _eventBus.Unsubscribe<ComponentRemoved<T1>>(this);
+        _eventBus.Unsubscribe(_component1AddedConsumer);
+        _eventBus.Unsubscribe(_component1AddedRemovedConsumer);
 
-        _consumer2.Dispose();
+        _eventBus.Unsubscribe(_component2AddedConsumer);
+        _eventBus.Unsubscribe(_component2AddedRemovedConsumer);
+
+        _eventBus.Unsubscribe(_worldClearingConsumer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

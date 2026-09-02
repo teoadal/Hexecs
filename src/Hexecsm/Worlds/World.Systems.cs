@@ -11,5 +11,10 @@ public sealed partial class World
     {
         _drawSystems = drawSystems.ToArray();
         _updateSystems = updateSystems.ToArray();
+
+        if (_updateSystems.Length > 0)
+        {
+            _parallelWorker.Start();
+        }
     }
 }

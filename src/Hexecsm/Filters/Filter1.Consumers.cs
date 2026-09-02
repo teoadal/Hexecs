@@ -6,17 +6,21 @@ namespace Hexecsm.Filters;
 
 public sealed partial class Filter<T1>
 {
-    void IConsumer<ComponentAdded<T1>>.Handle(ComponentAdded<T1> message)
+    private readonly ConsumerDelegate<ComponentAdded<T1>> _component1AddedConsumer;
+    private readonly ConsumerDelegate<ComponentRemoved<T1>> _component1AddedRemovedConsumer;
+    private readonly ConsumerDelegate<WorldClearing> _worldClearingConsumer;
+
+    private void Handle(in ComponentAdded<T1> message)
     {
         AddedHandler1(message.ActorId);
     }
 
-    void IConsumer<ComponentRemoved<T1>>.Handle(ComponentRemoved<T1> message)
+    private void Handle(in ComponentRemoved<T1> message)
     {
         RemovedHandler(message.ActorId);
     }
 
-    void IConsumer<WorldClearing>.Handle(WorldClearing message)
+    private void Handle(in WorldClearing _)
     {
         ClearingHandler();
     }

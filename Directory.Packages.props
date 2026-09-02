@@ -4,6 +4,8 @@
     <CentralPackageVersionOverrideEnabled>true</CentralPackageVersionOverrideEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="BenchmarkDotNet.Diagnostics.dotMemory" Version="0.15.8" />
+    <PackageVersion Include="BenchmarkDotNet.Diagnostics.dotTrace" Version="0.15.8" />
     <PackageVersion Include="Friflo.Engine.ECS" Version="3.6.0" />
     <PackageVersion Include="DefaultEcs" Version="0.17.2" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.400" />

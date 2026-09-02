@@ -2,8 +2,10 @@ namespace Hexecsm.Events;
 
 internal interface IProducer : IDisposable;
 
-internal interface IProducer<in TMessage> : IProducer
+internal interface IProducer<TMessage> : IProducer
     where TMessage : struct, IMessage
 {
-    void Produce(TMessage message);
+    void Produce(in TMessage message);
+
+    void Produce(ReadOnlySpan<TMessage> messages);
 }

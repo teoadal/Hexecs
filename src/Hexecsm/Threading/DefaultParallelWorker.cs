@@ -2,15 +2,28 @@ namespace Hexecsm.Threading;
 
 public sealed class DefaultParallelWorker : IParallelWorker
 {
-    public int DegreeOfParallelism { get; }
+    public int DegreeOfParallelism
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _degreeOfParallelism;
+    }
+
+    public bool Started
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _started;
+    }
 
     private readonly Barrier _barrier;
-    private readonly Thread[] _workers;
     private readonly CancellationTokenSource _cts;
     private readonly CancellationToken _cancellationToken;
+    private readonly int _degreeOfParallelism;
+    private readonly ThreadPriority _threadPriority;
+    private readonly Thread?[] _workers;
 
     private IParallelJob? _job;
     private volatile bool _disposed;
+    private bool _started;
 
     public DefaultParallelWorker(
         int degreeOfParallelism,
@@ -23,35 +36,39 @@ public sealed class DefaultParallelWorker : IParallelWorker
                 message: "Degree of parallelism must be at least 2.");
         }
 
-        DegreeOfParallelism = degreeOfParallelism;
+        _barrier = new Barrier(participantCount: degreeOfParallelism + 1);
+        _workers = new Thread?[degreeOfParallelism];
 
         _cts = new CancellationTokenSource();
         _cancellationToken = _cts.Token;
+        _degreeOfParallelism = degreeOfParallelism;
+        _threadPriority = priority;
+    }
 
-        // +1 для управляющего потока
-        _barrier = new Barrier(participantCount: degreeOfParallelism + 1);
-        _workers = new Thread[degreeOfParallelism];
-
-        // Используем countdown, чтобы главный поток не вышел из конструктора,
-        // пока все воркеры гарантированно не дойдут до первого барьера.
-        using var startupLatch = new CountdownEvent(degreeOfParallelism);
-
-        for (var i = 0; i < degreeOfParallelism; i++)
+    public void Dispose()
+    {
+        if (_disposed)
         {
-            int workerIndex = i;
-            var thread = new Thread(() => ExecuteWorker(workerIndex, startupLatch))
-            {
-                IsBackground = false, // Потоки foreground, удерживают приложение
-                Priority = priority,
-                Name = $"ParallelRunner {workerIndex} of {degreeOfParallelism}"
-            };
-
-            _workers[i] = thread;
-            thread.Start();
+            return;
         }
 
-        // Ждем, пока все потоки инициализируются и встанут у барьера
-        startupLatch.Wait();
+        _disposed = true;
+
+        // Отменяем токен — это заставит методы SignalAndWait выкинуть OperationCanceledException
+        // и мгновенно разблокирует все потоки, где бы они ни находились
+        _cts.Cancel();
+
+        // Теперь спокойно дожидаемся завершения потоков
+        foreach (Thread? thread in _workers)
+        {
+            if (thread is { IsAlive: true })
+            {
+                thread.Join();
+            }
+        }
+
+        _barrier.Dispose();
+        _cts.Dispose();
     }
 
     public void Run(IParallelJob job)
@@ -76,6 +93,40 @@ public sealed class DefaultParallelWorker : IParallelWorker
         {
             _job = null;
         }
+    }
+
+    public void Start()
+    {
+        if (_started)
+        {
+            return;
+        }
+
+        _started = true;
+
+        // +1 для управляющего потока
+
+        // Используем countdown, чтобы главный поток не вышел из конструктора,
+        // пока все воркеры гарантированно не дойдут до первого барьера.
+        var startupLatch = new CountdownEvent(_degreeOfParallelism);
+
+        for (var i = 0; i < _degreeOfParallelism; i++)
+        {
+            int workerIndex = i;
+            var thread = new Thread(() => ExecuteWorker(workerIndex, startupLatch))
+            {
+                IsBackground = false, // Потоки foreground, удерживают приложение
+                Priority = _threadPriority,
+                Name = $"ParallelRunner {workerIndex} of {_degreeOfParallelism}"
+            };
+
+            _workers[i] = thread;
+            thread.Start();
+        }
+
+        // Ждем, пока все потоки инициализируются и встанут у барьера
+        startupLatch.Wait(_cancellationToken);
+        startupLatch.Dispose();
     }
 
     private void ExecuteWorker(int workerIndex, CountdownEvent startupLatch)
@@ -107,31 +158,5 @@ public sealed class DefaultParallelWorker : IParallelWorker
         {
             // Нормальный выход, если барьер уничтожен
         }
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        // Отменяем токен — это заставит методы SignalAndWait выкинуть OperationCanceledException
-        // и мгновенно разблокирует все потоки, где бы они ни находились
-        _cts.Cancel();
-
-        // Теперь спокойно дожидаемся завершения потоков
-        foreach (Thread thread in _workers)
-        {
-            if (thread.IsAlive)
-            {
-                thread.Join();
-            }
-        }
-
-        _barrier.Dispose();
-        _cts.Dispose();
     }
 }

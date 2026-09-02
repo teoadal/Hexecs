@@ -1,8 +1,10 @@
-﻿namespace Hexecsm.Components;
+﻿using Hexecsm.Utils;
+
+namespace Hexecsm.Components;
 
 internal static class ComponentType
 {
-    private static readonly Dictionary<Type, ComponentTypeId> ComponentTypeIds = [];
+    private static readonly Dictionary<Type, ComponentTypeId> ComponentTypeIds = new Dictionary<Type, ComponentTypeId>(ReferenceComparer<Type>.Instance);
     private static readonly Dictionary<ComponentTypeId, Type> ComponentIdTypes = [];
     private static readonly Lock Locker = new Lock();
 

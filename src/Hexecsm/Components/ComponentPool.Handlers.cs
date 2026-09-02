@@ -4,7 +4,7 @@ namespace Hexecsm.Components;
 
 internal sealed partial class ComponentPool<T>
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void AddHandler(ActorId actorId, in T component)
     {
         if (_storage.TryAdd(actorId, in component))
@@ -17,7 +17,7 @@ internal sealed partial class ComponentPool<T>
         ThrowAlreadyExists(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ClearHandler()
     {
         if (_disposeHandler != null)
@@ -35,7 +35,7 @@ internal sealed partial class ComponentPool<T>
         _postponedOperations.Clear();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void CloneHandler(ActorId targetId, in T component)
     {
         if (_storage.TryAdd(targetId, in component))
@@ -48,7 +48,7 @@ internal sealed partial class ComponentPool<T>
         ThrowAlreadyExists(targetId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void RemoveHandler(ActorId actorId)
     {
         bool hasDisposeHandler = _disposeHandler != null;
@@ -64,7 +64,7 @@ internal sealed partial class ComponentPool<T>
         ThrowComponentNotFound(actorId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void UpdateHandler(ActorId actorId, in T expected)
     {
         ref T exists = ref _storage.TryGetRef(actorId);

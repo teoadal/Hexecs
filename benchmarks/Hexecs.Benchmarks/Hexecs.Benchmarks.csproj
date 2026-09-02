@@ -13,6 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="BenchmarkDotNet.Diagnostics.dotMemory" />
+        <PackageReference Include="BenchmarkDotNet.Diagnostics.dotTrace" />
         <PackageReference Include="DefaultEcs"/>
         <PackageReference Include="Friflo.Engine.ECS" />
     </ItemGroup>

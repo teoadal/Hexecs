@@ -3,11 +3,11 @@
 using Friflo.Engine.ECS;
 
 using Hexecs.Benchmarks.Mocks.ActorComponents;
-using Hexecs.Utils;
-using Hexecs.Worlds;
 
+using Hexecsm.Accessors;
+
+using ActorId = Hexecsm.ActorId;
 using Entity = DefaultEcs.Entity;
-using World = Hexecs.Worlds.World;
 
 namespace Hexecs.Benchmarks.Actors;
 
@@ -19,19 +19,19 @@ namespace Hexecs.Benchmarks.Actors;
 //
 // Job=.NET 10.0  Runtime=.NET 10.0
 //
-//     | Method                 | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
-//     |----------------------- |------- |----------:|------:|----------:|------------:|
-//     | FriFlo_Chunks          | 10000  |  16.52 us |  0.64 |         - |          NA |
-//     | Hexecs_ComponentAccess | 10000  |  19.01 us |  0.74 |         - |          NA |
-//     | Hexecs                 | 10000  |  25.75 us |  1.00 |         - |          NA |
-//     | FriFlo                 | 10000  |  26.46 us |  1.03 |      88 B |          NA |
-//     | DefaultEcs             | 10000  |  30.37 us |  1.18 |         - |          NA |
-//     |                        |        |           |       |           |             |
-//     | FriFlo_Chunks          | 100000 | 163.69 us |  0.63 |         - |          NA |
-//     | Hexecs_ComponentAccess | 100000 | 195.65 us |  0.75 |         - |          NA |
-//     | FriFlo                 | 100000 | 259.28 us |  0.99 |      88 B |          NA |
-//     | Hexecs                 | 100000 | 261.44 us |  1.00 |         - |          NA |
-//     | DefaultEcs             | 100000 | 296.66 us |  1.13 |         - |          NA |
+//     | Method                   | Count  | Mean      | Ratio | Allocated | Alloc Ratio |
+//     |------------------------- |------- |----------:|------:|----------:|------------:|
+//     | FriFlo_Chunks            | 10000  |  16.10 us |  0.47 |         - |          NA |
+//     | FriFlo                   | 10000  |  26.42 us |  0.77 |      88 B |          NA |
+//     | DefaultEcs               | 10000  |  28.82 us |  0.84 |         - |          NA |
+//     | Hexecs_M_ComponentAccess | 10000  |  34.12 us |  1.00 |         - |          NA |
+//     | Hexecs_M                 | 10000  |  35.36 us |  1.04 |         - |          NA |
+//     |                          |        |           |       |           |             |
+//     | FriFlo_Chunks            | 100000 | 162.70 us |  0.60 |         - |          NA |
+//     | DefaultEcs               | 100000 | 251.57 us |  0.93 |         - |          NA |
+//     | FriFlo                   | 100000 | 270.36 us |  1.00 |      88 B |          NA |
+//     | Hexecs_M_ComponentAccess | 100000 | 271.21 us |  1.00 |         - |          NA |
+//     | Hexecs_M                 | 100000 | 323.19 us |  1.19 |         - |          NA |
 //
 // ------------------------------------------------------------------------------------
 //
@@ -70,24 +70,24 @@ public class ActorFilter3EnumerationBenchmark
     [Params(10_000, 100_000)]
     public int Count;
 
-    private ActorContext _context = null!;
-    private ActorFilter<Attack, Defence, Speed> _filter = null!;
-    private World _world = null!;
-
     private DefaultEcs.World _defaultWorld = null!;
     private DefaultEcs.EntitySet _defaultEntitySet = null!;
 
     private EntityStore _frifloWorld = null!;
     private ArchetypeQuery<Attack, Defence, Speed> _frifloQuery = null!;
 
-    [Benchmark(Baseline = true)]
-    public int Hexecs()
+    private Hexecsm.Worlds.World _mWorld = null!;
+    private Hexecsm.Filters.Filter<Attack, Defence, Speed> _mFilter = null!;
+
+    [Benchmark]
+    public int Hexecs_M()
     {
         var result = 0;
 
-        foreach (ActorRef<Attack, Defence, Speed> actor in _filter)
+        foreach (Hexecsm.ActorRef<Attack, Defence, Speed> actor in _mFilter)
         {
-            result += actor.Component1.Value +
+            result +=
+                actor.Component1.Value +
                 actor.Component2.Value +
                 actor.Component3.Value;
         }
@@ -95,20 +95,22 @@ public class ActorFilter3EnumerationBenchmark
         return result;
     }
 
-    [Benchmark]
-    public int Hexecs_ComponentAccess()
+    [Benchmark(Baseline = true)]
+    public int Hexecs_M_ComponentAccess()
     {
         var result = 0;
 
-        ComponentsAccess<Attack> attacks = _context.GetComponents<Attack>();
-        ComponentsAccess<Defence> defences = _context.GetComponents<Defence>();
-        ComponentsAccess<Speed> speeds = _context.GetComponents<Speed>();
+        ReadOnlySpan<ActorId> keys = _mFilter.Keys.AsReadOnlySpan();
+        ValueAccessor<Attack> attacks = _mWorld.GetComponents<Attack>();
+        ValueAccessor<Defence> defences = _mWorld.GetComponents<Defence>();
+        ValueAccessor<Speed> speeds = _mWorld.GetComponents<Speed>();
 
-        foreach (uint actorId in _filter.Keys)
+        foreach (ActorId actorId in keys)
         {
-            result += attacks[actorId].Value +
-                defences[actorId].Value +
-                speeds[actorId].Value;
+            result +=
+                attacks.GetValue(actorId).Value +
+                defences.GetValue(actorId).Value +
+                speeds.GetValue(actorId).Value;
         }
 
         return result;
@@ -125,7 +127,8 @@ public class ActorFilter3EnumerationBenchmark
 
         foreach (Entity entity in _defaultEntitySet.GetEntities())
         {
-            result += attacks[entity].Value +
+            result +=
+                attacks[entity].Value +
                 defences[entity].Value +
                 speeds[entity].Value;
         }
@@ -140,7 +143,8 @@ public class ActorFilter3EnumerationBenchmark
 
         _frifloQuery.ForEachEntity((ref attack, ref defence, ref speed, _) =>
         {
-            result += attack.Value +
+            result +=
+                attack.Value +
                 defence.Value +
                 speed.Value;
         });
@@ -161,7 +165,8 @@ public class ActorFilter3EnumerationBenchmark
 
             for (var i = 0; i < queryChunk.Length; i++)
             {
-                result += attacks[i].Value +
+                result +=
+                    attacks[i].Value +
                     defences[i].Value +
                     speeds[i].Value;
             }
@@ -176,8 +181,8 @@ public class ActorFilter3EnumerationBenchmark
         _defaultWorld.Dispose();
         _defaultWorld = null!;
 
-        _world.Dispose();
-        _world = null!;
+        _mWorld.Dispose();
+        _mWorld = null!;
     }
 
     [GlobalSetup]
@@ -185,23 +190,15 @@ public class ActorFilter3EnumerationBenchmark
     {
         _defaultWorld = new DefaultEcs.World();
         _frifloWorld = new EntityStore();
-        _world = new WorldBuilder().Build();
-        _context = _world.Actors;
+        _mWorld = new Hexecsm.Worlds.World(128, 4);
 
         _defaultEntitySet = _defaultWorld.GetEntities().With<Attack>().With<Defence>().With<Speed>().AsSet();
-        _filter = _world.Actors.Filter<Attack, Defence, Speed>();
         _frifloQuery = _frifloWorld.Query<Attack, Defence, Speed>();
-
-        ActorContext context = _world.Actors;
+        _mFilter = _mWorld.GetFilter<Attack, Defence, Speed>();
 
         for (var i = 0; i < Count; i++)
         {
             var attack = new Attack { Value = i };
-
-            Actor actor = context.CreateActor();
-            actor.Add(in attack);
-            actor.Add(new Defence());
-            actor.Add(new Speed());
 
             Entity defaultEntity = _defaultWorld.CreateEntity();
             defaultEntity.Set(in attack);
@@ -209,6 +206,12 @@ public class ActorFilter3EnumerationBenchmark
             defaultEntity.Set<Speed>();
 
             _frifloWorld.CreateEntity(attack, new Defence(), new Speed());
+
+            ActorId actorId = _mWorld.CreateActor();
+            _mWorld.AddComponent(actorId, in attack);
+            _mWorld.AddComponent(actorId, new Defence());
+            _mWorld.AddComponent(actorId, new Speed());
+            _mWorld.Update();
         }
     }
 }

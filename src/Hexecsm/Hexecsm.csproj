@@ -41,9 +41,6 @@
         <Compile Update="Worlds\World.Producers.cs">
             <DependentUpon>World.cs</DependentUpon>
         </Compile>
-        <Compile Update="Worlds\World.ComponentPools.cs">
-            <DependentUpon>World.cs</DependentUpon>
-        </Compile>
         <Compile Update="Worlds\World.Entry.cs">
             <DependentUpon>World.cs</DependentUpon>
         </Compile>
@@ -97,6 +94,27 @@
         </Compile>
         <Compile Update="Events\EventBus.Producer.cs">
           <DependentUpon>EventBus.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\Operations\OperationQueue.ComponentQueue.cs">
+          <DependentUpon>OperationQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Worlds\Operations\OperationQueue.ActorQueue.cs">
+          <DependentUpon>OperationQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Events\EventBus.Errors.cs">
+          <DependentUpon>EventBus.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Operations\OperationQueue.ComponentBuffer.cs">
+          <DependentUpon>OperationQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Operations\OperationQueue.Operation.cs">
+          <DependentUpon>OperationQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Operations\OperationQueue.ComponentBufferManager.cs">
+          <DependentUpon>OperationQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Operations\OperationQueue.Queue.cs">
+          <DependentUpon>OperationQueue.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

@@ -18,8 +18,8 @@ namespace Hexecs.Benchmarks.Units;
 //
 //     | Method                   | Toolchain              | Mean     | Allocated |
 //     |------------------------- |----------------------- |---------:|----------:|
-//     | Hexes_M_CreateAddDestroy | Default                | 289.1 ms |      40 B |
-//     | Hexes_M_CreateAddDestroy | InProcessEmitToolchain | 290.1 ms |      40 B |
+//     | Hexes_M_CreateAddDestroy | Default                | 195.2 ms |      40 B |
+//     | Hexes_M_CreateAddDestroy | InProcessEmitToolchain | 200.4 ms |      40 B |
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
@@ -79,7 +79,13 @@ public class CreateAddComponentsDestroyBenchmark
     public void Setup()
     {
         _mHexecsActors = [];
-        _mWorld = new Hexecsm.Worlds.World(Count, 4);
+        _mWorld = new Hexecsm.Worlds.WorldBuilder()
+            .WithInitialCapacity(Count)
+            .ConfigureComponent<Attack>(attack => attack.WithInitialCapacity(Count))
+            .ConfigureComponent<Defence>(defence => defence.WithInitialCapacity(Count))
+            .ConfigureComponent<Speed>(speed => speed.WithInitialCapacity(Count))
+            .Build();
+
         _mFilters =
         [
             _mWorld.GetFilter<Attack>(),

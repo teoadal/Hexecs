@@ -19,6 +19,16 @@ public sealed partial class Filter<T1>
         _hashSet.Clear();
     }
 
+    private void InitHandler()
+    {
+        ReadOnlySpan<ActorId> actors = _componentPool1.GetKeys().AsReadOnlySpan();
+
+        foreach (ActorId actorId in actors)
+        {
+            _hashSet.TryAdd(actorId);
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemovedHandler(ActorId actorId)
     {

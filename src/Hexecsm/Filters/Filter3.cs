@@ -1,9 +1,7 @@
 using Hexecsm.Accessors;
 using Hexecsm.Components;
-using Hexecsm.Components.Messages;
 using Hexecsm.Events;
 using Hexecsm.Utils;
-using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Filters;
 
@@ -52,7 +50,7 @@ public sealed partial class Filter<T1, T2, T3> : IFilter
 
         _hashSet = new ActorHashSet(128);
 
-        Init();
+        InitHandler();
     }
 
     public void Dispose()
@@ -73,25 +71,14 @@ public sealed partial class Filter<T1, T2, T3> : IFilter
     {
         return new Enumerator(
             _hashSet.Keys.AsReadOnlySpan(),
-            _componentPool1.Values,
-            _componentPool2.Values,
-            _componentPool3.Values);
+            _componentPool1.GetValues(),
+            _componentPool2.GetValues(),
+            _componentPool3.GetValues());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public KeyAccessor GetKeys(int start, int length)
     {
         return _hashSet.GetKeys(start, length);
-    }
-
-    private void Init()
-    {
-        foreach (ActorId actorId in _componentPool1.Keys.AsReadOnlySpan())
-        {
-            if (_componentPool2.Contains(actorId) && _componentPool3.Contains(actorId))
-            {
-                _hashSet.TryAdd(actorId);
-            }
-        }
     }
 }

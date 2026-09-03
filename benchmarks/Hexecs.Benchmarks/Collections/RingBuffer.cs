@@ -2,111 +2,6 @@
 
 namespace Hexecs.Benchmarks.Collections;
 
-public sealed class MpscRingBuffer<T> where T : struct
-{
-    private readonly long[] _sequences;
-    private readonly T[] _items;
-    private readonly int _mask;
-
-    private PaddedHeadTail _indices;
-
-    public MpscRingBuffer(int powerOfTwoCapacity)
-    {
-        if ((powerOfTwoCapacity & (powerOfTwoCapacity - 1)) != 0)
-        {
-            throw new ArgumentException("Размер буфера должен быть степенью двойки.");
-        }
-
-        _items = new T[powerOfTwoCapacity];
-        _sequences = new long[powerOfTwoCapacity];
-        _mask = powerOfTwoCapacity - 1;
-
-        for (var i = 0; i < _sequences.Length; i++)
-        {
-            _sequences[i] = i;
-        }
-    }
-
-    // Множество писателей (Multi-Producer)
-    public bool TryEnqueue(in T item)
-    {
-        while (true)
-        {
-            long currentTail = Volatile.Read(ref _indices.Tail);
-            var index = (int)(currentTail & _mask);
-
-            long cellSequence = Volatile.Read(ref _sequences[index]);
-            long diff = cellSequence - currentTail;
-
-            if (diff == 0)
-            {
-                // Пытаемся занять слот атомарно
-                if (Interlocked.CompareExchange(ref _indices.Tail, currentTail + 1, currentTail) == currentTail)
-                {
-                    _items[index] = item;
-
-                    // Барьер памяти: данные _items обязаны быть записаны ДО обновления статуса в _sequences
-                    Volatile.Write(ref _sequences[index], currentTail + 1);
-
-                    return true;
-                }
-            }
-            else if (diff < 0)
-            {
-                // Буфер переполнен
-                return false;
-            }
-
-            // Надвигается гонка или слот занят другим писателем — уходим на короткий Spin
-            Thread.SpinWait(1);
-        }
-    }
-
-    // Один читатель (Single-Consumer)
-    public bool TryDequeue(out T item)
-    {
-        long currentHead = _indices.Head;
-        var index = (int)(currentHead & _mask);
-
-        long cellSequence = Volatile.Read(ref _sequences[index]);
-        long diff = cellSequence - (currentHead + 1);
-
-        if (diff == 0)
-        {
-            item = _items[index];
-
-            // Если T содержит ссылки (хоть мы и ограничили struct, внутри могут быть Nullable или Ref-поля)
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            {
-                _items[index] = default;
-            }
-
-            // Разрешаем писателям снова использовать этот слот на следующем круге
-            Volatile.Write(ref _sequences[index], currentHead + _sequences.Length);
-
-            // Сдвигаем голову без Interlocked (читатель-то один)
-            Volatile.Write(ref _indices.Head, currentHead + 1);
-
-            return true;
-        }
-
-        item = default;
-
-        return false;
-    }
-}
-
-// Выносим индексы в отдельную структуру без Generic, чтобы работал Explicit Layout
-[StructLayout(LayoutKind.Explicit, Size = 128)]
-internal struct PaddedHeadTail
-{
-    [FieldOffset(0)]
-    public long Head;
-
-    [FieldOffset(64)]
-    public long Tail; // Разнос на 64 байта (размер кэш-линии)
-}
-
 public sealed class MpscBatchingRingBuffer<T> where T : struct
 {
     private readonly long[] _sequences;
@@ -246,7 +141,7 @@ public sealed class MpscBatchingRingBuffer<T> where T : struct
             long seqToRelease = headStart + i;
             var idx = (int)(seqToRelease & _mask);
 
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: сначала очищаем память, если структура содержит ссылки...
+            // Сначала очищаем память, если структура содержит ссылки...
             if (hasReferences)
             {
                 _items[idx] = default;

@@ -54,6 +54,9 @@ internal sealed class NoiseGame : Game
         _world = new WorldBuilder()
             .WithDegreeOfParallelism(Math.Min(6, Environment.ProcessorCount))
             .WithInitialCapacity(InitialEntityCount)
+            .ConfigureComponent<CircleColor>(color => color.WithInitialCapacity(MaxEntityCount))
+            .ConfigureComponent<Position>(position => position.WithInitialCapacity(MaxEntityCount))
+            .ConfigureComponent<Velocity>(velocity => velocity.WithInitialCapacity(MaxEntityCount))
             .AddUpdateSystem(ctx => new MovementSystem(ctx, width, height))
             .AddDrawSystem(ctx => new RenderSystem(ctx, GraphicsDevice, MaxEntityCount * 2))
             .Build();

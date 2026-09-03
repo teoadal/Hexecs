@@ -78,6 +78,9 @@ public class ActorFilter3EnumerationBenchmark
 
     private Hexecsm.Worlds.World _mWorld = null!;
     private Hexecsm.Filters.Filter<Attack, Defence, Speed> _mFilter = null!;
+    private Hexecsm.Components.Components<Attack> _mComponents1;
+    private Hexecsm.Components.Components<Defence> _mComponents2;
+    private Hexecsm.Components.Components<Speed> _mComponents3;
 
     [Benchmark]
     public int Hexecs_M()
@@ -101,9 +104,10 @@ public class ActorFilter3EnumerationBenchmark
         var result = 0;
 
         ReadOnlySpan<ActorId> keys = _mFilter.Keys.AsReadOnlySpan();
-        ValueAccessor<Attack> attacks = _mWorld.GetComponents<Attack>();
-        ValueAccessor<Defence> defences = _mWorld.GetComponents<Defence>();
-        ValueAccessor<Speed> speeds = _mWorld.GetComponents<Speed>();
+
+        ValueAccessor<Attack> attacks = _mComponents1.GetValues();
+        ValueAccessor<Defence> defences = _mComponents2.GetValues();
+        ValueAccessor<Speed> speeds = _mComponents3.GetValues();
 
         foreach (ActorId actorId in keys)
         {
@@ -190,11 +194,19 @@ public class ActorFilter3EnumerationBenchmark
     {
         _defaultWorld = new DefaultEcs.World();
         _frifloWorld = new EntityStore();
-        _mWorld = new Hexecsm.Worlds.World(128, 4);
+        _mWorld = new Hexecsm.Worlds.WorldBuilder()
+            .WithInitialCapacity(Count)
+            .ConfigureComponent<Attack>(attack => attack.WithInitialCapacity(Count))
+            .ConfigureComponent<Defence>(defence => defence.WithInitialCapacity(Count))
+            .ConfigureComponent<Speed>(speed => speed.WithInitialCapacity(Count))
+            .Build();
 
         _defaultEntitySet = _defaultWorld.GetEntities().With<Attack>().With<Defence>().With<Speed>().AsSet();
         _frifloQuery = _frifloWorld.Query<Attack, Defence, Speed>();
         _mFilter = _mWorld.GetFilter<Attack, Defence, Speed>();
+        _mComponents1 = _mWorld.GetComponents<Attack>();
+        _mComponents2 = _mWorld.GetComponents<Defence>();
+        _mComponents3 = _mWorld.GetComponents<Speed>();
 
         for (var i = 0; i < Count; i++)
         {

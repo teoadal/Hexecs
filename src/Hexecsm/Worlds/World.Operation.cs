@@ -63,7 +63,7 @@ public sealed partial class World
         }
     }
 
-    private enum OperationType
+    private enum OperationType : byte
     {
         ActorAdd,
         ActorDestroy,

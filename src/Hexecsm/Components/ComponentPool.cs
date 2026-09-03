@@ -3,7 +3,6 @@ using Hexecsm.Components.Messages;
 using Hexecsm.Events;
 using Hexecsm.Handlers;
 using Hexecsm.Utils;
-using Hexecsm.Worlds.Messages;
 
 namespace Hexecsm.Components;
 
@@ -16,18 +15,6 @@ internal sealed partial class ComponentPool<T> : IComponentPool
         get => _storage.Length;
     }
 
-    public KeyAccessor Keys
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _storage.Keys;
-    }
-
-    public ValueAccessor<T> Values
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _storage.Values;
-    }
-
     private readonly ActorDictionary<T> _storage;
 
     private bool _disposed;
@@ -36,15 +23,13 @@ internal sealed partial class ComponentPool<T> : IComponentPool
     private readonly EventBus _eventBus;
 
     public ComponentPool(
-        ComponentCloneHandler<T>? cloneHandler,
-        ComponentDisposeHandler<T>? disposeHandler,
-        EventBus eventBus,
-        int initialCapacity)
+        ComponentConfiguration<T>? configuration,
+        EventBus eventBus)
     {
-        _cloneHandler = cloneHandler;
-        _disposeHandler = disposeHandler;
+        _cloneHandler = configuration?.CloneHandler;
+        _disposeHandler = configuration?.DisposeHandler;
         _eventBus = eventBus;
-        _storage = new ActorDictionary<T>(initialCapacity);
+        _storage = new ActorDictionary<T>(configuration?.InitialCapacity ?? 128);
 
         _addedProducer = eventBus.GetProducer<ComponentAdded<T>>();
         _removedProducer = eventBus.GetProducer<ComponentRemoved<T>>();
@@ -100,11 +85,23 @@ internal sealed partial class ComponentPool<T> : IComponentPool
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public KeyValueAccessor<T> GetComponents()
+    public KeyAccessor GetKeys()
+    {
+        return _storage.Keys;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public KeyValueAccessor<T> GetKeyValues()
     {
         ObjectDisposedException.ThrowIf(_disposed, typeof(ComponentPool<T>));
 
         return _storage.GetAccessor();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValueAccessor<T> GetValues()
+    {
+        return _storage.Values;
     }
 
     public ref T GetRef(ActorId actorId)

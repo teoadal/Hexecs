@@ -40,8 +40,8 @@ public abstract class ParallelUpdateSystem<T1, T2>(World world) : IUpdateSystem,
             else
             {
                 KeyAccessor keys = _filter.Keys;
-                ValueAccessor<T1> components1 = _componentPool1.Values;
-                ValueAccessor<T2> components2 = _componentPool2.Values;
+                ValueAccessor<T1> components1 = _componentPool1.GetValues();
+                ValueAccessor<T2> components2 = _componentPool2.GetValues();
 
                 Update(keys, in components1, in components2, in _currentTime);
             }
@@ -68,8 +68,8 @@ public abstract class ParallelUpdateSystem<T1, T2>(World world) : IUpdateSystem,
         int actualBatchSize = baseBatchSize + (workerIndex < remainder ? 1 : 0);
 
         KeyAccessor keys = _filter.GetKeys(start, actualBatchSize);
-        ValueAccessor<T1> components1 = _componentPool1.Values;
-        ValueAccessor<T2> components2 = _componentPool2.Values;
+        ValueAccessor<T1> components1 = _componentPool1.GetValues();
+        ValueAccessor<T2> components2 = _componentPool2.GetValues();
 
         Update(keys, in components1, in components2, in _currentTime);
     }

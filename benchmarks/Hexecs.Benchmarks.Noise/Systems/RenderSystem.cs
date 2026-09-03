@@ -2,6 +2,7 @@ using Hexecs.Benchmarks.Noise.Components;
 
 using Hexecsm;
 using Hexecsm.Accessors;
+using Hexecsm.Components;
 using Hexecsm.Filters;
 using Hexecsm.Systems;
 using Hexecsm.Worlds;
@@ -14,7 +15,8 @@ public sealed class RenderSystem : IDrawSystem
 {
     public bool Enabled { get; set; } = true;
 
-    private readonly World _context;
+    private readonly Components<Position> _components1;
+    private readonly Components<CircleColor> _components2;
     private readonly Filter<Position, CircleColor> _filter;
 
     private readonly DynamicVertexBuffer _instanceBuffer;
@@ -25,10 +27,12 @@ public sealed class RenderSystem : IDrawSystem
     private readonly Effect? _shader;
     private readonly Matrix _projection;
 
-    public RenderSystem(World context, GraphicsDevice device, int maxEntities)
+    public RenderSystem(World world, GraphicsDevice device, int maxEntities)
     {
-        _filter = context.GetFilter<Position, CircleColor>();
-        _context = context;
+        _components1 = world.GetComponents<Position>();
+        _components2 = world.GetComponents<CircleColor>();
+        _filter = world.GetFilter<Position, CircleColor>();
+
         _device = device;
         _hostBuffer = new InstanceData[maxEntities];
 
@@ -75,8 +79,8 @@ public sealed class RenderSystem : IDrawSystem
             return;
         }
 
-        ValueAccessor<Position> positions = _context.GetComponents<Position>();
-        ValueAccessor<CircleColor> colors = _context.GetComponents<CircleColor>();
+        ValueAccessor<Position> positions = _components1.GetValues();
+        ValueAccessor<CircleColor> colors = _components2.GetValues();
 
         var i = 0;
 

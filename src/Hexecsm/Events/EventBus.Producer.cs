@@ -57,7 +57,14 @@ internal sealed partial class EventBus
 
             using (_lock.EnterScope())
             {
-                _consumers.Add(consumer);
+                if (!_consumers.Contains(consumer))
+                {
+                    _consumers.Add(consumer);
+
+                    return;
+                }
+
+                ThrowConsumerAlreadyRegistered();
             }
         }
 
@@ -67,7 +74,12 @@ internal sealed partial class EventBus
 
             using (_lock.EnterScope())
             {
-                _consumers.Remove(consumer);
+                if (_consumers.Remove(consumer))
+                {
+                    return;
+                }
+
+                ThrowConsumerNotRegistered();
             }
         }
     }

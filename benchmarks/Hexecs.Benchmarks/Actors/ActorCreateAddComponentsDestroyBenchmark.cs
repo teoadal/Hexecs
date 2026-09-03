@@ -211,7 +211,13 @@ public class ActorCreateAddComponentsDestroyBenchmark
         ];
 
         _mHexecsActors = new List<ActorId>();
-        _mWorld = new Hexecsm.Worlds.World(256, 4);
+        _mWorld = new Hexecsm.Worlds.WorldBuilder()
+            .WithInitialCapacity(Count)
+            .ConfigureComponent<Attack>(attack => attack.WithInitialCapacity(Count))
+            .ConfigureComponent<Defence>(defence => defence.WithInitialCapacity(Count))
+            .ConfigureComponent<Speed>(speed => speed.WithInitialCapacity(Count))
+            .Build();
+
         _mFilters =
         [
             _mWorld.GetFilter<Attack>(),

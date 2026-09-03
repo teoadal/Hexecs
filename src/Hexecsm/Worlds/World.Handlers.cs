@@ -22,7 +22,7 @@ public sealed partial class World
         {
             foreach (ComponentTypeId componentTypeId in entry)
             {
-                IComponentPool componentPool = GetComponentPoolUnsafe(componentTypeId);
+                IComponentPool componentPool = _componentPools.GetUnsafe(componentTypeId);
                 componentPool.Remove(actorId);
             }
 

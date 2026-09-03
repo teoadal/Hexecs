@@ -17,6 +17,7 @@ internal sealed partial class EventBus : IDisposable
         _producers.Clear();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IProducer<TMessage> GetProducer<TMessage>()
         where TMessage : struct, IMessage
     {

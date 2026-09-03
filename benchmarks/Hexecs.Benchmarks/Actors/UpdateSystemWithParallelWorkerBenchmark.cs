@@ -120,6 +120,7 @@ public class UpdateSystemWithParallelWorkerBenchmark
             .UseDefaultParallelWorker(4)
             .UseDefaultActorContext(ctx => ctx.CreateUpdateSystem<HexecsUpdateParallelSystem>())
             .Build();
+
         _hexecsSystem = _hexecsWorld.Actors.GetUpdateSystem<HexecsUpdateParallelSystem>();
 
         _frifloWorld = new EntityStore { JobRunner = new ParallelJobRunner(4) };

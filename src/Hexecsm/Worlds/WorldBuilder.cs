@@ -1,4 +1,6 @@
-﻿using Hexecsm.Systems;
+﻿using Hexecsm.Components;
+using Hexecsm.Systems;
+using Hexecsm.Utils;
 
 namespace Hexecsm.Worlds;
 
@@ -7,6 +9,7 @@ public sealed class WorldBuilder
     private int? _degreeOfParallelism;
     private int? _initialCapacity;
 
+    private readonly Dictionary<Type, object> _componentConfigurations = new Dictionary<Type, object>(ReferenceComparer<Type>.Instance);
     private readonly List<Entry<IDrawSystem>> _drawSystems = [];
     private readonly List<Entry<IUpdateSystem>> _updateSystems = [];
 
@@ -22,6 +25,35 @@ public sealed class WorldBuilder
         _updateSystems.Add(new Entry<IUpdateSystem>(updateSystem));
 
         return this;
+    }
+
+    public WorldBuilder ConfigureComponent<TComponent>(Action<ComponentConfiguration<TComponent>> config)
+        where TComponent : struct, IComponent
+    {
+        var configurator = new ComponentConfiguration<TComponent>();
+
+        config(configurator);
+
+        _componentConfigurations.Add(typeof(TComponent), configurator);
+
+        return this;
+    }
+
+    public World Build()
+    {
+        var world = new World(
+            componentConfigurations: _componentConfigurations,
+            initialCapacity: _initialCapacity ?? 128,
+            degreeOfParallelism: _degreeOfParallelism ?? Environment.ProcessorCount);
+
+        world.LoadSystems(
+            _drawSystems.Select(entry => entry.Invoke(world)),
+            _updateSystems.Select(entry => entry.Invoke(world)));
+
+        _drawSystems.Clear();
+        _drawSystems.Clear();
+
+        return world;
     }
 
     #region Settings
@@ -41,22 +73,6 @@ public sealed class WorldBuilder
     }
 
     #endregion
-
-    public World Build()
-    {
-        var world = new World(
-            initialCapacity: _initialCapacity ?? 128,
-            degreeOfParallelism: _degreeOfParallelism ?? Environment.ProcessorCount);
-
-        world.LoadSystems(
-            _drawSystems.Select(entry => entry.Invoke(world)),
-            _updateSystems.Select(entry => entry.Invoke(world)));
-
-        _drawSystems.Clear();
-        _drawSystems.Clear();
-
-        return world;
-    }
 
     private readonly struct Entry<TResult>
         where TResult : class

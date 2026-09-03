@@ -23,6 +23,7 @@ public static class ArrayUtils
     /// <exception cref="ArgumentOutOfRangeException">
     /// Возникает, если параметр length меньше 0
     /// </exception>
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Create<T>(int length)
     {

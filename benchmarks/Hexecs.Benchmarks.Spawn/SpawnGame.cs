@@ -1,6 +1,7 @@
+using Hexecs.Benchmarks.Spawn.Components;
 using Hexecs.Benchmarks.Spawn.Systems;
 
-                                 using Hexecsm.Worlds;
+using Hexecsm.Worlds;
 
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,7 +14,8 @@ internal sealed class SpawnGame : Game
     private readonly GraphicsDeviceManager _graphics;
     private World _world = null!;
 
-    private const int MaxEntityCount = 3_000_000;
+    private const int InitialEntityCount = 600_000;
+    private const int MaxEntityCount = 1_800_000;
 
     public SpawnGame()
     {
@@ -49,6 +51,10 @@ internal sealed class SpawnGame : Game
 
         _world = new WorldBuilder()
             .WithDegreeOfParallelism(Math.Min(6, Environment.ProcessorCount))
+            .ConfigureComponent<CircleColor>(color => color.WithInitialCapacity(InitialEntityCount))
+            .ConfigureComponent<Lifetime>(lifetime => lifetime.WithInitialCapacity(InitialEntityCount))
+            .ConfigureComponent<Position>(position => position.WithInitialCapacity(InitialEntityCount))
+            .ConfigureComponent<Velocity>(velocity => velocity.WithInitialCapacity(InitialEntityCount))
             .AddUpdateSystem(ctx => new MovementSystem(ctx, width, height))
             .AddUpdateSystem(ctx => new LifetimeSystem(ctx))
             .AddUpdateSystem(ctx => new SpawnSystem(ctx, width, height))

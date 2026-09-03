@@ -9,8 +9,8 @@ public sealed partial class World
 
     internal void LoadSystems(IEnumerable<IDrawSystem> drawSystems, IEnumerable<IUpdateSystem> updateSystems)
     {
-        _drawSystems = drawSystems.ToArray();
-        _updateSystems = updateSystems.ToArray();
+        _drawSystems = [.. drawSystems];
+        _updateSystems = [.. updateSystems];
 
         if (_updateSystems.Length > 0)
         {

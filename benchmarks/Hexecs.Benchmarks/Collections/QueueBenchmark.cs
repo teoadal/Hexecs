@@ -13,46 +13,64 @@ namespace Hexecs.Benchmarks.Collections;
 [BenchmarkCategory("Collections")]
 public class QueueBenchmark
 {
-    private ConcurrentQueue<int> _queue = null!;
-    private ThreadLocalQueue<int> _localQueue = null!;
+    private const int TotalOperations = 120_000; // Число делится без остатка на 3, 4, 6 потоков
+    private const int WorkerThreadsCount = 4;
+    private const int OperationsPerWorker = TotalOperations / WorkerThreadsCount;
+
+    private MpscBlockQueue<SampleOperation> _mpscQueue = null!;
+    private ConcurrentQueue<SampleOperation> _concurrentQueue = null!;
+    private CountdownEvent _countdown = null!;
+
+    // Структуры состояния для передачи в потоки без замыканий и боксинга
+    private WorkerState<MpscBlockQueue<SampleOperation>>[] _mpscStates = null!;
+    private WorkerState<ConcurrentQueue<SampleOperation>>[] _concurrentStates = null!;
+
+    // Описываем callback-методы статическими, чтобы гарантировать отсутствие захвата контекста
+    private static readonly WaitCallback MpscCallback = ExecuteMpscWorker;
+    private static readonly WaitCallback ConcurrentCallback = ExecuteConcurrentWorker;
 
     [Benchmark(Baseline = true)]
-    public int ConcurrentQueue()
+    public int Benchmark_ConcurrentQueue()
     {
-        for (var i = 0; i < 64; i++)
+        _countdown.Reset(WorkerThreadsCount);
+
+        for (var i = 0; i < WorkerThreadsCount; i++)
         {
-            _queue.Enqueue(i);
+            ThreadPool.QueueUserWorkItem(ConcurrentCallback, _concurrentStates[i]);
         }
 
-        var sum = 0;
+        _countdown.Wait();
 
-        for (var i = 0; i < 64; i++)
+        var sum = 0;
+        while (_concurrentQueue.TryDequeue(out SampleOperation op))
         {
-            _queue.TryDequeue(out int value);
-            sum += value;
+            sum += op.EntityId + op.ComponentId;
         }
 
         return sum;
     }
 
     [Benchmark]
-    public int ThreadLocalQueue()
+    public int Benchmark_MpscBlockQueue()
     {
-        for (var i = 0; i < 64; i++)
+        _mpscQueue.Clear();
+
+        _countdown.Reset(WorkerThreadsCount);
+
+        for (var i = 0; i < WorkerThreadsCount; i++)
         {
-            _localQueue.Enqueue(i);
+            ThreadPool.QueueUserWorkItem(MpscCallback, _mpscStates[i]);
         }
 
+        _countdown.Wait();
+
         var sum = 0;
-
-        foreach (ThreadLocalQueue<int>.LocalQueue batch in _localQueue.GetBatches())
+        foreach (ReadOnlySpan<SampleOperation> block in _mpscQueue)
         {
-            foreach (int i in batch.AsSpan())
+            foreach (ref readonly SampleOperation op in block)
             {
-                sum += i;
+                sum += op.EntityId + op.ComponentId;
             }
-
-            batch.Clear();
         }
 
         return sum;
@@ -61,13 +79,75 @@ public class QueueBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        _queue = new ConcurrentQueue<int>();
-        _localQueue = new ThreadLocalQueue<int>(128);
+        _mpscQueue = new MpscBlockQueue<SampleOperation>(1024);
+        _concurrentQueue = new ConcurrentQueue<SampleOperation>();
+        _countdown = new CountdownEvent(WorkerThreadsCount);
+
+        _mpscStates = new WorkerState<MpscBlockQueue<SampleOperation>>[WorkerThreadsCount];
+        _concurrentStates = new WorkerState<ConcurrentQueue<SampleOperation>>[WorkerThreadsCount];
+
+        for (var i = 0; i < WorkerThreadsCount; i++)
+        {
+            _mpscStates[i] = new WorkerState<MpscBlockQueue<SampleOperation>>(_mpscQueue, _countdown, OperationsPerWorker);
+            _concurrentStates[i] = new WorkerState<ConcurrentQueue<SampleOperation>>(_concurrentQueue, _countdown, OperationsPerWorker);
+        }
     }
 
     [GlobalCleanup]
     public void Cleanup()
     {
-        _localQueue.Dispose();
+        _countdown.Dispose();
+    }
+
+    // Класс-контейнер для состояния воркера (создается один раз в Setup)
+    private sealed class WorkerState<TQueue>
+    {
+        public readonly TQueue Queue;
+        public readonly CountdownEvent Countdown;
+        public readonly int Count;
+
+        public WorkerState(TQueue queue, CountdownEvent countdown, int count)
+        {
+            Queue = queue;
+            Countdown = countdown;
+            Count = count;
+        }
+    }
+
+    // Статические методы полностью исключают выделение памяти на замыкания
+    private static void ExecuteMpscWorker(object state)
+    {
+        var workerState = (WorkerState<MpscBlockQueue<SampleOperation>>)state;
+        MpscBlockQueue<SampleOperation> queue = workerState.Queue;
+        int count = workerState.Count;
+
+        for (var i = 0; i < count; i++)
+        {
+            queue.Enqueue(new SampleOperation { EntityId = i, ComponentId = i });
+        }
+
+        workerState.Countdown.Signal();
+    }
+
+    private static void ExecuteConcurrentWorker(object state)
+    {
+        var workerState = (WorkerState<ConcurrentQueue<SampleOperation>>)state;
+        ConcurrentQueue<SampleOperation> queue = workerState.Queue;
+        int count = workerState.Count;
+
+        for (var i = 0; i < count; i++)
+        {
+            queue.Enqueue(new SampleOperation { EntityId = i, ComponentId = i });
+        }
+
+        workerState.Countdown.Signal();
+    }
+
+    public struct SampleOperation
+    {
+        public int EntityId;
+        public int ComponentId;
     }
 }
+
+

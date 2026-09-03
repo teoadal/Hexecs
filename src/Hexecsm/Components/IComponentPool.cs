@@ -12,3 +12,4 @@ internal interface IComponentPool : IDisposable
 
     void Remove(ActorId actorId);
 }
+

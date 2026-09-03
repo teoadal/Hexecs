@@ -26,6 +26,7 @@ internal sealed class ThreadLocalQueue<T> : IDisposable
         }
     }
 
+    [SkipLocalsInit]
     public void Enqueue(in T item)
     {
         ObjectDisposedException.ThrowIf(_disposed, typeof(ThreadLocalQueue<T>));
@@ -57,6 +58,7 @@ internal sealed class ThreadLocalQueue<T> : IDisposable
         private int _count;
         private T[] _data = ArrayUtils.Create<T>(capacity);
 
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> AsSpan()
         {
@@ -75,6 +77,7 @@ internal sealed class ThreadLocalQueue<T> : IDisposable
             ClearSlow();
         }
 
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Enqueue(in T item)
         {
@@ -98,6 +101,7 @@ internal sealed class ThreadLocalQueue<T> : IDisposable
             }
         }
 
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void EnqueueSlow(in T item)
         {

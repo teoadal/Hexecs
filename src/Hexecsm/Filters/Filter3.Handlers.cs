@@ -50,6 +50,19 @@ public sealed partial class Filter<T1, T2, T3>
         _hashSet.Clear();
     }
 
+    private void InitHandler()
+    {
+        ReadOnlySpan<ActorId> actors = _componentPool1.GetKeys().AsReadOnlySpan();
+
+        foreach (ActorId actorId in actors)
+        {
+            if (_componentPool2.Contains(actorId) && _componentPool3.Contains(actorId))
+            {
+                _hashSet.TryAdd(actorId);
+            }
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemovedHandler(ActorId actorId)
     {

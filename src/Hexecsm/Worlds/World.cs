@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 
-using Hexecsm.Accessors;
 using Hexecsm.Components;
 using Hexecsm.Events;
 using Hexecsm.Filters;
@@ -27,6 +26,8 @@ public sealed partial class World : IDisposable
         get => _parallelWorker;
     }
 
+    private readonly ComponentPoolManager _componentPools;
+
     private readonly EventBus _eventBus;
     private readonly ActorDictionary<Entry> _storage;
 
@@ -44,6 +45,7 @@ public sealed partial class World : IDisposable
     private readonly long _startTime;
 
     internal World(
+        Dictionary<Type, object> componentConfigurations,
         int initialCapacity,
         int degreeOfParallelism)
     {
@@ -52,6 +54,7 @@ public sealed partial class World : IDisposable
         _parallelWorker = new DefaultParallelWorker(degreeOfParallelism);
 
         _eventBus = new EventBus();
+        _componentPools = new ComponentPoolManager(componentConfigurations, _eventBus);
         _storage = new ActorDictionary<Entry>(initialCapacity);
 
         _clearingProducer = _eventBus.GetProducer<WorldClearing>();
@@ -69,7 +72,7 @@ public sealed partial class World : IDisposable
     public void AddComponent<T>(ActorId actorId, in T component)
         where T : struct, IComponent
     {
-        ComponentPool<T> componentPool = GetOrAddComponentPool<T>();
+        ComponentPool<T> componentPool = _componentPools.GetOrAdd<T>();
         componentPool.Add(actorId, in component);
 
         PostponeOperation(Operation.AddComponent(actorId, ComponentType<T>.Id));
@@ -101,7 +104,6 @@ public sealed partial class World : IDisposable
     {
         ClearHandler();
         ParallelWorker.Dispose();
-        _eventBus.Dispose();
 
         foreach (IFilter filter in _filters.Values)
         {
@@ -110,10 +112,12 @@ public sealed partial class World : IDisposable
 
         _filters.Clear();
 
-        foreach (IComponentPool? componentPool in _componentPools)
+        foreach (IComponentPool? componentPool in _componentPools.GetAll())
         {
             componentPool?.Dispose();
         }
+
+        _eventBus.Dispose(); // should be last for gracefully unsubscribe
     }
 
     public void Draw(TimeSpan elapsed, TimeSpan total)
@@ -146,7 +150,7 @@ public sealed partial class World : IDisposable
     public ref T GetComponent<T>(ActorId actorId)
         where T : struct, IComponent
     {
-        ComponentPool<T>? componentPool = GetComponentPool<T>();
+        ComponentPool<T>? componentPool = _componentPools.Get<T>();
 
         if (componentPool != null)
         {
@@ -163,14 +167,11 @@ public sealed partial class World : IDisposable
         return ref Unsafe.NullRef<T>();
     }
 
-    public ValueAccessor<T> GetComponents<T>()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Components<T> GetComponents<T>()
         where T : struct, IComponent
     {
-        ComponentPool<T>? componentPool = GetComponentPool<T>();
-
-        return componentPool != null
-            ? componentPool.Values
-            : ValueAccessor<T>.Empty;
+        return new Components<T>(_componentPools.GetOrAdd<T>());
     }
 
     public Filter<T1> GetFilter<T1>()
@@ -186,7 +187,7 @@ public sealed partial class World : IDisposable
             }
 
             var filter = new Filter<T1>(
-                componentPool1: GetOrAddComponentPool<T1>(),
+                componentPool1: _componentPools.GetOrAdd<T1>(),
                 _eventBus);
 
             _filters[key] = filter;
@@ -209,8 +210,8 @@ public sealed partial class World : IDisposable
             }
 
             var filter = new Filter<T1, T2>(
-                componentPool1: GetOrAddComponentPool<T1>(),
-                componentPool2: GetOrAddComponentPool<T2>(),
+                componentPool1: _componentPools.GetOrAdd<T1>(),
+                componentPool2: _componentPools.GetOrAdd<T2>(),
                 _eventBus);
 
             _filters[key] = filter;
@@ -234,9 +235,9 @@ public sealed partial class World : IDisposable
             }
 
             var filter = new Filter<T1, T2, T3>(
-                componentPool1: GetOrAddComponentPool<T1>(),
-                componentPool2: GetOrAddComponentPool<T2>(),
-                componentPool3: GetOrAddComponentPool<T3>(),
+                componentPool1: _componentPools.GetOrAdd<T1>(),
+                componentPool2: _componentPools.GetOrAdd<T2>(),
+                componentPool3: _componentPools.GetOrAdd<T3>(),
                 _eventBus);
 
             _filters[key] = filter;
@@ -248,7 +249,7 @@ public sealed partial class World : IDisposable
     public bool HasComponent<T>(ActorId actorId)
         where T : struct, IComponent
     {
-        ComponentPool<T>? componentPool = GetComponentPool<T>();
+        ComponentPool<T>? componentPool = _componentPools.Get<T>();
 
         return componentPool != null && componentPool.Contains(actorId);
     }
@@ -261,7 +262,7 @@ public sealed partial class World : IDisposable
     public void RemoveComponent<T>(ActorId actorId)
         where T : struct, IComponent
     {
-        ComponentPool<T>? componentPool = GetComponentPool<T>();
+        ComponentPool<T>? componentPool = _componentPools.Get<T>();
 
         if (componentPool != null)
         {
@@ -278,7 +279,7 @@ public sealed partial class World : IDisposable
     public bool RemoveComponent<T>(ActorId actorId, out T component)
         where T : struct, IComponent
     {
-        ComponentPool<T>? componentPool = GetComponentPool<T>();
+        ComponentPool<T>? componentPool = _componentPools.Get<T>();
 
         if (componentPool != null)
         {
@@ -318,7 +319,7 @@ public sealed partial class World : IDisposable
             ProcessPostponedOperations();
 
             // 3. Component operations (add/remove/update_with_notification)
-            foreach (IComponentPool? componentPool in _componentPools)
+            foreach (IComponentPool? componentPool in _componentPools.GetAll())
             {
                 componentPool?.ProcessPostponedOperations();
             }
@@ -327,5 +328,12 @@ public sealed partial class World : IDisposable
         {
             _previousUpdate = now;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ComponentPool<T1> GetOrAddComponentPool<T1>()
+        where T1 : struct, IComponent
+    {
+        return _componentPools.GetOrAdd<T1>();
     }
 }
